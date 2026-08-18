@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MDC Interior — Sales CRM v7.9</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap');
+
 :root{
   --navy:#241C15;--navy2:#332619;--gold:#B98A3C;--gold2:#CBA25A;
   --gold-bright:#D4B370;--goldbg:#FBF0DC;--cream:#F6F3ED;--lgray:#EFECE6;--mgray:#9C9182;
@@ -13,19 +13,19 @@
   --ruby:#C0392B;--lred:#F9E7E4;--sapphire:#2C6E9E;--lblue:#E5EFF6;
   --amber:#C77F1A;--lorange:#FBF0DC;--purple:#3D0D6E;--lpurple:#F0E8FB;
   --teal:#8F6A2B;--lteal:#E0F4F1;--white:#FFFFFF;
-  --serif:'Cormorant Garamond',Georgia,serif;
+  --serif:Arial, sans-serif;
   --line:#E8E2D8;--shadow:rgba(58,44,28,.10);--shadow-lg:rgba(43,33,26,.16);
   --sidebar-w:244px;--topbar-h:64px;
   /* Pipeline colors */
   --tk-color:#3D2E22;--tc-color:#8F6A2B;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(--charcoal);display:flex;height:100vh;overflow:hidden}
+body{font-family:Arial, sans-serif;background:var(--cream);color:var(--charcoal);display:flex;height:100vh;overflow:hidden}
 .sidebar{width:var(--sidebar-w);background:linear-gradient(170deg,#2A2016 0%,#241C15 55%,#1E1710 100%);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;z-index:100;position:relative;box-shadow:inset -1px 0 0 rgba(203,162,90,.14)}
 .sidebar-brand{padding:20px 20px 14px;border-bottom:1px solid rgba(184,150,62,.2)}
 .brand-title{font-family:var(--serif);font-size:25px;font-weight:600;color:var(--gold2);letter-spacing:.3px;line-height:1}
-.brand-sub{font-size:9.5px;color:rgba(203,162,90,.55);letter-spacing:3px;text-transform:uppercase;margin-top:4px;font-family:'Be Vietnam Pro',sans-serif}
-.brand-ver{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:9px;font-family:'Be Vietnam Pro',sans-serif}
+.brand-sub{font-size:9.5px;color:rgba(203,162,90,.55);letter-spacing:3px;text-transform:uppercase;margin-top:4px;font-family:Arial, sans-serif}
+.brand-ver{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:9px;font-family:Arial, sans-serif}
 .sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .sync-dot.green{background:#4ade80;animation:pulse 2s infinite}
 .sync-dot.yellow{background:#facc15;animation:pulse .8s infinite}
@@ -33,12 +33,12 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(-
 .sync-dot.gray{background:#666}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .sidebar-nav{padding:10px 0;flex:1}
-.nav-section{padding:14px 20px 5px;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(203,162,90,.42);font-family:'Be Vietnam Pro',sans-serif}
+.nav-section{padding:14px 20px 5px;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(203,162,90,.42);font-family:Arial, sans-serif}
 .nav-item{display:flex;align-items:center;gap:11px;padding:10px 20px;margin:1px 10px;border-radius:9px;cursor:pointer;color:rgba(255,255,255,.56);font-size:13px;transition:all .18s;border-left:none}
 .nav-item:hover{color:rgba(255,255,255,.92);background:rgba(255,255,255,.05)}
 .nav-item.active{color:#F1E4C8;background:linear-gradient(90deg,rgba(203,162,90,.22),rgba(203,162,90,.09));font-weight:600;box-shadow:inset 2px 0 0 var(--gold2)}
-.nav-item .icon{font-size:15px;width:18px;text-align:center}
-.nav-badge{margin-left:auto;background:var(--ruby);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;font-family:'Be Vietnam Pro',sans-serif}
+.nav-item .icon{font-size:15px;width:18px;text-align:center;opacity:.85;font-weight:400}
+.nav-badge{margin-left:auto;background:var(--ruby);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;font-family:Arial, sans-serif}
 .sidebar-footer{padding:12px 18px;border-top:1px solid rgba(255,255,255,.07)}
 .user-info{display:flex;align-items:center;gap:10px}
 .user-avatar{width:34px;height:34px;background:linear-gradient(135deg,#CBA25A,#A6792F);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#241C15;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25)}
@@ -62,7 +62,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(-
 .pm360-ro{font-size:9px;font-weight:600;letter-spacing:.5px;color:var(--mgray);background:var(--lgray);padding:2px 7px;border-radius:10px;text-transform:none}
 .pm360-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .pm360-stat{background:linear-gradient(135deg,#FBF7EF,#F4EEE1);border:1px solid var(--line);border-radius:11px;padding:11px 8px;text-align:center}
-.pm360-num{font-size:18px;font-weight:800;color:var(--navy);font-family:'Be Vietnam Pro',sans-serif;line-height:1}
+.pm360-num{font-size:18px;font-weight:800;color:var(--navy);font-family:Arial, sans-serif;line-height:1}
 .pm360-lbl{font-size:10px;color:var(--mgray);margin-top:3px}
 .pm360-fin{background:var(--white);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:10px}
 .pm360-finrow{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;color:var(--charcoal)}
@@ -99,7 +99,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(-
 .bell-btn:hover{background:var(--lgray)}
 .bell-btn.has-alert{border-color:#F2C9C5;background:#FDF2F1;animation:bellpulse 2s ease-in-out infinite}
 @keyframes bellpulse{0%,100%{box-shadow:0 0 0 0 rgba(179,38,30,.0)}50%{box-shadow:0 0 0 4px rgba(179,38,30,.10)}}
-.bell-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#B3261E;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Be Vietnam Pro',sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.bell-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#B3261E;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:Arial, sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .bell-panel{position:absolute;top:44px;right:0;width:360px;max-width:88vw;max-height:70vh;overflow-y:auto;background:#fff;border:1px solid #e8e4de;border-radius:12px;box-shadow:0 12px 40px rgba(43,33,26,.18);padding:0;display:none;z-index:2000}
 .bell-panel.open{display:block}
 .bell-head{padding:13px 16px;border-bottom:1px solid #f0ece5;font-weight:700;font-size:14px;color:var(--navy);position:sticky;top:0;background:#fff;border-radius:12px 12px 0 0;display:flex;align-items:center;gap:8px}
@@ -111,7 +111,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(-
 .bell-row .r-title{font-size:12.5px;color:var(--charcoal);font-weight:500;line-height:1.4}
 .bell-row .r-sub{font-size:11px;color:var(--mgray);margin-top:1px}
 .bell-empty{padding:34px 16px;text-align:center;color:var(--mgray);font-size:13px}
-.btn{padding:8px 15px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:'Be Vietnam Pro',sans-serif;transition:all .16s;display:flex;align-items:center;gap:5px;letter-spacing:.2px}
+.btn{padding:8px 15px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:Arial, sans-serif;transition:all .16s;display:flex;align-items:center;gap:5px;letter-spacing:.2px}
 .btn-primary{background:linear-gradient(135deg,#332619,#241C15);color:var(--gold-bright);box-shadow:0 2px 8px rgba(36,28,21,.18)}.btn-primary:hover{background:linear-gradient(135deg,#3D2E1E,#2A2016);box-shadow:0 4px 14px rgba(36,28,21,.26)}
 .btn-outline{background:var(--white);border:1.5px solid #DBD0BE;color:var(--charcoal)}.btn-outline:hover{border-color:var(--gold);color:var(--amber);background:#FEFCF8}
 .btn-sm{padding:5px 10px;font-size:11.5px}
@@ -120,9 +120,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(-
 .btn-tk{background:var(--tk-color);color:#fff}
 .btn-tc{background:var(--tc-color);color:#fff}
 .search-bar{display:flex;align-items:center;background:var(--lgray);border:1.5px solid #e0dbd3;border-radius:7px;padding:6px 11px;gap:7px;width:210px}
-.search-bar input{border:none;background:transparent;font-family:'Be Vietnam Pro',sans-serif;font-size:12.5px;color:var(--charcoal);width:100%;outline:none}
+.search-bar input{border:none;background:transparent;font-family:Arial, sans-serif;font-size:12.5px;color:var(--charcoal);width:100%;outline:none}
 .content{flex:1;overflow-y:auto;padding:20px 22px}
-.sync-banner{padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-family:'Be Vietnam Pro',sans-serif;flex-shrink:0}
+.sync-banner{padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-family:Arial, sans-serif;flex-shrink:0}
 .sync-banner.connected{background:#f0fdf4;border-bottom:1px solid #bbf7d0;color:var(--emerald)}
 .sync-banner.syncing{background:#fefce8;border-bottom:1px solid #fef08a;color:#713f12}
 .sync-banner.error{background:var(--lred);border-bottom:1px solid #fecaca;color:var(--ruby)}
@@ -131,12 +131,12 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(-
 
 /* PIPELINE SWITCHER */
 .pipeline-switcher{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1.5px solid #e0dbd3;margin-bottom:20px;background:var(--white)}
-.ps-btn{flex:1;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Be Vietnam Pro',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--mgray);background:var(--white)}
+.ps-btn{flex:1;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:Arial, sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--mgray);background:var(--white)}
 .ps-btn:first-child{border-right:1px solid #e0dbd3}
 .ps-btn.active-tk{background:var(--tk-color);color:#fff}
 .ps-btn.active-tc{background:var(--tc-color);color:#fff}
 .ps-btn:not(.active-tk):not(.active-tc):hover{background:var(--lgray)}
-.ps-count{background:rgba(255,255,255,.25);border-radius:10px;padding:1px 7px;font-size:10px;font-family:'Be Vietnam Pro',sans-serif}
+.ps-count{background:rgba(255,255,255,.25);border-radius:10px;padding:1px 7px;font-size:10px;font-family:Arial, sans-serif}
 .ps-btn:not(.active-tk):not(.active-tc) .ps-count{background:var(--lgray);color:var(--charcoal)}
 
 /* PIPELINE HEADER INDICATOR */
@@ -157,7 +157,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(-
 .stat-card:hover{box-shadow:0 6px 20px var(--shadow);transform:translateY(-1px)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--gold))}
 .stat-label{font-size:10.5px;color:var(--mgray);font-weight:500;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
-.stat-value{font-size:24px;font-weight:700;color:var(--navy);line-height:1;font-family:'Be Vietnam Pro',sans-serif}
+.stat-value{font-size:24px;font-weight:700;color:var(--navy);line-height:1;font-family:Arial, sans-serif}
 .stat-sub{font-size:10.5px;color:var(--mgray);margin-top:4px}
 .stat-sub .up{color:var(--emerald);font-weight:600}
 .table-wrap{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px var(--shadow)}
@@ -196,7 +196,7 @@ td{padding:10px 13px;font-size:12.5px;vertical-align:middle}
 .score-bar{display:flex;align-items:center;gap:6px}
 .score-track{width:46px;height:4px;background:#e8e4de;border-radius:3px;overflow:hidden}
 .score-fill{height:100%;border-radius:3px}
-.score-num{font-size:10.5px;font-weight:600;font-family:'Be Vietnam Pro',sans-serif}
+.score-num{font-size:10.5px;font-weight:600;font-family:Arial, sans-serif}
 .action-row{display:flex;gap:4px}
 .icon-btn{width:26px;height:26px;background:var(--lgray);border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s;color:var(--mgray)}
 .icon-btn:hover{background:var(--goldbg);color:var(--amber)}
@@ -205,11 +205,11 @@ td{padding:10px 13px;font-size:12.5px;vertical-align:middle}
 .pipeline-board{display:flex;gap:9px;overflow-x:auto;padding-bottom:8px}
 .pipeline-col{min-width:145px;flex-shrink:0}
 .pipeline-header{padding:7px 9px;border-radius:7px 7px 0 0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--white);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between}
-.pipeline-count{background:rgba(255,255,255,.25);border-radius:10px;padding:1px 6px;font-family:'Be Vietnam Pro',sans-serif;font-size:10px}
+.pipeline-count{background:rgba(255,255,255,.25);border-radius:10px;padding:1px 6px;font-family:Arial, sans-serif;font-size:10px}
 .pipeline-card{background:var(--white);border:1px solid #e8e4de;border-radius:7px;padding:9px 10px;margin-bottom:7px;cursor:pointer;transition:all .18s;border-left:3px solid var(--sc,#ccc)}
 .pipeline-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.08);transform:translateY(-1px)}
 .pc-name{font-size:12px;font-weight:600;color:var(--charcoal);margin-bottom:3px}
-.pc-value{font-size:10.5px;color:var(--amber);font-weight:600;font-family:'Be Vietnam Pro',sans-serif}
+.pc-value{font-size:10.5px;color:var(--amber);font-weight:600;font-family:Arial, sans-serif}
 .pc-meta{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
 .pc-owner{width:18px;height:18px;border-radius:50%;font-size:8px;font-weight:700;color:white;display:flex;align-items:center;justify-content:center}
 .pc-pipe-tag{font-size:8px;padding:1px 5px;border-radius:8px;font-weight:600}
@@ -226,7 +226,7 @@ td{padding:10px 13px;font-size:12.5px;vertical-align:middle}
 .panel-header{padding:18px 20px 14px;border-bottom:1px solid #e8e4de;background:var(--navy);position:relative}
 .panel-close{position:absolute;top:14px;right:14px;width:28px;height:28px;background:rgba(255,255,255,.12);border:none;border-radius:50%;cursor:pointer;color:rgba(255,255,255,.7);font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .panel-close:hover{background:rgba(255,255,255,.22);color:white}
-.panel-lead-name{font-family:'Be Vietnam Pro',sans-serif;font-size:20px;font-weight:600;color:var(--gold2);margin-bottom:3px}
+.panel-lead-name{font-family:Arial, sans-serif;font-size:20px;font-weight:600;color:var(--gold2);margin-bottom:3px}
 .panel-lead-sub{font-size:11px;color:rgba(255,255,255,.5)}
 .panel-body{flex:1;overflow-y:auto;padding:16px 20px}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
@@ -239,7 +239,7 @@ td{padding:10px 13px;font-size:12.5px;vertical-align:middle}
 .tl-dot::after{content:'';position:absolute;top:26px;left:50%;transform:translateX(-50%);width:1px;height:calc(100% - 14px);background:#e8e4de}
 .tl-item:last-child .tl-dot::after{display:none}
 .tl-text{font-size:12.5px;color:var(--charcoal);line-height:1.5}
-.tl-time{font-size:10.5px;color:var(--mgray);margin-top:2px;font-family:'Be Vietnam Pro',sans-serif}
+.tl-time{font-size:10.5px;color:var(--mgray);margin-top:2px;font-family:Arial, sans-serif}
 
 /* STAGE SELECTOR in panel */
 .stage-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:16px}
@@ -258,14 +258,14 @@ td{padding:10px 13px;font-size:12.5px;vertical-align:middle}
 .modal-lg{width:680px}
 @keyframes slideUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
 .modal-header{padding:20px 22px 14px;border-bottom:1px solid #e8e4de;display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-family:'Be Vietnam Pro',sans-serif;font-size:19px;font-weight:600;color:var(--navy)}
+.modal-title{font-family:Arial, sans-serif;font-size:19px;font-weight:600;color:var(--navy)}
 .modal-body{padding:18px 22px}
 .modal-footer{padding:12px 22px 18px;display:flex;justify-content:flex-end;gap:9px;border-top:1px solid #f0ebe3}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-group{display:flex;flex-direction:column;gap:4px}
 .form-group.full{grid-column:1/-1}
 .form-label{font-size:11px;font-weight:600;color:var(--charcoal)}
-.form-input{border:1.5px solid #e0dbd3;border-radius:7px;padding:8px 11px;font-family:'Be Vietnam Pro',sans-serif;font-size:12.5px;color:var(--charcoal);outline:none;transition:border-color .15s;background:var(--cream)}
+.form-input{border:1.5px solid #e0dbd3;border-radius:7px;padding:8px 11px;font-family:Arial, sans-serif;font-size:12.5px;color:var(--charcoal);outline:none;transition:border-color .15s;background:var(--cream)}
 .form-input:focus{border-color:var(--gold);background:var(--white)}
 select.form-input{cursor:pointer}
 textarea.form-input{resize:vertical;height:65px}
@@ -297,11 +297,11 @@ textarea.form-input{resize:vertical;height:65px}
 .funnel-label{font-size:10.5px;color:var(--mgray);width:110px;flex-shrink:0}
 .funnel-bar-wrap{flex:1;height:18px;background:#f0ece6;border-radius:4px;overflow:hidden}
 .funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px;font-size:9.5px;font-weight:600;color:white}
-.funnel-num{font-size:11px;font-weight:700;color:var(--charcoal);width:28px;text-align:right;font-family:'Be Vietnam Pro',sans-serif}
+.funnel-num{font-size:11px;font-weight:700;color:var(--charcoal);width:28px;text-align:right;font-family:Arial, sans-serif}
 .bar-group{margin-bottom:9px}
 .bar-label-row{display:flex;justify-content:space-between;margin-bottom:3px}
 .bar-label{font-size:11.5px;color:var(--charcoal)}
-.bar-amount{font-size:11.5px;font-weight:600;color:var(--amber);font-family:'Be Vietnam Pro',sans-serif}
+.bar-amount{font-size:11.5px;font-weight:600;color:var(--amber);font-family:Arial, sans-serif}
 .bar-track{height:7px;background:#f0ece6;border-radius:4px;overflow:hidden}
 .bar-fill{height:100%;border-radius:4px}
 
@@ -319,7 +319,7 @@ textarea.form-input{resize:vertical;height:65px}
 
 /* NOTE */
 .note-input{display:flex;gap:7px;margin-top:8px}
-.note-input textarea{flex:1;border:1.5px solid #e0dbd3;border-radius:7px;padding:8px 11px;font-family:'Be Vietnam Pro',sans-serif;font-size:12.5px;color:var(--charcoal);resize:none;height:65px;outline:none;transition:border-color .15s}
+.note-input textarea{flex:1;border:1.5px solid #e0dbd3;border-radius:7px;padding:8px 11px;font-family:Arial, sans-serif;font-size:12.5px;color:var(--charcoal);resize:none;height:65px;outline:none;transition:border-color .15s}
 .note-input textarea:focus{border-color:var(--gold)}
 
 ::-webkit-scrollbar{width:5px;height:5px}
@@ -367,14 +367,14 @@ textarea.form-input{resize:vertical;height:65px}
 .login-screen.hidden{display:none}
 .login-card{background:var(--white);border-radius:20px;padding:44px 46px;width:410px;box-shadow:0 30px 90px rgba(0,0,0,.5);border-top:3px solid var(--gold2)}
 .login-logo{font-family:var(--serif);font-size:34px;font-weight:600;color:var(--navy);margin-bottom:2px;letter-spacing:.3px}
-.login-sub{font-size:10.5px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;font-family:'Be Vietnam Pro',sans-serif;margin-bottom:30px;font-weight:600}
-.login-btn{width:100%;padding:13px;border-radius:9px;background:linear-gradient(135deg,#332619,#241C15);color:var(--gold-bright);font-family:'Be Vietnam Pro',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;margin-top:10px;transition:all .18s;letter-spacing:.5px;box-shadow:0 4px 14px rgba(36,28,21,.3)}
+.login-sub{font-size:10.5px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;font-family:Arial, sans-serif;margin-bottom:30px;font-weight:600}
+.login-btn{width:100%;padding:13px;border-radius:9px;background:linear-gradient(135deg,#332619,#241C15);color:var(--gold-bright);font-family:Arial, sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;margin-top:10px;transition:all .18s;letter-spacing:.5px;box-shadow:0 4px 14px rgba(36,28,21,.3)}
 .login-btn:hover{background:linear-gradient(135deg,#3D2E1E,#2A2016);box-shadow:0 6px 20px rgba(36,28,21,.4)}
 .login-form-group{margin-bottom:14px}
 .login-label{font-size:11px;font-weight:600;color:var(--charcoal);margin-bottom:5px;display:block}
-.login-input{width:100%;border:1.5px solid #e0dbd3;border-radius:8px;padding:10px 13px;font-family:'Be Vietnam Pro',sans-serif;font-size:13px;color:var(--charcoal);outline:none;transition:border-color .15s;background:var(--cream)}
+.login-input{width:100%;border:1.5px solid #e0dbd3;border-radius:8px;padding:10px 13px;font-family:Arial, sans-serif;font-size:13px;color:var(--charcoal);outline:none;transition:border-color .15s;background:var(--cream)}
 .login-input:focus{border-color:var(--gold);background:var(--white)}
-.login-btn{width:100%;padding:12px;border-radius:8px;background:var(--navy);color:var(--gold2);font-family:'Be Vietnam Pro',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;margin-top:8px;transition:all .18s}
+.login-btn{width:100%;padding:12px;border-radius:8px;background:var(--navy);color:var(--gold2);font-family:Arial, sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;margin-top:8px;transition:all .18s}
 .login-btn:hover{background:var(--navy2)}
 .login-error{background:var(--lred);border:1px solid #fecaca;color:var(--ruby);border-radius:7px;padding:9px 13px;font-size:12px;margin-top:10px;display:none}
 .login-error.show{display:block}
@@ -386,7 +386,7 @@ textarea.form-input{resize:vertical;height:65px}
 .permission-locked{display:flex;align-items:center;gap:8px;background:var(--lred);border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--ruby);margin-bottom:12px}
 .sidebar-footer{padding:14px 16px;border-top:1px solid rgba(203,162,90,.12);margin-top:auto}
 .user-role-tag{font-size:10px;color:rgba(203,162,90,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.logout-btn{margin-top:12px;width:100%;padding:9px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(203,162,90,.22);color:rgba(255,255,255,.62);font-size:12px;font-weight:500;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .16s;text-align:center;letter-spacing:.3px}
+.logout-btn{margin-top:12px;width:100%;padding:9px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(203,162,90,.22);color:rgba(255,255,255,.62);font-size:12px;font-weight:500;cursor:pointer;font-family:Arial, sans-serif;transition:all .16s;text-align:center;letter-spacing:.3px}
 .logout-btn:hover{background:rgba(192,57,43,.14);border-color:rgba(192,57,43,.4);color:#F0B4AC}
 /* ── STAFF CARDS ── */
 .staff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
@@ -410,7 +410,7 @@ textarea.form-input{resize:vertical;height:65px}
 .task-kh-avatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0}
 .task-kh-name{font-size:12.5px;font-weight:600;color:var(--charcoal);line-height:1.3}
 .task-kh-meta{font-size:10.5px;color:var(--mgray)}
-.task-kh-count{margin-left:auto;background:var(--ruby);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;font-family:'Be Vietnam Pro',sans-serif;flex-shrink:0}
+.task-kh-count{margin-left:auto;background:var(--ruby);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;font-family:Arial, sans-serif;flex-shrink:0}
 .task-kh-count.zero{background:var(--lgray);color:var(--mgray)}
 .task-main-panel{display:flex;flex-direction:column;gap:12px}
 .task-kh-header{background:var(--white);border:1px solid #e8e4de;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px}
@@ -430,7 +430,7 @@ textarea.form-input{resize:vertical;height:65px}
 .task-row-text{font-size:12.5px;color:var(--charcoal);font-weight:500}
 .task-row-text.done{text-decoration:line-through;color:var(--mgray)}
 .task-row-meta{display:flex;align-items:center;gap:10px;margin-top:3px;flex-wrap:wrap}
-.task-row-date{font-size:10.5px;font-family:'Be Vietnam Pro',sans-serif;display:flex;align-items:center;gap:4px}
+.task-row-date{font-size:10.5px;font-family:Arial, sans-serif;display:flex;align-items:center;gap:4px}
 .task-row-date.overdue{color:var(--ruby);font-weight:600}
 .task-row-date.today{color:var(--amber);font-weight:600}
 .task-row-date.upcoming{color:var(--mgray)}
@@ -458,8 +458,8 @@ textarea.form-input{resize:vertical;height:65px}
 .task-global-row:hover{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .task-kh-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
 /* Date input style */
-input[type="date"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:12px}
-input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:12px}
+input[type="date"].form-input{font-family:Arial, sans-serif;font-size:12px}
+input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 @media(max-width:768px){.task-board{grid-template-columns:1fr!important}.task-sidebar-panel{position:static}}
 
 /* ── CARE / ALERT SYSTEM ── */
@@ -469,7 +469,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
 .alert-card.danger{background:linear-gradient(135deg,#7B1A2B,#9d2438)}
 .alert-card.warn{background:linear-gradient(135deg,#7A3800,#a04d0a)}
 .alert-card.info{background:linear-gradient(135deg,#0F3460,#1a5c87)}
-.alert-card .ac-num{font-size:30px;font-weight:700;font-family:'Be Vietnam Pro',sans-serif;line-height:1}
+.alert-card .ac-num{font-size:30px;font-weight:700;font-family:Arial, sans-serif;line-height:1}
 .alert-card .ac-label{font-size:11.5px;font-weight:600;margin-top:4px;opacity:.95}
 .alert-card .ac-sub{font-size:10px;opacity:.75;margin-top:2px}
 .alert-card .ac-icon{position:absolute;right:12px;top:12px;font-size:22px;opacity:.35}
@@ -478,7 +478,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
 .care-item:hover{background:#fbf8f3}
 .care-item:last-child{border-bottom:none}
 .care-avatar{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:white}
-.care-days{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;font-family:'Be Vietnam Pro',sans-serif;white-space:nowrap}
+.care-days{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;font-family:Arial, sans-serif;white-space:nowrap}
 .care-days.hot{background:var(--lred);color:var(--ruby)}
 .care-days.warm{background:var(--lorange);color:var(--amber)}
 .care-days.cool{background:var(--lgray);color:var(--mgray)}
@@ -510,7 +510,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
 /* Agenda timeline (today) */
 .agenda-item{display:flex;gap:12px;padding:10px 16px;border-bottom:1px solid #f5f1eb}
 .agenda-item:last-child{border-bottom:none}
-.agenda-time{font-size:11px;font-family:'Be Vietnam Pro',sans-serif;font-weight:600;color:var(--navy);width:48px;flex-shrink:0;padding-top:1px}
+.agenda-time{font-size:11px;font-family:Arial, sans-serif;font-weight:600;color:var(--navy);width:48px;flex-shrink:0;padding-top:1px}
 .agenda-line{width:2px;background:#e8e4de;border-radius:2px;flex-shrink:0;position:relative}
 .agenda-line::before{content:'';position:absolute;top:2px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--gold)}
 .agenda-content{flex:1;padding-bottom:2px}
@@ -557,31 +557,31 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">Tổng quan</div>
-    <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)"><span class="icon">▦</span> Dashboard</div>
     <div class="nav-section">Pipeline</div>
     <div class="nav-item" data-page="pipeline_tk" onclick="showPage('pipeline_tk',this)">
-      <span class="icon">🎨</span> Pipeline Thiết kế
+      <span class="icon">◈</span> Pipeline Thiết kế
       <span class="nav-badge" id="count-tk">0</span>
     </div>
     <div class="nav-item" data-page="pipeline_tc" onclick="showPage('pipeline_tc',this)">
-      <span class="icon">🔨</span> Pipeline Thi công
+      <span class="icon">▤</span> Pipeline Thi công
       <span class="nav-badge" id="count-tc">0</span>
     </div>
     <div class="nav-item" data-page="pipeline_cs" onclick="showPage('pipeline_cs',this)">
-      <span class="icon">💚</span> Chăm sóc sau bán
+      <span class="icon">◍</span> Chăm sóc sau bán
       <span class="nav-badge" id="count-cs">0</span>
     </div>
     <div class="nav-section">Quản lý</div>
-    <div class="nav-item" data-page="leads" onclick="showPage('leads',this)"><span class="icon">👥</span> Tất cả KH<span class="nav-badge" id="lead-count">0</span></div>
-    <div class="nav-item" data-page="tasks" onclick="showPage('tasks',this)"><span class="icon">✅</span> Công việc<span class="nav-badge" id="task-count">0</span></div>
-    <div class="nav-item" data-page="calendar" onclick="showPage('calendar',this)"><span class="icon">📅</span> Lịch hẹn</div>
+    <div class="nav-item" data-page="leads" onclick="showPage('leads',this)"><span class="icon">◎</span> Tất cả KH<span class="nav-badge" id="lead-count">0</span></div>
+    <div class="nav-item" data-page="tasks" onclick="showPage('tasks',this)"><span class="icon">✓</span> Công việc<span class="nav-badge" id="task-count">0</span></div>
+    <div class="nav-item" data-page="calendar" onclick="showPage('calendar',this)"><span class="icon">◷</span> Lịch hẹn</div>
     <div class="nav-section admin-only">Phân tích</div>
-    <div class="nav-item admin-only" data-page="staff" onclick="showPage('staff',this)"><span class="icon">👤</span> Nhân sự & Phân quyền</div>
-    <div class="nav-item admin-only" data-page="actlog" onclick="showPage('actlog',this)"><span class="icon">📋</span> Nhật ký thao tác</div>
-    <div class="nav-item admin-only" data-page="trash" onclick="showPage('trash',this)"><span class="icon">🗑️</span> Thùng rác<span class="nav-badge" id="trash-count" style="display:none">0</span></div>
+    <div class="nav-item admin-only" data-page="staff" onclick="showPage('staff',this)"><span class="icon">◉</span> Nhân sự & Phân quyền</div>
+    <div class="nav-item admin-only" data-page="actlog" onclick="showPage('actlog',this)"><span class="icon">▥</span> Nhật ký thao tác</div>
+    <div class="nav-item admin-only" data-page="trash" onclick="showPage('trash',this)"><span class="icon">⊘</span> Thùng rác<span class="nav-badge" id="trash-count" style="display:none">0</span></div>
     <div class="nav-section admin-only">Hệ thống</div>
-    <div class="nav-item admin-only" data-page="connect" onclick="showPage('connect',this)"><span class="icon">🔗</span> Kết nối Sheets</div>
-    <div class="nav-item admin-only" data-page="settings" onclick="showPage('settings',this)"><span class="icon">⚙️</span> Cài đặt</div>
+    <div class="nav-item admin-only" data-page="connect" onclick="showPage('connect',this)"><span class="icon">⊚</span> Kết nối Sheets</div>
+    <div class="nav-item admin-only" data-page="settings" onclick="showPage('settings',this)"><span class="icon">⚙</span> Cài đặt</div>
   </div>
   <div class="sidebar-footer">
     <div class="user-info">
@@ -610,10 +610,10 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
     <div class="page-title" id="page-title">Dashboard</div>
     <div class="topbar-actions">
       <div class="bell-wrap">
-        <button class="bell-btn" id="reminder-bell" onclick="toggleReminderPanel(event)" title="Nhắc việc hôm nay">🔔<span class="bell-badge" id="bell-badge" style="display:none">0</span></button>
+        <button class="bell-btn" id="reminder-bell" onclick="toggleReminderPanel(event)" title="Nhắc việc hôm nay"><span style="font-size:15px">◷</span><span class="bell-badge" id="bell-badge" style="display:none">0</span></button>
         <div class="bell-panel" id="reminder-panel"></div>
       </div>
-      <button class="btn btn-outline btn-sm" id="sync-btn" onclick="syncNow()">🔄 Sync</button>
+      <button class="btn btn-outline btn-sm" id="sync-btn" onclick="syncNow()">Sync</button>
       <div class="search-bar"><span>🔍</span><input type="text" placeholder="Tìm kiếm khách hàng..." id="global-search" oninput="handleSearch(this.value)"></div>
       <button class="btn btn-primary btn-sm" onclick="openAddLead()">+ Thêm KH</button>
     </div>
@@ -635,7 +635,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
 <!-- ADD/EDIT MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal modal-lg">
-    <div class="modal-header"><div class="modal-title" id="modal-title">✨ Thêm Khách hàng mới</div><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="modal-title">Thêm Khách hàng mới</div><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Họ và Tên *</label><input type="text" class="form-input" id="f-name" placeholder="Nguyễn Văn A"></div>
@@ -650,14 +650,14 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
         <div class="form-group"><label class="form-label">Dự kiến nhận nhà</label><input type="text" class="form-input" id="f-timeline" placeholder="Tháng 6/2025"></div>
         <div class="form-group"><label class="form-label">Người phụ trách</label><select class="form-input" id="f-owner"></select></div>
         <div class="form-group"><label class="form-label">Lead Score (0–100) <span style="font-weight:400;color:var(--mgray)">— để trống: tự chấm điểm</span></label><input type="number" class="form-input" id="f-score" min="0" max="100" placeholder="Tự tính theo ngân sách, nguồn, giai đoạn"></div>
-        <div class="form-group"><label class="form-label">Pipeline</label><select class="form-input" id="f-pipeline" onchange="updateStageDropdown()"><option value="tk">🎨 Thiết kế</option><option value="tc">🔨 Thi công</option></select></div>
+        <div class="form-group"><label class="form-label">Pipeline</label><select class="form-input" id="f-pipeline" onchange="updateStageDropdown()"><option value="tk">Thiết kế</option><option value="tc">Thi công</option></select></div>
         <div class="form-group"><label class="form-label">Giai đoạn</label><select class="form-input" id="f-stage"></select></div>
         <div class="form-group"><label class="form-label">👉 Hành động tiếp theo</label><input type="text" class="form-input" id="f-next-action" placeholder="VD: Gọi chốt lịch khảo sát"></div>
-        <div class="form-group"><label class="form-label">📅 Ngày hành động</label><input type="date" class="form-input" id="f-next-date"></div>
+        <div class="form-group"><label class="form-label">Ngày hành động</label><input type="date" class="form-input" id="f-next-date"></div>
         <div class="form-group full"><label class="form-label">Ghi chú / Nhu cầu</label><textarea class="form-input" id="f-note" placeholder="Phong cách thiết kế, yêu cầu đặc biệt, nỗi lo của KH..."></textarea></div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Hủy</button><button class="btn btn-primary" id="modal-save-btn" onclick="withSubmitLock('modal-save-btn',saveLead)">💾 Lưu</button></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Hủy</button><button class="btn btn-primary" id="modal-save-btn" onclick="withSubmitLock('modal-save-btn',saveLead)">Lưu</button></div>
   </div>
 </div>
 
@@ -676,14 +676,14 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
       </div>
       <div style="background:var(--lgray);border-radius:8px;padding:12px;font-size:12px;color:var(--charcoal);line-height:1.8">
         <strong>Khi chuyển:</strong><br>
-        ✅ KH vẫn giữ nguyên trong Pipeline Thiết kế (giai đoạn: Nghiệm thu TK)<br>
-        ✅ Đồng thời xuất hiện trong Pipeline Thi công (giai đoạn: Ký HĐ TC)<br>
-        ✅ Dữ liệu và lịch sử được đồng bộ hoàn toàn
+        ✓ KH vẫn giữ nguyên trong Pipeline Thiết kế (giai đoạn: Nghiệm thu TK)<br>
+        ✓ Đồng thời xuất hiện trong Pipeline Thi công (giai đoạn: Ký HĐ TC)<br>
+        ✓ Dữ liệu và lịch sử được đồng bộ hoàn toàn
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" id="transfer-reject-btn">❌ Không đồng ý → Nghiệm thu TK</button>
-      <button class="btn btn-tc" id="transfer-accept-btn">✅ Chuyển sang Thi công</button>
+      <button class="btn btn-tc" id="transfer-accept-btn">✓ Chuyển sang Thi công</button>
     </div>
   </div>
 </div>
@@ -691,7 +691,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
 <!-- ══ STAFF MODAL ═══════════════════════════════════════════ -->
 <div class="modal-overlay" id="staff-modal">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="staff-modal-title">👤 Thêm nhân sự</div><button class="icon-btn" onclick="closeStaffModal()">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="staff-modal-title">Thêm nhân sự</div><button class="icon-btn" onclick="closeStaffModal()">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Họ tên *</label><input type="text" class="form-input" id="sf-name"></div>
@@ -711,7 +711,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
         </div>
         <div class="form-group"><label class="form-label">Trạng thái</label>
           <select class="form-input" id="sf-active">
-            <option value="true" selected>✅ Đang làm việc</option>
+            <option value="true" selected>✓ Đang làm việc</option>
             <option value="false">⛔ Đã nghỉ (khóa cả CRM & PM)</option>
           </select>
         </div>
@@ -732,9 +732,9 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
           </select>
         </div>
       </div>
-      <div id="sf-edit-note" style="display:none;background:var(--goldbg);border-radius:7px;padding:9px 12px;font-size:12px;color:var(--amber);margin-top:12px">💡 Để trống mật khẩu nếu không muốn thay đổi</div>
+      <div id="sf-edit-note" style="display:none;background:var(--goldbg);border-radius:7px;padding:9px 12px;font-size:12px;color:var(--amber);margin-top:12px">Để trống mật khẩu nếu không muốn thay đổi</div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeStaffModal()">Hủy</button><button class="btn btn-primary" id="staff-save-btn" onclick="withSubmitLock('staff-save-btn',saveStaffMember)">💾 Lưu</button></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeStaffModal()">Hủy</button><button class="btn btn-primary" id="staff-save-btn" onclick="withSubmitLock('staff-save-btn',saveStaffMember)">Lưu</button></div>
   </div>
 </div>
 
@@ -746,7 +746,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
       <div class="form-grid">
         <div class="form-group full"><label class="form-label">Nội dung *</label><input type="text" class="form-input" id="t-text" placeholder="Gọi follow-up anh..."></div>
         <div class="form-group full"><label class="form-label">Khách hàng liên quan</label><select class="form-input" id="t-lead-id"><option value="">— Không gắn KH —</option></select></div>
-        <div class="form-group"><label class="form-label">Loại việc</label><select class="form-input" id="t-type"><option value="call">📞 Gọi điện</option><option value="meet">🤝 Gặp/Họp</option><option value="send">📤 Gửi tài liệu</option><option value="design">🎨 Thiết kế</option><option value="construct">🔨 Thi công</option><option value="payment">💰 Thanh toán</option><option value="followup">🔄 Theo dõi</option><option value="other">📌 Khác</option></select></div>
+        <div class="form-group"><label class="form-label">Loại việc</label><select class="form-input" id="t-type"><option value="call">Gọi điện</option><option value="meet">Gặp/Họp</option><option value="send">📤 Gửi tài liệu</option><option value="design">Thiết kế</option><option value="construct">Thi công</option><option value="payment">Thanh toán</option><option value="followup">Theo dõi</option><option value="other">• Khác</option></select></div>
         <div class="form-group"><label class="form-label">Ưu tiên</label><select class="form-input" id="t-urgency"><option value="red">🔴 Khẩn cấp</option><option value="orange" selected>🟡 Quan trọng</option><option value="green">🟢 Bình thường</option></select></div>
         <div class="form-group"><label class="form-label">Ngày thực hiện *</label><input type="date" class="form-input" id="t-date"></div>
         <div class="form-group"><label class="form-label">Giờ</label><input type="time" class="form-input" id="t-time" value="09:00"></div>
@@ -754,7 +754,7 @@ input[type="time"].form-input{font-family:'Be Vietnam Pro',sans-serif;font-size:
         <div class="form-group full"><label class="form-label">Ghi chú</label><textarea class="form-input" id="t-note" rows="2" placeholder="Chi tiết, kịch bản, lưu ý..."></textarea></div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeTaskModal()">Hủy</button><button class="btn btn-primary" id="task-save-btn" onclick="withSubmitLock('task-save-btn',saveTask)">💾 Lưu công việc</button></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeTaskModal()">Hủy</button><button class="btn btn-primary" id="task-save-btn" onclick="withSubmitLock('task-save-btn',saveTask)">Lưu công việc</button></div>
   </div>
 </div>
 
@@ -1002,7 +1002,7 @@ function applyPermissionUI(){
   const rt=document.getElementById('sidebar-role-tag');
   if(av){av.textContent=currentUser.initials||currentUser.name.slice(0,2).toUpperCase();av.style.background=currentUser.color||'var(--gold)';}
   if(nm)nm.textContent=currentUser.name;
-  const pLbl={admin:'🔑 Admin',manager:'👁️ Manager',staff:'👤 Staff'}[currentUser.perm]||'Staff';
+  const pLbl={admin:'🔑 Admin',manager:'👁️ Manager',staff:'Staff'}[currentUser.perm]||'Staff';
   if(rt)rt.textContent=pLbl+' · MDC';
   document.querySelectorAll('.admin-only').forEach(el=>{el.style.display=isAdmin()?'':'none';});
   const addBtn=document.getElementById('btn-add-lead');
@@ -1032,7 +1032,7 @@ function renderStaff(){
   const capBacClass={tonggiamdoc:'role-admin',giamdoc:'role-admin',truongphong:'role-manager',quanly:'role-manager',nhanvien:'role-staff'};
   document.getElementById('page-content').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div><div style="font-size:16px;font-weight:600;color:var(--navy)">👤 Quản lý Nhân sự & Phân quyền</div>
+      <div><div style="font-size:16px;font-weight:600;color:var(--navy)">Quản lý Nhân sự & Phân quyền</div>
       <div style="font-size:12px;color:var(--mgray);margin-top:3px">${staffList.length} tài khoản</div></div>
       <button class="btn btn-primary" onclick="openAddStaff()">+ Thêm nhân sự</button>
     </div>
@@ -1040,13 +1040,13 @@ function renderStaff(){
       <strong>Phân quyền:</strong><br>
       🔑 <strong>Admin</strong> — Toàn quyền: xem tất cả KH, sửa/xóa, báo cáo, quản lý nhân sự, cài đặt<br>
       👁️ <strong>Manager</strong> — Xem tất cả KH, chỉ sửa KH được phân công cho mình<br>
-      👤 <strong>Staff</strong> — Chỉ thấy & thao tác KH có owner = tài khoản của họ
+      <strong>Staff</strong> — Chỉ thấy & thao tác KH có owner = tài khoản của họ
     </div>
     <div class="staff-grid">
       ${staffList.map(s=>{
         const khCount=leads.filter(l=>l.owner===s.id||l.owner===s.username||l.owner===s.initials).length;
         const isSelf=s.id===currentUser.id;
-        const pmLabel={super_admin:'👑 Super Admin',pm:'📋 PM',team_lead:'🔧 Thợ trưởng',worker:'👷 Thợ',client:'🤝 Khách',guest:'👁️ Guest'};
+        const pmLabel={super_admin:'👑 Super Admin',pm:'PM',team_lead:'🔧 Thợ trưởng',worker:'👷 Thợ',client:'Khách',guest:'👁️ Guest'};
         const inactive=s.active===false;
         return`<div class="staff-card" style="${inactive?'opacity:.5;filter:grayscale(.6)':''}">
           <div class="staff-card-actions">
@@ -1069,7 +1069,7 @@ function renderStaff(){
 
 function openAddStaff(){
   editingStaffId=null;
-  document.getElementById('staff-modal-title').textContent='👤 Thêm nhân sự mới';
+  document.getElementById('staff-modal-title').textContent='Thêm nhân sự mới';
   document.getElementById('staff-save-btn').textContent='💾 Thêm';
   ['sf-name','sf-password','sf-password2','sf-role-title','sf-phone','sf-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('sf-cap-bac').value='nhanvien';
@@ -1120,13 +1120,13 @@ function saveStaffMember(){
     const cb=document.getElementById('sf-cap-bac').value;
     staffList[idx]={...staffList[idx],name,roleTitle:document.getElementById('sf-role-title').value,phone:document.getElementById('sf-phone').value,email:document.getElementById('sf-email').value,capBac:cb,'Vai trò':cb,perm:capBacToPerm(cb),username:document.getElementById('sf-email').value||document.getElementById('sf-phone').value,active:document.getElementById('sf-active').value==='true',capDuyet:document.getElementById('sf-cap-duyet').value,'Cấp duyệt':document.getElementById('sf-cap-duyet').value,color,initials};
     if(pw)staffList[idx].password=pw;
-    toast(`✅ Đã cập nhật: ${name}`);
+    toast(`✓ Đã cập nhật: ${name}`);
   }else{
     const maxNV=staffList.reduce((mx,s)=>{const m=String(s['Mã NV']||s.id||'').match(/NV(\d+)/);return m?Math.max(mx,+m[1]):mx;},0);
     const newMaNV='NV'+String(maxNV+1).padStart(3,'0');
     const cb=document.getElementById('sf-cap-bac').value;
     staffList.push({id:newMaNV,'Mã NV':newMaNV,name,password:pw,roleTitle:document.getElementById('sf-role-title').value,phone:document.getElementById('sf-phone').value,email:document.getElementById('sf-email').value,capBac:cb,'Vai trò':cb,perm:capBacToPerm(cb),username:document.getElementById('sf-email').value||document.getElementById('sf-phone').value,active:document.getElementById('sf-active').value==='true',capDuyet:document.getElementById('sf-cap-duyet').value,'Cấp duyệt':document.getElementById('sf-cap-duyet').value,color,initials});
-    toast(`✅ Đã thêm: ${name}`);
+    toast(`✓ Đã thêm: ${name}`);
   }
   saveStaffList(staffList);closeStaffModal();renderStaff();populateOwnerDropdown();
   pushStaff(staffList); // Đẩy lên Sheets để đồng bộ mobile
@@ -1666,12 +1666,12 @@ function mergeById(local, remote){
 }
 
 async function syncFromSheets(){
-  setSyncState('syncing','🔄 Đang đồng bộ...');
+  setSyncState('syncing','Đang đồng bộ...');
   try{
     // Đẩy hàng đợi offline trước, để bản local kịp lên Sheets trước khi kéo về
     await flushQueue();
     const data=await apiFetch({action:'getAll'});
-    // ✅ MERGE thay vì ghi đè — bảo vệ dữ liệu đang sửa trên thiết bị này
+    // ✓ MERGE thay vì ghi đè — bảo vệ dữ liệu đang sửa trên thiết bị này
     if(Array.isArray(data.leads)) leads = mergeById(leads, data.leads);
     if(Array.isArray(data.tasks)) tasks = mergeById(tasks, data.tasks);
 
@@ -1685,7 +1685,7 @@ async function syncFromSheets(){
     });
     if(typeof htSave === 'function') htSave();
     saveLocal();
-    setSyncState('connected',`✅ Đồng bộ lúc ${nowStr()}`);
+    setSyncState('connected',`✓ Đồng bộ lúc ${nowStr()}`);
     isConnected=true;
     updateBadges();
     return true;
@@ -1714,7 +1714,7 @@ async function claimTask(id, event){
   touch(t);
   saveLocal(); renderTasks(); updateBadges();
   await pushTask(t);
-  toast('✅ Đã nhận việc: '+(t.text||'').slice(0,30)+'…','✅');
+  toast('✓ Đã nhận việc: '+(t.text||'').slice(0,30)+'…','✅');
 }
 
 // Cấp trên giao việc cho một nhân viên cụ thể
@@ -1729,7 +1729,7 @@ async function assignTaskTo(id, staffId, event){
   saveLocal(); renderTasks(); updateBadges();
   await pushTask(t);
   const who = (loadStaffList().find(s=>s.id===staffId)||{}).name || '';
-  toast('✅ Đã giao việc cho '+who,'✅');
+  toast('✓ Đã giao việc cho '+who,'✅');
 }
 
 // Mở hộp chọn nhân viên để giao việc (chỉ cấp quản lý thấy)
@@ -1779,7 +1779,7 @@ async function syncNow(){
     const ok=await syncFromSheets();
     if(ok){
       rerenderCurrent();
-      toast('✅ Đồng bộ thành công!','✅');
+      toast('✓ Đồng bộ thành công!','✅');
     }else{
       toast('❌ Đồng bộ thất bại, kiểm tra kết nối','❌');
     }
@@ -1788,7 +1788,7 @@ async function syncNow(){
     toast('❌ Lỗi: '+e.message,'❌');
   }finally{
     isSyncing=false;
-    btn.textContent='🔄 Sync';
+    btn.textContent='Sync';
     btn.disabled=false;
   }
 }
@@ -1820,7 +1820,7 @@ function showPage(page,el){
   currentPage=page;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
-  const titles={dashboard:'Dashboard',pipeline_tk:'Pipeline Thiết kế',pipeline_tc:'Pipeline Thi công',pipeline_cs:'💚 Chăm sóc sau bán',leads:'Tất cả Khách hàng',tasks:'Công việc',calendar:'📅 Lịch hẹn',reports:'Báo cáo',staff:'Nhân sự & Phân quyền',connect:'Kết nối Google Sheets',settings:'Cài đặt',actlog:'Nhật ký thao tác',trash:'🗑️ Thùng rác'};
+  const titles={dashboard:'Dashboard',pipeline_tk:'Pipeline Thiết kế',pipeline_tc:'Pipeline Thi công',pipeline_cs:'Chăm sóc sau bán',leads:'Tất cả Khách hàng',tasks:'Công việc',calendar:'Lịch hẹn',reports:'Báo cáo',staff:'Nhân sự & Phân quyền',connect:'Kết nối Google Sheets',settings:'Cài đặt',actlog:'Nhật ký thao tác',trash:'Thùng rác'};
   const _pt=document.getElementById('page-title'); if(_pt) _pt.textContent=titles[page]||page;
   const renders={
     dashboard:renderDashboard,
@@ -1857,26 +1857,26 @@ function renderDashboard(){
 
   document.getElementById('page-content').innerHTML = crmInsightHtml() + `
     <div style="margin-bottom:18px">
-      <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:24px;font-weight:600;color:var(--navy)">${greeting}, ${firstName} 👋</div>
+      <div style="font-family:Arial, sans-serif;font-size:24px;font-weight:600;color:var(--navy)">${greeting}, ${firstName}</div>
       <div style="font-size:13px;color:var(--mgray);margin-top:2px">${new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · ${todayTasks.length} việc hôm nay${overdueTasks.length?` · <span style="color:var(--ruby);font-weight:600">${overdueTasks.length} việc quá hạn</span>`:''}</div>
     </div>
 
     <!-- TRUNG TÂM CẢNH BÁO -->
     <div class="alert-hub">
       <div class="alert-card danger" onclick="showPage('tasks',document.querySelector('[data-page=tasks]'))">
-        <span class="ac-icon">⚠️</span>
+        <span class="ac-icon">△</span>
         <div class="ac-num">${overdueTasks.length}</div>
         <div class="ac-label">Việc quá hạn</div>
         <div class="ac-sub">Cần xử lý ngay hôm nay</div>
       </div>
       <div class="alert-card warn" onclick="scrollToCare()">
-        <span class="ac-icon">🔥</span>
+        <span class="ac-icon">◐</span>
         <div class="ac-num">${careRed.length}</div>
         <div class="ac-label">KH nguy cơ bỏ lỡ</div>
         <div class="ac-sub">Lâu chưa được liên hệ</div>
       </div>
       <div class="alert-card info" onclick="scrollToHot()">
-        <span class="ac-icon">💎</span>
+        <span class="ac-icon">◇</span>
         <div class="ac-num">${hot.length}</div>
         <div class="ac-label">Deal sắp chốt</div>
         <div class="ac-sub">Đang ở giai đoạn quyết định</div>
@@ -1886,7 +1886,7 @@ function renderDashboard(){
     <!-- LỊCH HÔM NAY -->
     <div class="dash-section">
       <div class="dash-section-head">
-        <div class="dash-section-title">📅 Lịch làm việc hôm nay</div>
+        <div class="dash-section-title">Lịch làm việc hôm nay</div>
         <button class="btn btn-outline btn-sm" onclick="openAddTask()">+ Thêm việc</button>
       </div>
       <div class="dash-section-body">
@@ -1902,7 +1902,7 @@ function renderDashboard(){
               <div class="agenda-line"></div>
               <div class="agenda-content">
                 <div class="agenda-task">${tt.icon} ${t.text}</div>
-                <div class="agenda-meta">${kh?`👤 ${kh.name} · `:''}${od?'<span style="color:var(--ruby);font-weight:600">Quá hạn</span>':'Hôm nay'}</div>
+                <div class="agenda-meta">${kh?`${kh.name} · `:''}${od?'<span style="color:var(--ruby);font-weight:600">Quá hạn</span>':'Hôm nay'}</div>
               </div>
               <div class="task-check2 ${od?'overdue':''}" style="margin-top:2px" onclick="toggleTask('${t.id}',event)"></div>
             </div>`;
@@ -1914,7 +1914,7 @@ function renderDashboard(){
     <!-- KH CẦN CHĂM SÓC -->
     <div class="dash-section" id="care-section">
       <div class="dash-section-head">
-        <div class="dash-section-title">🔥 Khách hàng cần chăm sóc gấp</div>
+        <div class="dash-section-title">Khách hàng cần chăm sóc gấp</div>
         <span style="font-size:11px;color:var(--mgray)">${care.length} KH</span>
       </div>
       <div class="dash-section-body">
@@ -1937,7 +1937,7 @@ function renderDashboard(){
     <!-- DEAL SẮP CHỐT -->
     <div class="dash-section" id="hot-section">
       <div class="dash-section-head">
-        <div class="dash-section-title">💎 Deal sắp chốt — Đẩy mạnh!</div>
+        <div class="dash-section-title">Deal sắp chốt — Đẩy mạnh</div>
         <span style="font-size:11px;color:var(--mgray)">${hot.length} deal</span>
       </div>
       <div class="dash-section-body">
@@ -2002,7 +2002,7 @@ function renderCarePipeline(vl){
   const overdueCare=csLeads.filter(l=>tasks.some(t=>t.leadId===l.id && t.isCare && !t.done && t.date && t.date<today)).length;
 
   document.getElementById('page-content').innerHTML=`
-    <div class="pipeline-type-badge" style="background:#E6F4EC;color:#0F5132">💚 Chăm sóc sau bán hàng</div>
+    <div class="pipeline-type-badge" style="background:#E6F4EC;color:#0F5132">Chăm sóc sau bán hàng</div>
     <div class="transfer-notice" style="background:#F3FAF5;border-color:#CBE8D5">
       <span class="tn-icon">💚</span>
       <div><strong>Vòng đời sau bàn giao:</strong> Khách hoàn thành dự án tự động vào đây. Kéo qua từng chặng chăm sóc — từ hỏi thăm, bảo hành, tri ân đến giữ quan hệ và khai thác <strong>dự án mới / giới thiệu</strong>.</div>
@@ -2028,11 +2028,11 @@ function renderCarePipeline(vl){
             return `<div class="pipeline-card" style="--sc:${s.color}" onclick="openPanel('${l.id}')">
               <div class="pc-name">${esc2(l.name)}</div>
               <div class="pc-value">${money((Number(l.valueTk)||0)+(Number(l.valueTc)||0))}</div>
-              ${since!=null?`<div style="font-size:9.5px;color:var(--mgray);margin-top:3px">🎉 Bàn giao ${since} ngày trước</div>`:''}
+              ${since!=null?`<div style="font-size:9.5px;color:var(--mgray);margin-top:3px">Bàn giao ${since} ngày trước</div>`:''}
               ${nextCare?`<div style="font-size:9.5px;color:${overdue?'#B3261E':'var(--amber)'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${overdue?'⏰':'🔔'} ${esc2((nextCare.text||'').replace(/^\[Chăm sóc\][^:]*:\s*/,''))}</div>`:''}
               <div class="pc-meta">
                 <div class="pc-owner" style="background:${staffColor(l.owner)}">${staffInitials(l.owner)}</div>
-                ${l.stage==='cs_upsell'?`<span style="font-size:8px;background:#FDF0E4;color:#6B3400;padding:1px 5px;border-radius:8px;font-weight:700">💰 Cơ hội</span>`:l.stage==='cs_loyal'?`<span style="font-size:8px;background:#E6F4EC;color:#0F5132;padding:1px 5px;border-radius:8px;font-weight:700">⭐ Thân thiết</span>`:''}
+                ${l.stage==='cs_upsell'?`<span style="font-size:8px;background:#FDF0E4;color:#6B3400;padding:1px 5px;border-radius:8px;font-weight:700">Cơ hội</span>`:l.stage==='cs_loyal'?`<span style="font-size:8px;background:#E6F4EC;color:#0F5132;padding:1px 5px;border-radius:8px;font-weight:700"> Thân thiết</span>`:''}
               </div>
             </div>`;
           }).join('')||'<div style="padding:14px 8px;text-align:center;color:var(--mgray);font-size:11px">—</div>'}
@@ -2132,9 +2132,9 @@ function renderLeads(){
   const cntTk=vl.filter(l=>getPipelineOfStage(l.stage||'tk_new')==='tk').length;
   const cntTc=vl.filter(l=>getPipelineOfStage(l.stage||'tk_new')==='tc').length;
 
-  document.getElementById('page-content').innerHTML=(function(){var ng=dsLeadNguoi().length;var tr=Object.values(leads.reduce(function(a,l){var k=chuanSDT(l.phone);if(k&&k.length>=8){(a[k]=a[k]||[]).push(l);}return a;},{})).filter(function(v){return v.length>1;}).length;if(!ng&&!tr)return '';return '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">'+(ng?'<button class="btn btn-outline" style="border-color:#F2C9C5;color:#B3261E" onclick="moLeadNguoi()">🔥 '+ng+' khách cần liên hệ</button>':'')+(tr?'<button class="btn btn-outline" style="border-color:#F5DEB8;color:#8F6A2B" onclick="moDoTrung()">🔍 '+tr+' số điện thoại trùng</button>':'')+'</div>';})()+`
+  document.getElementById('page-content').innerHTML=(function(){var ng=dsLeadNguoi().length;var tr=Object.values(leads.reduce(function(a,l){var k=chuanSDT(l.phone);if(k&&k.length>=8){(a[k]=a[k]||[]).push(l);}return a;},{})).filter(function(v){return v.length>1;}).length;if(!ng&&!tr)return '';return '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">'+(ng?'<button class="btn btn-outline" style="border-color:#F2C9C5;color:#B3261E" onclick="moLeadNguoi()">'+ng+' khách cần liên hệ</button>':'')+(tr?'<button class="btn btn-outline" style="border-color:#F5DEB8;color:#8F6A2B" onclick="moDoTrung()">🔍 '+tr+' số điện thoại trùng</button>':'')+'</div>';})()+`
     <div class="tabs">
-      ${[['all','Tất cả'],['tk','🎨 Thiết kế'],['tc','🔨 Thi công']].map(([id,label])=>`
+      ${[['all','Tất cả'],['tk','Thiết kế'],['tc','Thi công']].map(([id,label])=>`
         <div class="tab ${activeFilter===id?'active':''}" onclick="setFilter('${id}')">
           ${label} <span style="font-size:10px;color:var(--mgray)">(${id==='all'?vl.length:id==='tk'?cntTk:cntTc})</span>
         </div>`).join('')}
@@ -2142,8 +2142,8 @@ function renderLeads(){
     <div class="adv-filter">
       <input class="form-input adv-search" placeholder="🔍 Tìm tên, SĐT, khu vực, ghi chú..." value="${esc2(searchQuery)}" oninput="searchQuery=this.value;clearTimeout(window.__advTmr);window.__advTmr=setTimeout(renderLeads,250)">
       <select class="form-input adv-sel" onchange="setAdvFilter('source',this.value)"><option value="">📣 Mọi nguồn</option>${srcOpts.map(s=>`<option value="${esc2(s)}" ${advFilter.source===s?'selected':''}>${esc2(s)}</option>`).join('')}</select>
-      <select class="form-input adv-sel" onchange="setAdvFilter('owner',this.value)"><option value="">👤 Mọi NV</option>${ownOpts.map(o=>`<option value="${esc2(o)}" ${advFilter.owner===o?'selected':''}>${esc2(staffName(o))}</option>`).join('')}</select>
-      <select class="form-input adv-sel" onchange="setAdvFilter('tag',this.value)"><option value="">🏷️ Mọi nhãn</option>${tagOpts.map(t=>`<option value="${esc2(t)}" ${advFilter.tag===t?'selected':''}>${esc2(t)}</option>`).join('')}</select>
+      <select class="form-input adv-sel" onchange="setAdvFilter('owner',this.value)"><option value="">Mọi NV</option>${ownOpts.map(o=>`<option value="${esc2(o)}" ${advFilter.owner===o?'selected':''}>${esc2(staffName(o))}</option>`).join('')}</select>
+      <select class="form-input adv-sel" onchange="setAdvFilter('tag',this.value)"><option value="">• Mọi nhãn</option>${tagOpts.map(t=>`<option value="${esc2(t)}" ${advFilter.tag===t?'selected':''}>${esc2(t)}</option>`).join('')}</select>
       <select class="form-input adv-sel" onchange="setAdvFilter('health',this.value)"><option value="">💧 Mọi tình trạng</option>${[['green','🟢 Đang nóng'],['yellow','🟡 Cần chú ý'],['red','🔴 Nguội'],['gray','⚪ Đã đóng']].map(([v,lb])=>`<option value="${v}" ${advFilter.health===v?'selected':''}>${lb}</option>`).join('')}</select>
       ${advFilterActive()?`<button class="btn btn-outline btn-sm" onclick="clearAdvFilter()">✕ Xóa lọc</button>`:''}
     </div>
@@ -2151,26 +2151,26 @@ function renderLeads(){
       <div class="table-toolbar">
         <span style="font-size:12px;color:var(--mgray)">${filtered.length} khách hàng</span>
         <div style="margin-left:auto;display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="exportCSV()">📊 Xuất CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">Xuất CSV</button>
           ${isManager()?'<button class="btn btn-outline btn-sm" onclick="openImport()">📥 Import</button>':''}
           <button class="btn btn-primary btn-sm" onclick="openAddLead()">+ Thêm KH</button>
         </div>
       </div>
       <table>
-        <thead><tr><th>#</th><th>👤 Khách hàng</th><th>📱 SĐT</th><th>🏠 Loại CT</th><th>Pipeline</th><th>🏷️ Giai đoạn</th><th>💰 Giá trị</th><th>📊 Score</th><th>👤 Owner</th><th>⚡</th></tr></thead>
+        <thead><tr><th>#</th><th>Khách hàng</th><th>SĐT</th><th>Loại CT</th><th>Pipeline</th><th>• Giai đoạn</th><th>Giá trị</th><th>Score</th><th>Owner</th><th>⚡</th></tr></thead>
         <tbody>${filtered.length===0?`<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--mgray)">Không có KH nào</td></tr>`
         :filtered.map((l,i)=>{
           const st=getStageObj(l.stage);
           const pipe=getPipelineOfStage(l.stage||'tk_new');
           const sc=l.score>=80?'#0F5132':l.score>=60?'#7A3800':'#7B1A2B';
           return`<tr onclick="openPanel('${l.id}')">
-            <td style="color:var(--mgray);font-family:'Be Vietnam Pro',sans-serif;font-size:10.5px">${i+1}</td>
+            <td style="color:var(--mgray);font-family:Arial, sans-serif;font-size:10.5px">${i+1}</td>
             <td><div style="display:flex;align-items:center;gap:6px"><span class="health-dot ${leadHealth(l)}" title="${healthLabel(leadHealth(l))}"></span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:6px">${l.name}${huyHieuNguoi(l)}</div><div style="font-size:10.5px;color:var(--mgray);display:flex;align-items:center;gap:6px"><span onclick="event.stopPropagation();moHanhTrinh('${l.id}')" title="Mở hành trình khách hàng" style="cursor:pointer;color:#1D4E89;font-weight:700;white-space:nowrap">🗺 ${tinhHanhTrinh(l).soXong}/9</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nextAction?'👉 '+l.nextAction:(l.area||'–')}</span></div>${leadTags(l).length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${leadTags(l).slice(0,4).map(t=>`<span class="tag-chip" style="background:${tagStyle(t).bg};color:${tagStyle(t).color};font-size:9.5px;padding:1px 7px">${esc2(t)}</span>`).join('')}</div>`:''}</div></div></td>
-            <td style="font-family:'Be Vietnam Pro',sans-serif;font-size:11.5px">${l.phone}</td>
+            <td style="font-family:Arial, sans-serif;font-size:11.5px">${l.phone}</td>
             <td style="font-size:12px">${l.type||'–'}</td>
             <td><span style="font-size:9.5px;padding:3px 8px;border-radius:10px;font-weight:600;background:${pipe==='tc'?'#E0F4F1':'#EBF3FC'};color:${pipe==='tc'?'#8F6A2B':'#0F3460'}">${pipe==='tc'?'🔨 TC':'🎨 TK'}</span>${l.inBothPipelines?` <span style="font-size:9px;padding:2px 5px;border-radius:8px;background:#FFF0E0;color:#7A3800">+TC</span>`:''}${l.afterSale?` <span style="font-size:9px;padding:2px 5px;border-radius:8px;background:#E6F4EC;color:#0F5132">💚 Sau bán</span>`:''}</td>
             <td><span class="badge ${st.badge}">${st.label}</span>${l.pmStatus?`<div style="font-size:10px;color:var(--brass-deep,#8F6A2B);margin-top:3px">🔨 ${l.pmStatus}</div>`:''}</td>
-            <td style="font-weight:600;color:var(--amber);font-family:'Be Vietnam Pro',sans-serif;font-size:11.5px">${formatShort(Number(l.valueTc||l.valueTk)||0)}</td>
+            <td style="font-weight:600;color:var(--amber);font-family:Arial, sans-serif;font-size:11.5px">${formatShort(Number(l.valueTc||l.valueTk)||0)}</td>
             <td><div class="score-bar"><div class="score-track"><div class="score-fill" style="width:${l.score||0}%;background:${sc}"></div></div><div class="score-num">${l.score||0}</div></div></td>
             <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:${staffColor(l.owner)};color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${staffInitials(l.owner)}</div><span style="font-size:11px;color:var(--mgray)">${staffName(l.owner)}</span></div></td>
             <td onclick="event.stopPropagation()"><div class="action-row">
@@ -2234,7 +2234,7 @@ function openTagPicker(leadId){
   const l=leads.find(l=>l.id==leadId); if(!l) return;
   const cur=leadTags(l);
   const avail=Object.keys(TAG_CATALOG).filter(t=>!cur.includes(t));
-  modal2('🏷️ Gắn nhãn cho '+ (l.name||''), `
+  modal2('• Gắn nhãn cho '+ (l.name||''), `
     <div style="font-size:12.5px;color:var(--mgray);margin-bottom:8px">Nhãn định sẵn:</div>
     <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
       ${avail.map(t=>`<button class="tag-chip" style="background:${tagStyle(t).bg};color:${tagStyle(t).color};border:none;cursor:pointer" onclick="addTag('${leadId}','${t}');dongModal2()">+ ${t}</button>`).join('')||'<span style="font-size:12px;color:var(--mgray)">Đã gắn hết nhãn định sẵn</span>'}
@@ -2251,11 +2251,11 @@ function openTagPicker(leadId){
 // MẪU TIN NHẮN — điền sẵn tên KH, gửi qua Zalo/SMS/Email/Copy
 // ══════════════════════════════════════════════════════════════
 const MSG_TEMPLATES = [
-  {id:'chao',   ten:'👋 Chào & giới thiệu', noidung:'Chào anh/chị {ten}, em là {nv} bên MDC Interior (Mộc Đông Châu). Cảm ơn anh/chị đã quan tâm dịch vụ thiết kế – thi công nội thất của bên em. Không biết anh/chị đang có nhu cầu cho công trình nào ạ?'},
+  {id:'chao',   ten:' Chào & giới thiệu', noidung:'Chào anh/chị {ten}, em là {nv} bên MDC Interior (Mộc Đông Châu). Cảm ơn anh/chị đã quan tâm dịch vụ thiết kế – thi công nội thất của bên em. Không biết anh/chị đang có nhu cầu cho công trình nào ạ?'},
   {id:'hen_ks', ten:'📐 Hẹn khảo sát',      noidung:'Dạ anh/chị {ten}, bên em muốn xin một buổi khảo sát thực tế mặt bằng để tư vấn phương án và báo giá chính xác nhất. Anh/chị sắp xếp được thời gian nào trong tuần này ạ?'},
   {id:'gui_bg', ten:'📄 Gửi báo giá',        noidung:'Dạ anh/chị {ten}, em gửi anh/chị bảng báo giá chi tiết cho công trình mình. Anh/chị xem qua giúp em, có điểm nào cần điều chỉnh mình trao đổi thêm nhé. Em cảm ơn ạ!'},
-  {id:'nhac',   ten:'🔔 Nhắc nhẹ (follow-up)',noidung:'Dạ anh/chị {ten}, không biết anh/chị đã có thời gian xem qua phương án/báo giá bên em gửi chưa ạ? Nếu cần em tư vấn thêm gì, anh/chị cứ nhắn em nhé. Em cảm ơn!'},
-  {id:'cam_on', ten:'🙏 Cảm ơn sau khi ký',  noidung:'MDC Interior chân thành cảm ơn anh/chị {ten} đã tin tưởng lựa chọn bên em. Em cam kết đồng hành sát sao để công trình của mình hoàn thiện đúng tiến độ và chất lượng. Trân trọng!'},
+  {id:'nhac',   ten:'Nhắc nhẹ (follow-up)',noidung:'Dạ anh/chị {ten}, không biết anh/chị đã có thời gian xem qua phương án/báo giá bên em gửi chưa ạ? Nếu cần em tư vấn thêm gì, anh/chị cứ nhắn em nhé. Em cảm ơn!'},
+  {id:'cam_on', ten:'Cảm ơn sau khi ký',  noidung:'MDC Interior chân thành cảm ơn anh/chị {ten} đã tin tưởng lựa chọn bên em. Em cam kết đồng hành sát sao để công trình của mình hoàn thiện đúng tiến độ và chất lượng. Trân trọng!'},
   {id:'cham_soc',ten:'💝 Chăm sóc sau bàn giao',noidung:'Dạ anh/chị {ten}, công trình mình đưa vào sử dụng cũng được một thời gian rồi, không biết mọi thứ có ổn không ạ? Nếu cần bảo hành hay hỗ trợ gì, anh/chị cứ nhắn em nhé. MDC luôn sẵn sàng!'}
 ];
 function fillTemplate(tpl, l){
@@ -2281,21 +2281,21 @@ function pickTemplate(leadId, tplId){
   const mailUrl = l.email?`mailto:${l.email}?subject=${encodeURIComponent('MDC Interior')}&body=${encodeURIComponent(msg)}`:'';
   modal2('💬 '+tpl.ten, `
     <textarea id="msg-body" class="form-input" style="width:100%;height:150px;font-size:13px;line-height:1.6">${esc2(msg)}</textarea>
-    <div style="font-size:11.5px;color:var(--mgray);margin:8px 0 12px">📱 ${esc2(l.phone||'–')}${l.email?' · ✉️ '+esc2(l.email):''}</div>
+    <div style="font-size:11.5px;color:var(--mgray);margin:8px 0 12px">${esc2(l.phone||'–')}${l.email?' · ✉️ '+esc2(l.email):''}</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="copyMsg('${leadId}')">📋 Copy</button>
+      <button class="btn btn-primary" onclick="copyMsg('${leadId}')">Copy</button>
       <a class="btn btn-outline" href="${zaloUrl}" target="_blank" onclick="logMsgSent('${leadId}')">💬 Mở Zalo</a>
       ${phone?`<a class="btn btn-outline" href="${smsUrl}" onclick="logMsgSent('${leadId}')">📩 SMS</a>`:''}
       ${mailUrl?`<a class="btn btn-outline" href="${mailUrl}" onclick="logMsgSent('${leadId}')">✉️ Email</a>`:''}
       <button class="btn btn-outline" style="margin-left:auto" onclick="openMsgTemplates('${leadId}')">← Mẫu khác</button>
     </div>
-    <div style="font-size:11px;color:var(--mgray);margin-top:8px">💡 Zalo web chỉ mở đúng khách nếu số đã kết bạn. Nếu không, hãy dùng Copy rồi dán vào Zalo.</div>
+    <div style="font-size:11px;color:var(--mgray);margin-top:8px">Zalo web chỉ mở đúng khách nếu số đã kết bạn. Nếu không, hãy dùng Copy rồi dán vào Zalo.</div>
   `);
 }
 function copyMsg(leadId){
   const ta=document.getElementById('msg-body'); if(!ta) return;
   const text=ta.value;
-  const done=()=>{ toast('📋 Đã copy nội dung'); logMsgSent(leadId); };
+  const done=()=>{ toast('Đã copy nội dung'); logMsgSent(leadId); };
   if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>{ta.select();document.execCommand('copy');done();}); }
   else { ta.select(); document.execCommand('copy'); done(); }
 }
@@ -2433,18 +2433,18 @@ function renderTasks(){
   const today   = myTasks.filter(t=>!t.done && getTaskDateStatus(t)==='today').length;
   const pending = myTasks.filter(t=>!t.done).length;
 
-  document.getElementById('page-content').innerHTML = (function(){var ng=dsLeadNguoi().length;var tr=Object.values(leads.reduce(function(a,l){var k=chuanSDT(l.phone);if(k&&k.length>=8){(a[k]=a[k]||[]).push(l);}return a;},{})).filter(function(v){return v.length>1;}).length;if(!ng&&!tr)return '';return '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">'+(ng?'<button class="btn btn-outline" style="border-color:#F2C9C5;color:#B3261E" onclick="moLeadNguoi()">🔥 '+ng+' khách cần liên hệ</button>':'')+(tr?'<button class="btn btn-outline" style="border-color:#F5DEB8;color:#8F6A2B" onclick="moDoTrung()">🔍 '+tr+' số điện thoại trùng</button>':'')+'</div>';})() + `
+  document.getElementById('page-content').innerHTML = (function(){var ng=dsLeadNguoi().length;var tr=Object.values(leads.reduce(function(a,l){var k=chuanSDT(l.phone);if(k&&k.length>=8){(a[k]=a[k]||[]).push(l);}return a;},{})).filter(function(v){return v.length>1;}).length;if(!ng&&!tr)return '';return '<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">'+(ng?'<button class="btn btn-outline" style="border-color:#F2C9C5;color:#B3261E" onclick="moLeadNguoi()">'+ng+' khách cần liên hệ</button>':'')+(tr?'<button class="btn btn-outline" style="border-color:#F5DEB8;color:#8F6A2B" onclick="moDoTrung()">🔍 '+tr+' số điện thoại trùng</button>':'')+'</div>';})() + `
     <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
-      <div class="stat-card" style="--accent:var(--ruby)"><div class="stat-label">⚠️ Quá hạn</div><div class="stat-value" style="color:var(--ruby)">${overdue}</div></div>
-      <div class="stat-card" style="--accent:var(--amber)"><div class="stat-label">📅 Hôm nay</div><div class="stat-value" style="color:var(--amber)">${today}</div></div>
-      <div class="stat-card" style="--accent:var(--sapphire)"><div class="stat-label">📋 Còn lại</div><div class="stat-value">${pending}</div></div>
-      <div class="stat-card" style="--accent:var(--emerald)"><div class="stat-label">✅ Hoàn thành</div><div class="stat-value">${myTasks.filter(t=>t.done).length}</div></div>
+      <div class="stat-card" style="--accent:var(--ruby)"><div class="stat-label">Quá hạn</div><div class="stat-value" style="color:var(--ruby)">${overdue}</div></div>
+      <div class="stat-card" style="--accent:var(--amber)"><div class="stat-label">Hôm nay</div><div class="stat-value" style="color:var(--amber)">${today}</div></div>
+      <div class="stat-card" style="--accent:var(--sapphire)"><div class="stat-label">Còn lại</div><div class="stat-value">${pending}</div></div>
+      <div class="stat-card" style="--accent:var(--emerald)"><div class="stat-label">✓ Hoàn thành</div><div class="stat-value">${myTasks.filter(t=>t.done).length}</div></div>
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="display:flex;gap:8px">
-        <button class="btn btn-sm ${!activeKhId || activeKhId==='__global'?'btn-primary':'btn-outline'}" onclick="switchTaskView('__global')">📋 Tất cả</button>
-        <button class="btn btn-sm ${activeKhId && activeKhId!=='__global'?'btn-primary':'btn-outline'}" onclick="switchTaskView('${khList[0]?khList[0].id:''}')">👤 Theo KH</button>
+        <button class="btn btn-sm ${!activeKhId || activeKhId==='__global'?'btn-primary':'btn-outline'}" onclick="switchTaskView('__global')">Tất cả</button>
+        <button class="btn btn-sm ${activeKhId && activeKhId!=='__global'?'btn-primary':'btn-outline'}" onclick="switchTaskView('${khList[0]?khList[0].id:''}')">Theo KH</button>
       </div>
       <button class="btn btn-primary btn-sm" onclick="openAddTask()">+ Thêm công việc</button>
     </div>
@@ -2467,17 +2467,17 @@ function renderTasksGlobal(myTasks){
     if(!arr.length) return '';
     return `<div class="task-group" style="margin-bottom:10px">
       <div class="task-group-header">
-        <div class="task-group-title" style="color:${color}">${title} <span style="font-family:'Be Vietnam Pro',sans-serif">(${arr.length})</span></div>
+        <div class="task-group-title" style="color:${color}">${title} <span style="font-family:Arial, sans-serif">(${arr.length})</span></div>
       </div>
       ${arr.map(t => renderTaskGlobalRow(t)).join('')}
     </div>`;
   }
 
   return `<div>
-    ${renderGroup('⚠️ Quá hạn', grouped.overdue, 'var(--ruby)')}
-    ${renderGroup('📅 Hôm nay', grouped.today, 'var(--amber)')}
-    ${renderGroup('📌 Sắp tới', grouped.upcoming, 'var(--charcoal)')}
-    ${renderGroup('✅ Đã hoàn thành', grouped.done.slice(0,20), 'var(--mgray)')}
+    ${renderGroup('Quá hạn', grouped.overdue, 'var(--ruby)')}
+    ${renderGroup('Hôm nay', grouped.today, 'var(--amber)')}
+    ${renderGroup('• Sắp tới', grouped.upcoming, 'var(--charcoal)')}
+    ${renderGroup('✓ Đã hoàn thành', grouped.done.slice(0,20), 'var(--mgray)')}
     ${!myTasks.length ? '<div style="text-align:center;padding:40px;color:var(--mgray)">Chưa có công việc nào. Nhấn "+ Thêm công việc" để bắt đầu.</div>' : ''}
   </div>`;
 }
@@ -2504,8 +2504,8 @@ function renderTaskGlobalRow(t){
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
         ${kh?`<span class="task-kh-pill" style="background:${SBG[kh.stage]||'#eee'};color:${SC[kh.stage]||'#555'}">${getPipe(kh.stage)==='tc'?'🔨':'🎨'} ${kh.name}</span>`:''}
-        <span class="task-row-date ${dateStatus}">📅 ${formatTaskDate(t)}</span>
-        ${assignee?`<span style="font-size:10px;color:var(--mgray)">👤 ${assignee.name}</span>`:''}
+        <span class="task-row-date ${dateStatus}">${formatTaskDate(t)}</span>
+        ${assignee?`<span style="font-size:10px;color:var(--mgray)">${assignee.name}</span>`:''}
         ${t.note?`<span style="font-size:10.5px;color:var(--mgray);font-style:italic">${t.note}</span>`:''}
       </div>
     </div>
@@ -2594,7 +2594,7 @@ function renderTasksByKh(khList, selKh){
         <!-- Pipeline progress bar -->
         ${pp ? `<div style="width:100%">
           <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mgray);margin-bottom:5px">
-            <span>${pipe==='tc'?'🔨 Thi công':'🎨 Thiết kế'} — Bước ${pp.idx+1}/${pp.total}</span>
+            <span>${pipe==='tc'?'Thi công':'Thiết kế'} — Bước ${pp.idx+1}/${pp.total}</span>
             <span style="font-weight:600;color:${SC[selKh.stage]||'#555'}">${stObj.label}</span>
           </div>
           <div style="display:flex;gap:3px;height:6px">
@@ -2607,12 +2607,12 @@ function renderTasksByKh(khList, selKh){
         </div>` : ''}
         <!-- Checklist progress cho giai đoạn hiện tại -->
         ${stageTotalCount > 0 ? `<div style="width:100%;background:var(--lgray);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:10px">
-          <span style="font-size:11px;font-weight:600;color:var(--charcoal)">📋 Checklist giai đoạn:</span>
+          <span style="font-size:11px;font-weight:600;color:var(--charcoal)">Checklist giai đoạn:</span>
           <div style="flex:1;height:5px;background:#e0dbd3;border-radius:3px;overflow:hidden">
             <div style="height:100%;background:var(--emerald);width:${Math.round(stageDoneCount/stageTotalCount*100)}%;border-radius:3px;transition:width .3s"></div>
           </div>
-          <span style="font-size:11px;font-weight:600;color:var(--emerald);font-family:'Be Vietnam Pro',sans-serif">${stageDoneCount}/${stageTotalCount}</span>
-          ${stageDoneCount<stageTotalCount ? `<button class="btn btn-sm" style="background:var(--goldbg);color:var(--amber);font-size:10px;padding:3px 9px" onclick="createMissingChecklistTasks('${selKh.id}','${selKh.stage}')">+ Tạo lại việc mẫu</button>` : '<span style="font-size:10px;color:var(--emerald)">✅ Hoàn thành</span>'}
+          <span style="font-size:11px;font-weight:600;color:var(--emerald);font-family:Arial, sans-serif">${stageDoneCount}/${stageTotalCount}</span>
+          ${stageDoneCount<stageTotalCount ? `<button class="btn btn-sm" style="background:var(--goldbg);color:var(--amber);font-size:10px;padding:3px 9px" onclick="createMissingChecklistTasks('${selKh.id}','${selKh.stage}')">+ Tạo lại việc mẫu</button>` : '<span style="font-size:10px;color:var(--emerald)">✓ Hoàn thành</span>'}
         </div>` : ''}
       </div>
 
@@ -2620,7 +2620,7 @@ function renderTasksByKh(khList, selKh){
       ${stageChecklist.length > 0 ? `
       <div style="background:linear-gradient(135deg,${pipe==='tc'?'#E0F4F1,#EBF3FC':'#EBF3FC,#F0E8FB'});border:1px solid ${pipe==='tc'?'#a7d9d3':'#c3d9f0'};border-radius:10px;padding:12px 14px;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:${pipe==='tc'?'var(--tc-color)':'var(--tk-color)'};text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">
-          📋 Lộ trình ${stObj.label} — ${stageChecklist.length} việc chuẩn
+          Lộ trình ${stObj.label} — ${stageChecklist.length} việc chuẩn
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           ${stageChecklist.map((tpl,i)=>{
@@ -2631,7 +2631,7 @@ function renderTasksByKh(khList, selKh){
               <span style="width:5px;height:5px;border-radius:50%;background:${uColor};flex-shrink:0;margin-top:5px"></span>
               <div style="flex:1;min-width:0">
                 <span style="font-size:11.5px;color:${done?'var(--mgray)':'var(--charcoal)'};${done?'text-decoration:line-through':''};line-height:1.35;font-weight:500">${tpl.text}</span>
-                ${tpl.sla?`<span style="font-size:9px;font-family:'Be Vietnam Pro',sans-serif;color:${uColor};background:${pipe==='tc'?'rgba(10,77,69,.08)':'rgba(15,52,96,.08)'};padding:1px 5px;border-radius:6px;margin-left:5px;white-space:nowrap">${tpl.sla}</span>`:''}
+                ${tpl.sla?`<span style="font-size:9px;font-family:Arial, sans-serif;color:${uColor};background:${pipe==='tc'?'rgba(10,77,69,.08)':'rgba(15,52,96,.08)'};padding:1px 5px;border-radius:6px;margin-left:5px;white-space:nowrap">${tpl.sla}</span>`:''}
                 ${tpl.tip?`<div style="font-size:10px;color:var(--mgray);line-height:1.3;margin-top:2px;font-style:italic">💬 ${tpl.tip.length>70?tpl.tip.slice(0,70)+'...':tpl.tip}</div>`:''}
               </div>
             </div>`;
@@ -2643,15 +2643,15 @@ function renderTasksByKh(khList, selKh){
       ${pending.length===0 && done.length===0 ? `<div style="background:var(--white);border:1px solid #e8e4de;border-radius:10px;padding:32px;text-align:center;color:var(--mgray)">
         Chưa có công việc nào.<br>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-          ${selKh && STAGE_CHECKLIST[selKh.stage]?.length ? `<button class="btn btn-primary btn-sm" onclick="createMissingChecklistTasks('${selKh.id}','${selKh.stage}')">📋 Tạo checklist mẫu (${STAGE_CHECKLIST[selKh.stage].length} việc)</button>` : ''}
+          ${selKh && STAGE_CHECKLIST[selKh.stage]?.length ? `<button class="btn btn-primary btn-sm" onclick="createMissingChecklistTasks('${selKh.id}','${selKh.stage}')">Tạo checklist mẫu (${STAGE_CHECKLIST[selKh.stage].length} việc)</button>` : ''}
           <button class="btn btn-outline btn-sm" onclick="openAddTask('${selKh?selKh.id:''}')">+ Thêm việc thủ công</button>
         </div>
       </div>` : `
-        ${renderKhTaskGroup('⚠️ Quá hạn', grouped.overdue, 'var(--ruby)')}
-        ${renderKhTaskGroup('📅 Hôm nay', grouped.today, 'var(--amber)')}
-        ${renderKhTaskGroup('📌 Sắp tới', grouped.upcoming, 'var(--charcoal)')}
+        ${renderKhTaskGroup('Quá hạn', grouped.overdue, 'var(--ruby)')}
+        ${renderKhTaskGroup('Hôm nay', grouped.today, 'var(--amber)')}
+        ${renderKhTaskGroup('• Sắp tới', grouped.upcoming, 'var(--charcoal)')}
         ${done.length>0?`<div class="task-group">
-          <div class="task-group-header"><div class="task-group-title">✅ Đã hoàn thành (${done.length})</div></div>
+          <div class="task-group-header"><div class="task-group-title">✓ Đã hoàn thành (${done.length})</div></div>
           ${done.slice(0,15).map(t=>renderTaskGlobalRow(t)).join('')}
         </div>`:''}
       `}
@@ -2666,7 +2666,7 @@ async function createMissingChecklistTasks(leadId, stage){
   if(!templates) return;
   const existingTexts = tasks.filter(t=>t.leadId==leadId&&t.stage===stage&&t.isTemplate).map(t=>t.text);
   const missing = templates.filter(tpl=>!existingTexts.includes(tpl.text));
-  if(!missing.length){ toast('✅ Tất cả việc mẫu đã tồn tại!'); return; }
+  if(!missing.length){ toast('✓ Tất cả việc mẫu đã tồn tại!'); return; }
   const deadlineDays={red:1,orange:3,green:7};
   const newTasks = missing.map((tpl,idx)=>{
     const dd=deadlineDays[tpl.urgency]||3;
@@ -2676,7 +2676,7 @@ async function createMissingChecklistTasks(leadId, stage){
   tasks.push(...newTasks);
   saveLocal(); renderTasks(); updateBadges();
   for(const t of newTasks) await pushTask(t);
-  toast(`📋 Đã tạo ${newTasks.length} công việc mẫu cho giai đoạn!`);
+  toast(`Đã tạo ${newTasks.length} công việc mẫu cho giai đoạn!`);
 }
 
 
@@ -2688,7 +2688,7 @@ function switchTaskView(khId){
 function openAddTask(leadId=''){
   editingTaskId = null;
   document.getElementById('task-modal-title').textContent = '📝 Thêm Công việc';
-  document.getElementById('task-save-btn').textContent = '💾 Lưu công việc';
+  document.getElementById('task-save-btn').textContent = 'Lưu công việc';
   document.getElementById('t-text').value = '';
   document.getElementById('t-type').value = 'call';
   document.getElementById('t-urgency').value = 'orange';
@@ -2756,7 +2756,7 @@ async function saveTask(){
     if(!t) return;
     Object.assign(t,{text, type:document.getElementById('t-type').value, urgency:document.getElementById('t-urgency').value, leadId, date, time:document.getElementById('t-time').value, assignee:document.getElementById('t-assignee').value, note:document.getElementById('t-note').value});
     touch(t);
-    toast('✅ Đã cập nhật công việc!');
+    toast('✓ Đã cập nhật công việc!');
   } else {
     const task = {
       id: newId(),
@@ -2812,7 +2812,7 @@ async function toggleTask(id,e){
   }
   saveLocal();renderTasks();updateBadges();
   await pushTask(t);
-  toast(t.done?'✅ Hoàn thành!':'↩️ Chưa xong');
+  toast(t.done?'✓ Hoàn thành!':'↩️ Chưa xong');
 }
 
 async function confirmDeleteTask(id){
@@ -2820,7 +2820,7 @@ async function confirmDeleteTask(id){
     tasks=tasks.filter(t=>String(t.id)!==String(id));
     saveLocal();renderTasks();updateBadges();
     await removeTask(id);
-    toast('🗑️ Đã xóa!');
+    toast('Đã xóa!');
   });
 }
 
@@ -2928,10 +2928,10 @@ function renderReports(){
 
   document.getElementById('page-content').innerHTML=`
     <div class="stats-row">
-      <div class="stat-card" style="--accent:var(--gold)"><div class="stat-label">💰 Tổng Pipeline</div><div class="stat-value">${formatB(tkV+tcV)}</div><div class="stat-sub">${active.length} KH đang theo</div></div>
-      <div class="stat-card" style="--accent:var(--emerald)"><div class="stat-label">📈 Doanh thu dự báo</div><div class="stat-value">${formatB(forecast)}</div><div class="stat-sub">theo xác suất chốt</div></div>
-      <div class="stat-card" style="--accent:var(--tk-color)"><div class="stat-label">✅ Đã ký (giá trị)</div><div class="stat-value">${formatB(won)}</div><div class="stat-sub">${wonCount} hợp đồng</div></div>
-      <div class="stat-card" style="--accent:var(--tc-color)"><div class="stat-label">🎯 Tỷ lệ thắng</div><div class="stat-value">${winRate}%</div><div class="stat-sub">${wonCount} thắng / ${lostCount} mất</div></div>
+      <div class="stat-card" style="--accent:var(--gold)"><div class="stat-label">Tổng Pipeline</div><div class="stat-value">${formatB(tkV+tcV)}</div><div class="stat-sub">${active.length} KH đang theo</div></div>
+      <div class="stat-card" style="--accent:var(--emerald)"><div class="stat-label">Doanh thu dự báo</div><div class="stat-value">${formatB(forecast)}</div><div class="stat-sub">theo xác suất chốt</div></div>
+      <div class="stat-card" style="--accent:var(--tk-color)"><div class="stat-label">✓ Đã ký (giá trị)</div><div class="stat-value">${formatB(won)}</div><div class="stat-sub">${wonCount} hợp đồng</div></div>
+      <div class="stat-card" style="--accent:var(--tc-color)"><div class="stat-label">Tỷ lệ thắng</div><div class="stat-value">${winRate}%</div><div class="stat-sub">${wonCount} thắng / ${lostCount} mất</div></div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -2943,7 +2943,7 @@ function renderReports(){
       </div>
     </div>
 
-    <div class="chart-card" style="margin-bottom:14px"><div class="chart-title">💵 Giá trị theo giai đoạn (× xác suất chốt = dự báo)</div>
+    <div class="chart-card" style="margin-bottom:14px"><div class="chart-title">Giá trị theo giai đoạn (× xác suất chốt = dự báo)</div>
       ${[...STAGES_TK,...STAGES_TC].filter(s=>!s.id.includes('lost')).map(s=>{
         const ls=all.filter(l=>l.stage===s.id);
         if(!ls.length) return '';
@@ -2965,7 +2965,7 @@ function renderReports(){
           <th>Nhân viên</th><th style="text-align:center">Đang theo</th>
           <th style="text-align:center">Đã ký</th><th style="text-align:center">Đã mất</th>
           <th style="text-align:center">Tỷ lệ thắng</th><th style="text-align:right">Giá trị ký</th>
-          <th style="text-align:center" title="Số KH nguy cơ bỏ lỡ">🔥 Nguội</th>
+          <th style="text-align:center" title="Số KH nguy cơ bỏ lỡ">Nguội</th>
           <th style="text-align:center" title="Số lần tương tác 30 ngày qua">Tương tác 30d</th>
         </tr></thead>`;
         const body=rows.map(r=>{
@@ -3083,11 +3083,11 @@ function renderLogTable(){
     <table>
       <thead><tr>
         <th>⏰ Thời gian</th>
-        <th>👤 Nhân viên</th>
-        <th>🏷️ Thao tác</th>
-        <th>📌 Đối tượng</th>
+        <th>Nhân viên</th>
+        <th>• Thao tác</th>
+        <th>• Đối tượng</th>
         <th>📝 Chi tiết</th>
-        <th>🔄 Giai đoạn</th>
+        <th>Giai đoạn</th>
       </tr></thead>
       <tbody>
         ${page.length ? page.map(l=>{
@@ -3097,7 +3097,7 @@ function renderLogTable(){
           const isAdd = lbl.includes('Thêm');
           const rowBg = isDelete?'background:#fff5f5':isAdd?'background:#f0fdf4':'';
           return `<tr style="${rowBg}">
-            <td style="font-family:'Be Vietnam Pro',sans-serif;font-size:11px;color:var(--mgray);white-space:nowrap">${l.time||'–'}</td>
+            <td style="font-family:Arial, sans-serif;font-size:11px;color:var(--mgray);white-space:nowrap">${l.time||'–'}</td>
             <td>
               <div style="display:flex;align-items:center;gap:7px">
                 <div style="width:26px;height:26px;border-radius:50%;background:var(--navy);color:var(--gold2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">
@@ -3112,7 +3112,7 @@ function renderLogTable(){
               <div style="font-size:10.5px;color:var(--mgray)">${l.target||''} ${l.targetId?'#'+String(l.targetId).slice(-6):''}</div>
             </td>
             <td style="font-size:11.5px;color:var(--mgray);max-width:200px">${l.detail||'–'}</td>
-            <td style="font-size:11px;font-family:'Be Vietnam Pro',sans-serif">
+            <td style="font-size:11px;font-family:Arial, sans-serif">
               ${l.oldStage&&l.newStage ? `<span style="color:var(--mgray)">${l.oldStage}</span> → <span style="color:var(--emerald)">${l.newStage}</span>` : '–'}
             </td>
           </tr>`;
@@ -3129,14 +3129,14 @@ function renderConnect(){
   document.getElementById('page-content').innerHTML=`
     <div style="max-width:640px">
       <div class="table-wrap" style="padding:28px;margin-bottom:16px">
-        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:22px;font-weight:600;color:var(--navy);margin-bottom:6px">🔗 Kết nối Google Sheets</div>
+        <div style="font-family:Arial, sans-serif;font-size:22px;font-weight:600;color:var(--navy);margin-bottom:6px">🔗 Kết nối Google Sheets</div>
         <div style="font-size:13px;color:var(--mgray);margin-bottom:22px;line-height:1.7">Dữ liệu CRM sẽ được lưu vào Google Sheets và đồng bộ theo thời gian thực.
       <div style="background:var(--goldbg);border:1px solid #e8d99a;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--amber);margin-top:10px">
-        📱 <strong>Dùng trên điện thoại?</strong> Nhập đúng URL này vào ô bên dưới — dữ liệu KH và nhân viên sẽ tự đồng bộ về máy.
+        <strong>Dùng trên điện thoại?</strong> Nhập đúng URL này vào ô bên dưới — dữ liệu KH và nhân viên sẽ tự đồng bộ về máy.
       </div></div>
         <div style="font-size:12px;font-weight:600;color:var(--charcoal);margin-bottom:8px">Web App URL:</div>
         <div style="display:flex;gap:9px;margin-bottom:14px">
-          <input type="text" id="api-url-input" class="form-input" style="flex:1;font-family:'Be Vietnam Pro',sans-serif;font-size:11.5px" value="${saved}" placeholder="https://script.google.com/macros/s/ABC.../exec">
+          <input type="text" id="api-url-input" class="form-input" style="flex:1;font-family:Arial, sans-serif;font-size:11.5px" value="${saved}" placeholder="https://script.google.com/macros/s/ABC.../exec">
           <button class="btn btn-primary" onclick="testAndSaveUrl()">🔌 Kết nối & Test</button>
         </div>
         ${saved?`<div style="background:var(--lgreen);border:1px solid #bbf7d0;border-radius:8px;padding:11px 14px;font-size:12.5px;color:var(--emerald);display:flex;align-items:center;gap:8px"><span>✅</span> Đã có URL. Nhấn "Kết nối & Test" để kiểm tra lại.</div>`:''}
@@ -3160,7 +3160,7 @@ async function testAndSaveUrl(){
     // Kiểm tra phiên bản backend để chắc chắn đã deploy bản mới
     let verMsg='';
     try{ const g=await apiFetch({action:'getAll'}); if(g&&g.ver){ verMsg=' · Backend '+g.ver; window.__backendVer=g.ver; } }catch(e){}
-    toast('✅ Kết nối thành công!'+verMsg);
+    toast('✓ Kết nối thành công!'+verMsg);
     await syncFromSheets();
     showPage('dashboard',document.querySelector('[data-page=dashboard]'));
   }catch(e){
@@ -3176,7 +3176,7 @@ function renderSettings(){
   document.getElementById('page-content').innerHTML=`
     <div style="max-width:560px">
       <div class="table-wrap" style="padding:22px;margin-bottom:14px">
-        <div class="section-title">👤 Thông tin Sales</div>
+        <div class="section-title">Thông tin Sales</div>
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Họ tên</label><input class="form-input" id="s-name" value="${s.name||''}"></div>
           <div class="form-group"><label class="form-label">Chức vụ</label><input class="form-input" id="s-role" value="${s.role||''}"></div>
@@ -3184,21 +3184,21 @@ function renderSettings(){
           <div class="form-group"><label class="form-label">SĐT</label><input class="form-input" id="s-phone" value="${s.phone||''}"></div>
         </div>
         <div style="margin-top:14px;display:flex;justify-content:flex-end">
-          <button class="btn btn-primary" onclick="saveSettingsForm()">💾 Lưu</button>
+          <button class="btn btn-primary" onclick="saveSettingsForm()">Lưu</button>
         </div>
       </div>
       <div class="table-wrap" style="padding:22px">
         <div class="section-title">🔗 Trạng thái</div>
-        <div style="background:var(--lgray);border-radius:8px;padding:12px;font-size:12px;font-family:'Be Vietnam Pro',sans-serif;line-height:1.9">
-          Trạng thái: ${isConnected?'✅ Đã kết nối':'❌ Chưa kết nối'}<br>
+        <div style="background:var(--lgray);border-radius:8px;padding:12px;font-size:12px;font-family:Arial, sans-serif;line-height:1.9">
+          Trạng thái: ${isConnected?'✓ Đã kết nối':'❌ Chưa kết nối'}<br>
           KH Thiết kế: ${leads.filter(l=>getPipelineOfStage(l.stage||'tk_new')==='tk').length}<br>
           KH Thi công: ${leads.filter(l=>getPipelineOfStage(l.stage||'tk_new')==='tc').length}<br>
           Tổng KH: ${leads.length}
         </div>
         <div style="margin-top:10px;display:flex;gap:9px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="showPage('connect',document.querySelector('[data-page=connect]'))">⚙️ Cài đặt kết nối</button>
-          <button class="btn btn-outline btn-sm" onclick="syncNow()">🔄 Sync ngay</button>
-          <button class="btn btn-outline btn-sm" onclick="exportCSV()">📊 Xuất CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="syncNow()">Sync ngay</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">Xuất CSV</button>
         </div>
       </div>
     </div>`;
@@ -3206,7 +3206,7 @@ function renderSettings(){
 
 function saveSettingsForm(){
   persistSettings({name:document.getElementById('s-name').value,role:document.getElementById('s-role').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value||''});
-  toast('✅ Đã lưu cài đặt!');
+  toast('✓ Đã lưu cài đặt!');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3276,7 +3276,7 @@ function openPanel(id){
   const stages=getStages(pipe);
 
   document.getElementById('panel-name').textContent=l.name;
-  document.getElementById('panel-sub').textContent=`${pipe==='tc'?'🔨 Thi công':'🎨 Thiết kế'} · ${l.type||''} · ${l.area||''} · Score: ${l.score||0}`;
+  document.getElementById('panel-sub').textContent=`${pipe==='tc'?'Thi công':'Thiết kế'} · ${l.type||''} · ${l.area||''} · Score: ${l.score||0}`;
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
 
@@ -3288,7 +3288,7 @@ function openPanel(id){
         Báo giá · Khảo sát · Hợp đồng · Đợt thanh toán</span>
     </button>
     <div id="pm360-${l.id}" class="pm360-box">
-      <div class="pm360-loading">🏗️ Đang tải dữ liệu dự án từ PM…</div>
+      <div class="pm360-loading">Đang tải dữ liệu dự án từ PM…</div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
       <span style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:${pipe==='tc'?'#E0F4F1':'#EBF3FC'};color:${pipe==='tc'?'#8F6A2B':'#0F3460'}">${pipe==='tc'?'🔨 Pipeline Thi công':'🎨 Pipeline Thiết kế'}</span>
@@ -3296,7 +3296,7 @@ function openPanel(id){
     </div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
       ${leadTags(l).map(t=>tagChipHtml(t,canEdit,l.id)).join('')}
-      ${canEdit?`<span class="tag-add" onclick="openTagPicker('${l.id}')">🏷️ + Nhãn</span>`:''}
+      ${canEdit?`<span class="tag-add" onclick="openTagPicker('${l.id}')">• + Nhãn</span>`:''}
     </div>
     ${canEdit?`<div class="quick-actions">
       <div class="qa-btn" onclick="quickLogContact('${l.id}')"><span class="qa-emoji">📞</span>Đã liên hệ</div>
@@ -3305,8 +3305,8 @@ function openPanel(id){
       <div class="qa-btn" onclick="openEditLead('${l.id}')"><span class="qa-emoji">✏️</span>Sửa TT</div>
     </div>`:''}
     <div class="next-action-box ${l.nextAction?'':'next-action-empty'}">
-      <span class="na-icon">${l.nextAction?'👉':'💡'}</span>
-      <div class="na-text">${l.nextAction?l.nextAction+(l.nextDate?` <span style="font-family:'Be Vietnam Pro',sans-serif;font-size:11px">(${new Date(l.nextDate).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})})</span>`:''):'Chưa đặt hành động tiếp theo — hãy lên kế hoạch để không bỏ lỡ KH'}</div>
+      <span class="na-icon">${l.nextAction?'👉':''}</span>
+      <div class="na-text">${l.nextAction?l.nextAction+(l.nextDate?` <span style="font-family:Arial, sans-serif;font-size:11px">(${new Date(l.nextDate).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})})</span>`:''):'Chưa đặt hành động tiếp theo — hãy lên kế hoạch để không bỏ lỡ KH'}</div>
       ${canEdit?`<button class="btn btn-outline btn-sm" style="font-size:10px" onclick="openEditLead('${l.id}')">Đặt</button>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:9px 12px;background:var(--lgray);border-radius:8px">
@@ -3316,11 +3316,11 @@ function openPanel(id){
     </div>
     <div class="section-title">Thông tin</div>
     <div class="info-grid">
-      <div><div class="info-label">Điện thoại</div><div class="info-value">📱 ${l.phone}</div></div>
+      <div><div class="info-label">Điện thoại</div><div class="info-value">${l.phone}</div></div>
       <div><div class="info-label">Email</div><div class="info-value">✉️ ${l.email||'–'}</div></div>
-      <div><div class="info-label">Loại CT</div><div class="info-value">🏠 ${l.type||'–'}</div></div>
-      <div><div class="info-label">Khu vực</div><div class="info-value">📍 ${l.area||'–'}</div></div>
-      <div><div class="info-label">Ngân sách</div><div class="info-value">💰 ${l.budget||'–'}</div></div>
+      <div><div class="info-label">Loại CT</div><div class="info-value">${l.type||'–'}</div></div>
+      <div><div class="info-label">Khu vực</div><div class="info-value">${l.area||'–'}</div></div>
+      <div><div class="info-label">Ngân sách</div><div class="info-value">${l.budget||'–'}</div></div>
       <div><div class="info-label">HĐ Thiết kế</div><div class="info-value" style="color:var(--tk-color);font-weight:700">${formatShort(Number(l.valueTk)||0)}</div></div>
       <div><div class="info-label">HĐ Thi công</div><div class="info-value" style="color:var(--tc-color);font-weight:700">${formatShort(Number(l.valueTc)||0)}</div></div>
       <div><div class="info-label">Nguồn</div><div class="info-value">📣 ${l.source||'–'}</div></div>
@@ -3328,9 +3328,9 @@ function openPanel(id){
         <div class="score-bar"><div class="score-track" style="width:70px"><div class="score-fill" style="width:${l.score||0}%;background:${(l.score||0)>=80?'#0F5132':(l.score||0)>=60?'#7A3800':'#7B1A2B'}"></div></div><div class="score-num">${l.score||0}/100</div></div>
       </div></div>
     </div>
-    <div class="section-title">📝 Ghi chú</div>
+    <div class="section-title">Ghi chú</div>
     <div style="background:var(--lgray);border-radius:8px;padding:11px;font-size:12.5px;color:var(--charcoal);margin-bottom:16px;line-height:1.6">${l.note||'Chưa có ghi chú'}</div>
-    <div class="section-title">🏷️ Cập nhật Giai đoạn (${pipe==='cs'?'Chăm sóc sau bán':pipe==='tc'?'Thi công':'Thiết kế'})</div>
+    <div class="section-title">• Cập nhật Giai đoạn (${pipe==='cs'?'Chăm sóc sau bán':pipe==='tc'?'Thi công':'Thiết kế'})</div>
     <div class="stage-selector">
       ${stages.map(s=>`<div class="stage-btn ${l.stage===s.id?'active':''} ${s.autoTransfer?'highlight-auto':''}" 
         style="--stage-bg:${getSBG(s.id)};--stage-c:${getSC(s.id)};--stage-bc:${getSC(s.id)}" 
@@ -3347,14 +3347,14 @@ function openPanel(id){
     <div class="section-title">📜 Lịch sử tương tác</div>
     ${canEdit?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
       <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="addInteraction('${l.id}','call')">📞 Đã gọi</button>
-      <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="addInteraction('${l.id}','meet')">🤝 Đã gặp</button>
-      <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="addInteraction('${l.id}','zalo')">💬 Zalo</button>
+      <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="addInteraction('${l.id}','meet')">Đã gặp</button>
+      <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="addInteraction('${l.id}','zalo')">Zalo</button>
       <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="addInteraction('${l.id}','send')">📤 Gửi báo giá</button>
     </div>`:''}
     <div class="timeline">${renderTimelineHtml(l)}</div>
     ${canEdit?`<div class="note-input">
       <textarea id="qn-${l.id}" placeholder="Ghi chú nhanh / nội dung trao đổi với KH..."></textarea>
-      <button class="btn btn-primary" style="height:65px;white-space:nowrap;font-size:12px" onclick="saveNote('${l.id}')">💾 Lưu</button>
+      <button class="btn btn-primary" style="height:65px;white-space:nowrap;font-size:12px" onclick="saveNote('${l.id}')">Lưu</button>
     </div>`:''}
     <button class="btn btn-outline btn-sm" style="width:100%;margin-top:7px;font-size:11.5px" onclick="openAddTask('${l.id}');closePanel()">📝 Thêm công việc cho KH này</button>
     </div>`;
@@ -3388,7 +3388,7 @@ function renderPM360(d){
         <span style="font-size:10px;color:var(--mgray);margin-left:auto">${esc2(p.maDA||'')}</span>
       </div>
       <div style="font-size:11px;color:var(--mgray);margin-bottom:6px">
-        ${p.giaiDoan?'📍 '+esc2(p.giaiDoan)+' · ':''}${p.trangThai?esc2(p.trangThai):''}${p.phuTrach?' · 👤 '+esc2(p.phuTrach):''}
+        ${p.giaiDoan?''+esc2(p.giaiDoan)+' · ':''}${p.trangThai?esc2(p.trangThai):''}${p.phuTrach?' · '+esc2(p.phuTrach):''}
       </div>
       <div class="pm360-bar"><div class="pm360-fill" style="width:${pp}%"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--mgray);margin-top:3px">
@@ -3397,15 +3397,15 @@ function renderPM360(d){
     </div>`;
   }).join('');
   return `
-    <div class="pm360-header">🏗️ Tổng quan dự án (từ PM) <span class="pm360-ro">chỉ xem</span></div>
+    <div class="pm360-header">Tổng quan dự án (từ PM) <span class="pm360-ro">chỉ xem</span></div>
     <div class="pm360-stats">
       <div class="pm360-stat"><div class="pm360-num">${d.soDuAn}</div><div class="pm360-lbl">Dự án</div></div>
       <div class="pm360-stat"><div class="pm360-num">${pct}%</div><div class="pm360-lbl">Tiến độ TB</div></div>
       <div class="pm360-stat"><div class="pm360-num">${cv.xong}/${cv.tong}</div><div class="pm360-lbl">Việc xong${cv.vuong?` · ⚠${cv.vuong}`:''}</div></div>
     </div>
     <div class="pm360-fin">
-      <div class="pm360-finrow"><span>💰 Giá trị hợp đồng</span><b>${money(f.tongHD)}</b></div>
-      <div class="pm360-finrow"><span>✅ Đã thu</span><b style="color:var(--emerald)">${money(f.daThu)}</b></div>
+      <div class="pm360-finrow"><span>Giá trị hợp đồng</span><b>${money(f.tongHD)}</b></div>
+      <div class="pm360-finrow"><span>✓ Đã thu</span><b style="color:var(--emerald)">${money(f.daThu)}</b></div>
       <div class="pm360-finrow"><span>⏳ Còn phải thu</span><b style="color:${f.conLai>0?'#B3261E':'var(--mgray)'}">${money(f.conLai)}</b></div>
       <div class="pm360-finrow"><span>🧾 Chi phí đã ghi</span><b>${money(f.chiPhi)}</b></div>
     </div>
@@ -3472,9 +3472,9 @@ async function updateStage(id,stage){
   for(const t of newChkTasks) pushTask(t);
   logActivity('changeStage','KH',l.id,l.name,`${old} → ${nw}`,old,nw);
   if(newChkTasks.length > 0)
-    toast(`🔄 → ${nw} · ✅ ${newChkTasks.length} việc mới`);
+    toast(`→ ${nw} · ✓ ${newChkTasks.length} việc mới`);
   else
-    toast(`🔄 Chuyển sang: ${nw}`);
+    toast(`Chuyển sang: ${nw}`);
 }
 
 async function handleTransferAccept(id){
@@ -3520,10 +3520,10 @@ async function completeStage(id){
   if(isTK && l.inBothPipelines && l.stageTc && l.stageTc!=='tc_handover'){
     if(!confirm(`${l.name} đã xong Thiết kế nhưng vẫn đang ở pipeline Thi công.\n\nĐánh dấu HOÀN THÀNH THIẾT KẾ và tiếp tục theo dõi Thi công?`)) return;
     if(!Array.isArray(l.history)) l.history=[];
-    l.history.unshift({t:'✅ Hoàn thành giai đoạn THIẾT KẾ',time:nowStr()});
+    l.history.unshift({t:'✓ Hoàn thành giai đoạn THIẾT KẾ',time:nowStr()});
     logActivity('completeStage','KH',l.id,l.name,'Hoàn thành Thiết kế','tk_accept','');
     touch(l); saveLocal(); closePanel(); rerenderCurrent(); await pushLead(l);
-    toast(`✅ ${l.name}: hoàn thành Thiết kế. Tiếp tục theo dõi Thi công.`);
+    toast(`✓ ${l.name}: hoàn thành Thiết kế. Tiếp tục theo dõi Thi công.`);
     return;
   }
 
@@ -3537,7 +3537,7 @@ async function completeStage(id){
   l.afterSale = true;
   l.afterSaleSince = new Date().toISOString().split('T')[0];
   if(!Array.isArray(l.history)) l.history=[];
-  l.history.unshift({t:`🎉 Hoàn thành ${loai} → Chăm sóc sau bán hàng`,time:nowStr(),ts:Date.now(),kind:'system',by:(currentUser&&currentUser.name)||''});
+  l.history.unshift({t:`Hoàn thành ${loai} → Chăm sóc sau bán hàng`,time:nowStr(),ts:Date.now(),kind:'system',by:(currentUser&&currentUser.name)||''});
   logActivity('completeStage','KH',l.id,l.name,`Hoàn thành ${loai} → Pipeline Chăm sóc sau bán`,'cs_new','');
 
   // Tạo các task chăm sóc theo lịch
@@ -3557,7 +3557,7 @@ async function completeStage(id){
   touch(l); saveLocal(); closePanel(); rerenderCurrent();
   await pushLead(l);
   for(const t of newCare){ await pushTask(t); }
-  toast(`🎉 ${l.name} đã vào danh sách chăm sóc sau bán — đã tạo ${newCare.length} lịch nhắc!`);
+  toast(`${l.name} đã vào danh sách chăm sóc sau bán — đã tạo ${newCare.length} lịch nhắc!`);
 }
 
 async function handleTransferReject(id){
@@ -3601,8 +3601,8 @@ function updateStageDropdown(){
 function openAddLead(pipe='tk', defaultStage=null){
   if(!isManager()){toast('⛔ Bạn không có quyền thêm KH','⛔');return;}
   editingLeadId=null;
-  document.getElementById('modal-title').textContent='✨ Thêm Khách hàng mới';
-  document.getElementById('modal-save-btn').textContent='💾 Lưu';
+  document.getElementById('modal-title').textContent='Thêm Khách hàng mới';
+  document.getElementById('modal-save-btn').textContent='Lưu';
   ['f-name','f-phone','f-email','f-area','f-timeline','f-note','f-next-action','f-next-date'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-value-tk').value='';
   document.getElementById('f-value-tc').value='';
@@ -3665,7 +3665,7 @@ async function saveLead(){
     saveLocal(); closeModal(); rerenderCurrent();
     await pushLead(l);
     logActivity('editLead','KH',l.id,l.name,`Sửa thông tin KH`,'','');
-    toast(`✅ Đã cập nhật: ${name}!`);
+    toast(`✓ Đã cập nhật: ${name}!`);
   } else {
     const _fScore=document.getElementById('f-score').value;
     const newLead={id:newId(),name,phone,email:document.getElementById('f-email').value,type:document.getElementById('f-type').value,source:document.getElementById('f-source').value,budget:document.getElementById('f-budget').value,valueTk:parseInt(document.getElementById('f-value-tk').value)||0,valueTc:parseInt(document.getElementById('f-value-tc').value)||0,area:document.getElementById('f-area').value,timeline:document.getElementById('f-timeline').value,stage,owner:document.getElementById('f-owner').value,note:document.getElementById('f-note').value,nextAction:(document.getElementById('f-next-action')||{}).value||'',nextDate:(document.getElementById('f-next-date')||{}).value||'',created:now,lastContact:now,inBothPipelines:false,updatedAt:Date.now(),history:[{t:`KH mới từ ${document.getElementById('f-source').value}`,time:nowStr()}]};
@@ -3673,7 +3673,7 @@ async function saveLead(){
     leads.unshift(newLead); saveLocal(); closeModal(); rerenderCurrent();
     await pushLead(newLead);
     logActivity('addLead','KH',newLead.id,newLead.name,`Nguồn: ${newLead.source} · Giai đoạn: ${newLead.stage}`,'',newLead.stage);
-    toast(`✅ Đã thêm: ${name}!`);
+    toast(`✓ Đã thêm: ${name}!`);
   }
   updateBadges();
 }
@@ -3681,19 +3681,19 @@ async function saveLead(){
 async function confirmDeleteLead(id){
   if(!isAdmin()){toast('⛔ Chỉ Admin mới xóa được KH','⛔');return;}
   const l=leads.find(l=>l.id==id); if(!l) return;
-  showConfirm('🗑️','Chuyển vào thùng rác',`Đưa "${l.name}" vào thùng rác? Bạn có thể khôi phục lại bất cứ lúc nào trong mục 🗑️ Thùng rác.`,async()=>{
+  showConfirm('🗑️','Chuyển vào thùng rác',`Đưa "${l.name}" vào thùng rác? Bạn có thể khôi phục lại bất cứ lúc nào trong mục Thùng rác.`,async()=>{
     // SOFT-DELETE: giữ lại bản ghi, chỉ đánh dấu đã xóa → khôi phục được
     l.deleted   = true;
     l.deletedAt = Date.now();
     l.deletedBy = currentUser ? currentUser.name : '';
     if(!Array.isArray(l.history)) l.history=[];
-    l.history.unshift({t:'🗑️ Đưa vào thùng rác', time:nowStr(), ts:Date.now(), kind:'system', by:(currentUser&&currentUser.name)||''});
+    l.history.unshift({t:'Đưa vào thùng rác', time:nowStr(), ts:Date.now(), kind:'system', by:(currentUser&&currentUser.name)||''});
     touch(l);
     try{ closePanel(); }catch(e){}
     saveLocal(); rerenderCurrent(); updateBadges();
     await pushLead(l);   // đẩy bản đã đánh dấu deleted lên Sheets (KHÔNG xóa hẳn)
     logActivity('trashLead','KH',id,l.name,'Đưa KH vào thùng rác','','');
-    toast(`🗑️ Đã đưa vào thùng rác: ${l.name}`);
+    toast(`Đã đưa vào thùng rác: ${l.name}`);
   });
 }
 
@@ -3746,13 +3746,13 @@ function renderTrash(){
     const pipe=getPipelineOfStage(l.stage||'tk_new');
     return `<tr>
       <td style="font-weight:600">${esc2(l.name||'–')}</td>
-      <td>📱 ${esc2(l.phone||'–')}</td>
-      <td>${pipe==='tc'?'🔨 Thi công':'🎨 Thiết kế'} · ${esc2(getStageObj(l.stage||'tk_new').label)}</td>
+      <td>${esc2(l.phone||'–')}</td>
+      <td>${pipe==='tc'?'Thi công':'Thiết kế'} · ${esc2(getStageObj(l.stage||'tk_new').label)}</td>
       <td>${esc2(l.deletedBy||'–')}</td>
       <td style="font-size:11.5px;color:var(--mgray)">${when}</td>
       <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-outline btn-sm" style="border-color:#0F5132;color:#0F5132" onclick="restoreLead('${l.id}')">♻️ Khôi phục</button>
-        <button class="btn btn-outline btn-sm" style="border-color:#B3261E;color:#B3261E;margin-left:6px" onclick="purgeLead('${l.id}')">🗑️ Xóa hẳn</button>
+        <button class="btn btn-outline btn-sm" style="border-color:#B3261E;color:#B3261E;margin-left:6px" onclick="purgeLead('${l.id}')">Xóa hẳn</button>
       </td></tr>`;
   }).join('');
   document.getElementById('page-content').innerHTML=`
@@ -3775,7 +3775,7 @@ function renderTrash(){
 // ══════════════════════════════════════════════════════════════
 function openImport(){
   if(!isManager()){toast('⛔ Chỉ quản lý mới được import','⛔');return;}
-  const pipeOpts=`<option value="tk">🎨 Thiết kế</option><option value="tc">🔨 Thi công</option>`;
+  const pipeOpts=`<option value="tk">Thiết kế</option><option value="tc">Thi công</option>`;
   const ownerOpts=loadStaffList().filter(s=>s.active!==false).map(s=>`<option value="${s.id}">${esc2(s.name)}</option>`).join('');
   modal2('📥 Import khách hàng hàng loạt', `
     <div style="font-size:13px;color:var(--mgray);margin-bottom:10px;line-height:1.6">
@@ -3869,7 +3869,7 @@ async function importCommit(){
   });
   saveLocal(); dongModal2(); showPage('leads',document.querySelector('[data-page=leads]')); updateBadges();
   logActivity('importLeads','KH','','',`Import ${created.length} khách hàng`,'','');
-  toast(`✅ Đã nhập ${created.length} khách hàng`);
+  toast(`✓ Đã nhập ${created.length} khách hàng`);
   // Đẩy lên Sheets tuần tự
   for(const l of created){ await pushLead(l); }
 }
@@ -3883,7 +3883,7 @@ function exportCSV(){
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
   a.download=`MDC_KhachHang_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  toast('📊 Đã xuất CSV!');
+  toast('Đã xuất CSV!');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3978,10 +3978,10 @@ function toggleReminderPanel(ev){
 function buildReminderHtml(){
   const d=reminderData();
   if(d.total===0){
-    return `<div class="bell-head">🔔 Nhắc việc</div>
-      <div class="bell-empty">🎉 Tuyệt vời! Không có việc quá hạn hay khách cần liên hệ gấp.</div>`;
+    return `<div class="bell-head">Nhắc việc</div>
+      <div class="bell-empty">Tuyệt vời! Không có việc quá hạn hay khách cần liên hệ gấp.</div>`;
   }
-  let h=`<div class="bell-head">🔔 Nhắc việc <span style="margin-left:auto;font-size:11px;font-weight:600;color:#B3261E">${d.total} mục cần xử lý</span></div>`;
+  let h=`<div class="bell-head">Nhắc việc <span style="margin-left:auto;font-size:11px;font-weight:600;color:#B3261E">${d.total} mục cần xử lý</span></div>`;
   const taskRow=(t,over)=>{
     const l=leads.find(x=>x.id==t.leadId);
     const who=l?l.name:(t.lead||t.khName||'');
@@ -3996,11 +3996,11 @@ function buildReminderHtml(){
     h+=d.overdue.slice(0,10).map(t=>taskRow(t,true)).join('');
   }
   if(d.today.length){
-    h+=`<div class="bell-sec" style="color:#8F6A2B">📅 Hôm nay (${d.today.length})</div>`;
+    h+=`<div class="bell-sec" style="color:#8F6A2B">Hôm nay (${d.today.length})</div>`;
     h+=d.today.slice(0,10).map(t=>taskRow(t,false)).join('');
   }
   if(d.care.length){
-    h+=`<div class="bell-sec" style="color:#B3261E">🔥 Khách cần liên hệ gấp (${d.care.length})</div>`;
+    h+=`<div class="bell-sec" style="color:#B3261E">Khách cần liên hệ gấp (${d.care.length})</div>`;
     h+=d.care.map(x=>{
       const l=x.lead;
       return `<div class="bell-row" onclick="goToLead('${l.id}')">
@@ -4031,7 +4031,7 @@ updateStageDropdown();
 // Khởi tạo staff mặc định
 initDefaultStaff();
 
-// ✅ SỬA LỖI ĐĂNG NHẬP MOBILE: kéo danh sách nhân sự từ Sheets về TRƯỚC khi đăng nhập.
+// ✓ SỬA LỖI ĐĂNG NHẬP MOBILE: kéo danh sách nhân sự từ Sheets về TRƯỚC khi đăng nhập.
 // Thiết bị mới (điện thoại) có localStorage trống → chỉ có admin mặc định →
 // không đăng nhập được bằng tài khoản thật. Preload khắc phục điều này.
 async function preloadStaffForLogin(){
@@ -4041,7 +4041,7 @@ async function preloadStaffForLogin(){
     const data=await apiFetch({action:'getAll'});
     if(data && data.staff && Array.isArray(data.staff) && data.staff.length>0){
       saveStaffList(normalizeStaff(data.staff));
-      console.log('✅ Đã tải '+data.staff.length+' nhân sự từ Sheets cho đăng nhập');
+      console.log('✓ Đã tải '+data.staff.length+' nhân sự từ Sheets cho đăng nhập');
     }
   }catch(e){ console.warn('Preload staff lỗi (vẫn đăng nhập được bằng dữ liệu local):', e); }
 }
@@ -4062,12 +4062,12 @@ function bootApp(){
     console.log('🔐 Session restored, starting app with immediate sync...');
     startApp();
 
-    // ✅ IMMEDIATE SYNC khi app khởi động
+    // ✓ IMMEDIATE SYNC khi app khởi động
     if(getApiUrl() && !isSyncing){
-      console.log('🔄 Triggering initial sync on startup...');
+      console.log('Triggering initial sync on startup...');
       syncFromSheets().then(ok=>{
         if(ok && currentUser){
-          console.log('✅ Initial sync complete');
+          console.log('✓ Initial sync complete');
           rerenderCurrent();
         }
       }).catch(err=>{
@@ -4197,7 +4197,7 @@ function moDoTrung(){
     .sort((a,b)=>b[1].length-a[1].length);
   let html;
   if(!trung.length){
-    html = '<div style="padding:26px;text-align:center;color:#6F6355">✅ Không phát hiện khách trùng số điện thoại.</div>';
+    html = '<div style="padding:26px;text-align:center;color:#6F6355">✓ Không phát hiện khách trùng số điện thoại.</div>';
   } else {
     html = '<p style="font-size:13px;color:#6F6355;margin-bottom:12px">Phát hiện <b>'+trung.length
       + '</b> số điện thoại bị trùng. Trùng khách khiến số liệu chuyển đổi sai và hai sale cùng chăm một người.</p>'
@@ -4273,7 +4273,7 @@ function crmInsightHtml(){
     + '<div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#9A8F82;text-transform:uppercase">Khách cần liên hệ gấp</div>'
     + '<div style="font-size:23px;font-weight:800;color:'+mauN+';margin-top:4px">'+nguoi.length+'</div>'
     + '<div style="font-size:11px;color:#9A8F82;margin-top:2px">'
-    + (nguoi.length ? '🧊 '+rat+' rất nguội · 🔥 '+ng+' nguội · ⏳ '+sap+' sắp' : '✅ không có khách bị bỏ quên')
+    + (nguoi.length ? '🧊 '+rat+' rất nguội · '+ng+' nguội · ⏳ '+sap+' sắp' : 'Không có khách bị bỏ quên')
     + '</div></div>';
 
   h += '</div>';
@@ -4282,7 +4282,7 @@ function crmInsightHtml(){
   if(nguoi.length){
     h += '<div style="background:#fff;border:1px solid #E5DFD5;border-radius:10px;margin-bottom:16px;overflow:hidden">'
       + '<div style="display:flex;align-items:center;gap:8px;padding:12px 15px;border-bottom:1px solid #F1EBE0">'
-      + '<b style="font-size:14px">🔥 Cần liên hệ ngay</b>'
+      + '<b style="font-size:14px">Cần liên hệ ngay</b>'
       + '<span style="font-size:11px;color:#9A8F82">ngưỡng tính theo từng giai đoạn</span>'
       + '<button class="btn btn-outline" style="margin-left:auto;padding:4px 10px;font-size:11.5px" onclick="moLeadNguoi()">Xem tất cả '+nguoi.length+'</button></div>';
     nguoi.slice(0,5).forEach(x=>{
@@ -4291,7 +4291,7 @@ function crmInsightHtml(){
       h += '<div style="display:flex;align-items:center;gap:9px;padding:9px 15px;border-bottom:1px solid #F5F1EA;cursor:pointer" onclick="openLeadDetail(\''+l.id+'\')">'
         + '<div style="flex:1;min-width:0"><b style="font-size:13px">'+esc2(l.name)+'</b>'
         + '<div style="font-size:11px;color:#9A8F82">'+esc2(stageLabelOf(l.stage))+' · '+esc2(own)
-        + (l.nextAction?' · 📌 '+esc2(l.nextAction):'')+'</div></div>'
+        + (l.nextAction?' · • '+esc2(l.nextAction):'')+'</div></div>'
         + (giaTriLead(l)?'<div style="font-size:12px;color:#6F6355;white-space:nowrap">'+formatShort(giaTriLead(l))+'</div>':'')
         + huyHieuNguoi(l) + '</div>';
     });
@@ -4305,7 +4305,7 @@ function moLeadNguoi(){
   const ds = dsLeadNguoi();
   let html;
   if(!ds.length){
-    html = '<div style="padding:26px;text-align:center;color:#6F6355">✅ Không có khách nào bị bỏ quên.</div>';
+    html = '<div style="padding:26px;text-align:center;color:#6F6355">✓ Không có khách nào bị bỏ quên.</div>';
   } else {
     html = '<p style="font-size:12.5px;color:#6F6355;margin-bottom:11px">Ngưỡng nguội tính riêng theo giai đoạn — '
       + 'khách <b>Mới</b> quá 2 ngày đã là nguội, khách <b>Đang thi công</b> thì 14 ngày mới tính.</p>'
@@ -4316,12 +4316,12 @@ function moLeadNguoi(){
           return '<div style="display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid #F1EBE0;cursor:pointer" onclick="closeModal();openLeadDetail(\''+l.id+'\')">'
             + '<div style="flex:1;min-width:0"><b style="font-size:13px">'+esc2(l.name)+'</b>'
             + '<div style="font-size:11px;color:#9A8F82">'+esc2(stageLabelOf(l.stage))+' · '+esc2(own)
-            + ' · '+esc2(l.phone||'')+(l.nextAction?' · 📌 '+esc2(l.nextAction):'')+'</div></div>'
+            + ' · '+esc2(l.phone||'')+(l.nextAction?' · • '+esc2(l.nextAction):'')+'</div></div>'
             + (giaTriLead(l)?'<div style="font-size:12px;color:#6F6355;white-space:nowrap">'+formatShort(giaTriLead(l))+'</div>':'')
             + huyHieuNguoi(l)+'</div>';
         }).join('') + '</div>';
   }
-  modal2('🔥 Khách cần liên hệ ('+ds.length+')', html);
+  modal2('Khách cần liên hệ ('+ds.length+')', html);
 }
 
 /* Bảng dự báo chi tiết theo giai đoạn — dùng trong Báo cáo */
@@ -4338,7 +4338,7 @@ function duBaoTheoGiaiDoanHtml(){
   if(!rows.length) return '';
   const T = rows.reduce((a,r)=>({gt:a.gt+r.gt, ts:a.ts+r.ts}), {gt:0,ts:0});
   return '<div style="background:#fff;border:1px solid #E5DFD5;border-radius:10px;overflow:hidden;margin-bottom:16px">'
-    + '<div style="padding:12px 15px;border-bottom:1px solid #F1EBE0"><b style="font-size:14px">📈 Dự báo doanh thu theo giai đoạn</b>'
+    + '<div style="padding:12px 15px;border-bottom:1px solid #F1EBE0"><b style="font-size:14px">Dự báo doanh thu theo giai đoạn</b>'
     + '<div style="font-size:11px;color:#9A8F82;margin-top:2px">Giá trị × xác suất thắng của từng giai đoạn</div></div>'
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">'
     + '<thead><tr style="background:#FBF8F1;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#9A8F82">'
@@ -4471,7 +4471,7 @@ function htRender(){
         + esc2(stageLabelOf(l.stage))+'</span></div>'
       + '<div style="font-size:12px;color:#6F6355;margin-top:3px">'
         + esc2(l.source||'—') + ' · ' + esc2(l.type||'—')
-        + (l.area?' · '+esc2(l.area):'') + ' · 📱 '+esc2(l.phone||'') + '</div></div>'
+        + (l.area?' · '+esc2(l.area):'') + ' · '+esc2(l.phone||'') + '</div></div>'
     + '<div style="display:flex;gap:16px;flex:none">'
       + '<div><div style="font-size:9.5px;font-weight:700;letter-spacing:.5px;color:#9A8F82;text-transform:uppercase">Giá trị ước tính</div>'
       + '<div style="font-size:15px;font-weight:800;margin-top:2px">'+(gt?formatShort(gt):'–')+'</div></div>'
@@ -4540,11 +4540,11 @@ function htHanhDongChinh(l, H, quyen){
   };
   var k = BUOC_HT[H.hienTai] ? BUOC_HT[H.hienTai].k : 'xong';
   if(k==='lienhe')    return b('📞 Ghi nhận đã liên hệ', "htGhiNhanh('Gọi điện')");
-  if(k==='khaosat')   return b('📍 Ghi khảo sát', 'htFormKhaoSat()');
+  if(k==='khaosat')   return b('Ghi khảo sát', 'htFormKhaoSat()');
   if(k==='baogia')    return b('📄 Lập báo giá', 'htFormBaoGia()');
   if(k==='duyet'){
     var bgN = H.bg.filter(function(x){return x['Trạng thái']==='Bản nháp';})[0];
-    if(bgN) return b('📋 Trình duyệt báo giá', "htDoiTTBaoGia('"+bgN['Mã BG']+"','Chờ duyệt')");
+    if(bgN) return b('Trình duyệt báo giá', "htDoiTTBaoGia('"+bgN['Mã BG']+"','Chờ duyệt')");
     var bgC = H.bg.filter(function(x){return x['Trạng thái']==='Chờ duyệt';})[0];
     if(bgC && typeof isAdmin==='function' && isAdmin())
       return b('✓ Duyệt báo giá', "htDoiTTBaoGia('"+bgC['Mã BG']+"','Đã duyệt')", '#0F5132');
@@ -4556,7 +4556,7 @@ function htHanhDongChinh(l, H, quyen){
   }
   if(k==='chapthuan'){
     var bgG = H.bg.filter(function(x){return x['Trạng thái']==='Đã gửi khách';})[0];
-    if(bgG) return b('🤝 Khách đã chấp thuận', "htDoiTTBaoGia('"+bgG['Mã BG']+"','Khách chấp thuận')", '#0F5132');
+    if(bgG) return b('Khách đã chấp thuận', "htDoiTTBaoGia('"+bgG['Mã BG']+"','Khách chấp thuận')", '#0F5132');
   }
   if(k==='kyhd')      return b('✍ Ký hợp đồng', 'htFormKyHopDong()', '#0F5132');
   if(k==='duan')      return b('🏛 Chuyển thành dự án', 'htChuyenDuAn()', '#8F6A2B');
@@ -4613,7 +4613,7 @@ function htColKhaoSat(l, H, quyen){
     + '<div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F1EBE0">'
     + '<b style="font-size:11px;letter-spacing:.6px;text-transform:uppercase">Khảo sát ('+H.ks.length+')</b>'
     + (quyen?'<button onclick="htFormKhaoSat()" style="margin-left:auto;border:none;background:none;cursor:pointer;'
-      + 'font-size:11.5px;color:#1D4E89;font-weight:600">📍 Ghi khảo sát</button>':'')+'</div>'
+      + 'font-size:11.5px;color:#1D4E89;font-weight:600">Ghi khảo sát</button>':'')+'</div>'
     + '<div style="padding:9px">';
   if(!H.ks.length){
     h += '<div style="padding:16px 8px;text-align:center;color:#9A8F82;font-size:12px">Chưa khảo sát hiện trạng</div>';
@@ -4621,7 +4621,7 @@ function htColKhaoSat(l, H, quyen){
     H.ks.slice().sort(function(a,b){ return (b['Ngày']||'') > (a['Ngày']||'') ? 1 : -1; }).forEach(function(x){
       h += '<div style="border:1px solid #E5DFD5;border-radius:8px;padding:9px 11px;margin-bottom:7px;cursor:pointer" '
         + 'onclick="htFormKhaoSat(\''+esc2(x['Mã KS'])+'\')">'
-        + '<div style="font-size:12px;line-height:1.5">📍 '+esc2(x['Địa chỉ']||'—')
+        + '<div style="font-size:12px;line-height:1.5">'+esc2(x['Địa chỉ']||'—')
         + '<span style="color:#9A8F82"> · '+esc2(x['Ngày']||'')+'</span></div>'
         + '<div style="font-size:11.5px;color:#6F6355;margin-top:3px">'
         + (x['Diện tích (m2)']||0)+' m² · '+esc2(x['Nhu cầu']||'Không ghi nhu cầu')+'</div>'
@@ -4738,7 +4738,7 @@ function htNhatKyDayDu(l, H){
 
   return '<details style="margin-top:12px;border:1px solid #E5DFD5;border-radius:10px;background:#fff">'
     + '<summary style="padding:11px 14px;cursor:pointer;font-size:12.5px;font-weight:600;list-style:none">'
-    + '📋 Nhật ký đầy đủ <span style="font-weight:400;color:#9A8F82">— ai làm gì, lúc nào: tiếp nhận, gọi/gặp, '
+    + 'Nhật ký đầy đủ <span style="font-weight:400;color:#9A8F82">— ai làm gì, lúc nào: tiếp nhận, gọi/gặp, '
     + 'khảo sát, báo giá &amp; duyệt, ký hợp đồng, tạo dự án</span></summary>'
     + '<div style="padding:0 14px 12px">'
     + (muc.length ? muc.map(function(m){
@@ -4795,7 +4795,7 @@ function htFormGhiChu(ma){
     + '<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">'
     + (x?'<button class="btn btn-outline" style="color:#B3261E;border-color:#F2C9C5" onclick="htXoaGhiChu(\''+ma+'\')">Xóa</button>':'')
     + '<button class="btn btn-outline" onclick="htRender()">Hủy</button>'
-    + '<button class="btn btn-primary" onclick="htLuuGhiChu(\''+(ma||'')+'\')">💾 Lưu</button></div>';
+    + '<button class="btn btn-primary" onclick="htLuuGhiChu(\''+(ma||'')+'\')">Lưu</button></div>';
   modal2(x?'Sửa ghi nhận':'✍ Ghi nhận làm việc', h);
 }
 function htLuuGhiChu(ma){
@@ -4822,7 +4822,7 @@ function htLuuGhiChu(ma){
 function htXoaGhiChu(ma){
   if(!confirm('Xóa ghi nhận này?')) return;
   HT.lichsulv = (HT.lichsulv||[]).filter(function(r){return r['Mã LS']!==ma;});
-  htSave(); htGui('deleteLichSuLV',{code:ma}); htRender(); toast('🗑️ Đã xóa');
+  htSave(); htGui('deleteLichSuLV',{code:ma}); htRender(); toast('Đã xóa');
 }
 
 /* --- Khảo sát --- */
@@ -4849,8 +4849,8 @@ function htFormKhaoSat(ma){
     + '<div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end">'
     + (x?'<button class="btn btn-outline" style="color:#B3261E;border-color:#F2C9C5" onclick="htXoaKhaoSat(\''+ma+'\')">Xóa</button>':'')
     + '<button class="btn btn-outline" onclick="htRender()">Hủy</button>'
-    + '<button class="btn btn-primary" onclick="htLuuKhaoSat(\''+(ma||'')+'\')">💾 Lưu khảo sát</button></div>';
-  modal2(x?'Sửa khảo sát':'📍 Ghi nhận khảo sát hiện trạng', h);
+    + '<button class="btn btn-primary" onclick="htLuuKhaoSat(\''+(ma||'')+'\')">Lưu khảo sát</button></div>';
+  modal2(x?'Sửa khảo sát':'Ghi nhận khảo sát hiện trạng', h);
 }
 function htLuuKhaoSat(ma){
   var l = window.__htLead;
@@ -4872,7 +4872,7 @@ function htLuuKhaoSat(ma){
 function htXoaKhaoSat(ma){
   if(!confirm('Xóa bản khảo sát này?')) return;
   HT.khaosat = (HT.khaosat||[]).filter(function(r){return r['Mã KS']!==ma;});
-  htSave(); htGui('deleteKhaoSat',{code:ma}); htRender(); toast('🗑️ Đã xóa');
+  htSave(); htGui('deleteKhaoSat',{code:ma}); htRender(); toast('Đã xóa');
 }
 
 /* --- Báo giá --- */
@@ -4916,7 +4916,7 @@ function htFormBaoGia(ma){
           + BG_TT.map(function(t){ return '<option'+(x['Trạng thái']===t?' selected':'')+'>'+t+'</option>'; }).join('')+'</select>' : '')
     + (x?'<button class="btn btn-outline" style="color:#B3261E;border-color:#F2C9C5" onclick="htXoaBaoGia(\''+ma+'\')">Xóa</button>':'')
     + '<button class="btn btn-outline" onclick="htRender()">Hủy</button>'
-    + '<button class="btn btn-primary" onclick="htLuuBaoGia(\''+(ma||'')+'\')">💾 Lưu báo giá</button></div>';
+    + '<button class="btn btn-primary" onclick="htLuuBaoGia(\''+(ma||'')+'\')">Lưu báo giá</button></div>';
   modal2(x?('Báo giá v'+(x['Phiên bản']||1)):'📄 Lập báo giá mới', h);
 }
 function htLuuBaoGia(ma){
@@ -4959,7 +4959,7 @@ function htLuuBaoGia(ma){
 function htXoaBaoGia(ma){
   if(!confirm('Xóa báo giá này?')) return;
   HT.baogia = (HT.baogia||[]).filter(function(r){return r['Mã BG']!==ma;});
-  htSave(); htGui('deleteBaoGia',{code:ma}); htRender(); toast('🗑️ Đã xóa');
+  htSave(); htGui('deleteBaoGia',{code:ma}); htRender(); toast('Đã xóa');
 }
 function htApDungTTBaoGia(rec, tt){
   rec['Trạng thái'] = tt;
@@ -5150,7 +5150,7 @@ function htLuuHopDong(ma){
   ops.forEach(function(o){ htGui(o.action, o.data); });
   htGhiNhanh('Ghi chú','Ký hợp đồng '+(rec['Số HĐ']||'')+' — '+formatShort(gt)
     + ((window.__htDot||[]).length?' · khai '+(window.__htDot||[]).filter(function(d){return d.ten&&d.tien;}).length+' đợt thanh toán':''));
-  toast('✅ Đã ghi nhận ký hợp đồng');
+  toast('✓ Đã ghi nhận ký hợp đồng');
 }
 
 /* --- Hẹn liên hệ lại / đánh dấu thất bại / chuyển dự án --- */
@@ -5209,22 +5209,22 @@ function htChuyenDuAn(){
 /* ─── 1. CƠ CẤU MENU CHUẨN ────────────────────────────────────── */
 var MENU_CRM = [
   {nhom:null, muc:[
-    {id:'dashboard', ten:'Tổng quan',        icon:'📊', mb:true, mbTen:'Tổng quan'}
+    {id:'dashboard', ten:'Tổng quan',        icon:'▦', mb:true, mbTen:'Tổng quan'}
   ]},
   {nhom:'Bán hàng', muc:[
-    {id:'leads',       ten:'Tất cả khách hàng', icon:'👥', mb:true, mbTen:'Khách hàng'},
-    {id:'pipeline_tk', ten:'Pipeline Thiết kế', icon:'🎨', mb:false},
-    {id:'pipeline_tc', ten:'Pipeline Thi công', icon:'🔨', mb:false},
-    {id:'tasks',       ten:'Công việc',         icon:'✅', mb:true, mbTen:'Công việc'}
+    {id:'leads',       ten:'Tất cả khách hàng', icon:'◎', mb:true, mbTen:'Khách hàng'},
+    {id:'pipeline_tk', ten:'Pipeline Thiết kế', icon:'◈', mb:false},
+    {id:'pipeline_tc', ten:'Pipeline Thi công', icon:'▤', mb:false},
+    {id:'tasks',       ten:'Công việc',         icon:'✓', mb:true, mbTen:'Công việc'}
   ]},
   {nhom:'Phân tích', muc:[
-    {id:'reports', ten:'Báo cáo & Dự báo', icon:'📈', mb:true, mbTen:'Báo cáo'}
+    {id:'reports', ten:'Báo cáo & Dự báo', icon:'◱', mb:true, mbTen:'Báo cáo'}
   ]},
   {nhom:'Quản trị', muc:[
-    {id:'staff',    ten:'Nhân sự & Phân quyền', icon:'👤', mb:false, admin:true},
-    {id:'actlog',   ten:'Nhật ký thao tác',     icon:'📋', mb:false, admin:true},
-    {id:'connect',  ten:'Kết nối Google Sheets',icon:'🔗', mb:false},
-    {id:'settings', ten:'Cài đặt',              icon:'⚙️', mb:true, mbTen:'Cài đặt'}
+    {id:'staff',    ten:'Nhân sự & Phân quyền', icon:'◉', mb:false, admin:true},
+    {id:'actlog',   ten:'Nhật ký thao tác',     icon:'▥', mb:false, admin:true},
+    {id:'connect',  ten:'Kết nối Google Sheets',icon:'⊚', mb:false},
+    {id:'settings', ten:'Cài đặt',              icon:'⚙', mb:true, mbTen:'Cài đặt'}
   ]}
 ];
 
