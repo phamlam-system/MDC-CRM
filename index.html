@@ -3372,7 +3372,8 @@ async function loadPM360(id){
   if(!box) return;
   if(!getApiUrl()){ box.innerHTML=''; return; }
   try{
-    const d=await apiFetch({action:'getCustomer360', maKH:id});
+    const l=leads.find(x=>x.id==id);
+    const d=await apiFetch({action:'getCustomer360', maKH:id, sdt:(l&&l.phone)||'', ten:(l&&l.name)||''});
     if(!d || !d.hasProject){ box.innerHTML=''; return; }   // chưa có dự án → ẩn hẳn
     box.innerHTML=renderPM360(d);
   }catch(e){
