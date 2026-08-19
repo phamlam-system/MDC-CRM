@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MDC Interior — Sales CRM v7.9</title>
+<title>MDC Interior — Sales CRM v8.0</title>
 <style>
 
 :root{
@@ -530,7 +530,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <div class="login-screen" id="login-screen">
   <div class="login-card">
     <div class="login-logo">MDC Interior</div>
-    <div class="login-sub">Sales CRM v7.9</div>
+    <div class="login-sub">Sales CRM v8.0</div>
     <div class="login-form-group">
       <label class="login-label">Tên đăng nhập</label>
       <input class="login-input" id="login-username" placeholder="Email hoặc số điện thoại" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
@@ -548,7 +548,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <nav class="sidebar" id="main-sidebar" style="display:none">
   <div class="sidebar-brand">
     <div class="brand-title">MDC Interior</div>
-    <div class="brand-sub">Sales CRM v7.9</div>
+    <div class="brand-sub">Sales CRM v8.0</div>
     <div class="brand-ver">
       <div class="sync-dot gray" id="sync-dot"></div>
       <span id="sync-label" style="color:rgba(212,175,106,.4)">Chưa kết nối</span>
@@ -614,7 +614,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
         <div class="bell-panel" id="reminder-panel"></div>
       </div>
       <button class="btn btn-outline btn-sm" id="sync-btn" onclick="syncNow()">Sync</button>
-      <div class="search-bar"><span>🔍</span><input type="text" placeholder="Tìm kiếm khách hàng..." id="global-search" oninput="handleSearch(this.value)"></div>
+      <div class="search-bar"><span style="opacity:.5">⌕</span><input type="text" placeholder="Tìm kiếm khách hàng..." id="global-search" oninput="handleSearch(this.value)"></div>
       <button class="btn btn-primary btn-sm" onclick="openAddLead()">+ Thêm KH</button>
     </div>
   </div>
@@ -862,8 +862,9 @@ async function doLogin(){
   // Chuẩn hóa SĐT VN: bỏ '84' hoặc '0' ở đầu để +84/0xxx/xxx đều khớp
   const normPhone=x=>{let d=String(x||'').replace(/[^0-9]/g,'');if(d.indexOf('84')===0&&d.length>=11)d=d.slice(2);if(d.indexOf('0')===0)d=d.slice(1);return d;};
   const rawP=normPhone(rawPhone);
-  // ── ĐĂNG NHẬP KHẨN CẤP: luôn vào được dù dữ liệu nhân sự bị lỗi/lệch cột ──
-  // Dùng để khôi phục khi sheet Nhân sự hỏng. ĐỔI MẬT KHẨU NÀY sau khi sửa xong.
+  // ── ĐĂNG NHẬP KHẨN CẤP (mạng lưới an toàn) ───────────────────────
+  // Chỉ dùng khi sheet Nhân sự hỏng/lệch cột khiến không ai đăng nhập được.
+  // V8: ghi nhật ký mỗi lần dùng để kiểm soát; nên đổi mật khẩu định kỳ.
   if((raw==='admin@mdc.vn'||raw==='sos') && p==='MDC-cuuho-2026'){
     currentUser={id:'admin_001','Mã NV':'admin_001',name:'Quản trị (khẩn cấp)',
       password:p,roleTitle:'Tổng giám đốc',phone:'',email:'admin@mdc.vn',
@@ -873,6 +874,9 @@ async function doLogin(){
     err.classList.remove('show');
     localStorage.setItem(LS_SESSION,JSON.stringify({id:currentUser.id,at:Date.now()}));
     startApp();
+    // Ghi nhật ký + báo cho quản trị biết đây là phiên khẩn cấp
+    setTimeout(()=>{ try{ logActivity('login_emergency','Hệ thống','','Quản trị (khẩn cấp)','Đăng nhập KHẨN CẤP — kiểm tra sheet Nhân sự','',''); }catch(e){} },1500);
+    setTimeout(()=>{ try{ toast('Đang dùng đăng nhập khẩn cấp — hãy kiểm tra dữ liệu Nhân sự','⚠️'); }catch(e){} },2500);
     return;
   }
   const matchFn=s=>{
@@ -1106,13 +1110,13 @@ function saveStaffMember(){
   const phone=document.getElementById('sf-phone').value.trim();
   const pw=document.getElementById('sf-password').value;
   const pw2=document.getElementById('sf-password2').value;
-  if(!name){toast('⚠️ Nhập Họ tên','⚠️');return;}
-  if(!email&&!phone){toast('⚠️ Cần Email hoặc SĐT để đăng nhập','⚠️');return;}
-  if(!editingStaffId&&!pw){toast('⚠️ Nhập mật khẩu','⚠️');return;}
-  if(pw&&pw!==pw2){toast('⚠️ Mật khẩu không khớp','⚠️');return;}
+  if(!name){toast('Nhập Họ tên','⚠️');return;}
+  if(!email&&!phone){toast('Cần Email hoặc SĐT để đăng nhập','⚠️');return;}
+  if(!editingStaffId&&!pw){toast('Nhập mật khẩu','⚠️');return;}
+  if(pw&&pw!==pw2){toast('Mật khẩu không khớp','⚠️');return;}
   const staffList=loadStaffList();
-  if(email&&staffList.find(s=>(s.email||'').toLowerCase()===email.toLowerCase()&&s.id!==editingStaffId)){toast('⚠️ Email đã tồn tại','⚠️');return;}
-  if(phone&&staffList.find(s=>String(s.phone||'').replace(/[^0-9]/g,'')===phone.replace(/[^0-9]/g,'')&&s.id!==editingStaffId)){toast('⚠️ SĐT đã tồn tại','⚠️');return;}
+  if(email&&staffList.find(s=>(s.email||'').toLowerCase()===email.toLowerCase()&&s.id!==editingStaffId)){toast('Email đã tồn tại','⚠️');return;}
+  if(phone&&staffList.find(s=>String(s.phone||'').replace(/[^0-9]/g,'')===phone.replace(/[^0-9]/g,'')&&s.id!==editingStaffId)){toast('SĐT đã tồn tại','⚠️');return;}
   const color=document.getElementById('sf-color').value;
   const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   if(editingStaffId){
@@ -1120,13 +1124,13 @@ function saveStaffMember(){
     const cb=document.getElementById('sf-cap-bac').value;
     staffList[idx]={...staffList[idx],name,roleTitle:document.getElementById('sf-role-title').value,phone:document.getElementById('sf-phone').value,email:document.getElementById('sf-email').value,capBac:cb,'Vai trò':cb,perm:capBacToPerm(cb),username:document.getElementById('sf-email').value||document.getElementById('sf-phone').value,active:document.getElementById('sf-active').value==='true',capDuyet:document.getElementById('sf-cap-duyet').value,'Cấp duyệt':document.getElementById('sf-cap-duyet').value,color,initials};
     if(pw)staffList[idx].password=pw;
-    toast(`✓ Đã cập nhật: ${name}`);
+    toast(`Đã cập nhật: ${name}`);
   }else{
     const maxNV=staffList.reduce((mx,s)=>{const m=String(s['Mã NV']||s.id||'').match(/NV(\d+)/);return m?Math.max(mx,+m[1]):mx;},0);
     const newMaNV='NV'+String(maxNV+1).padStart(3,'0');
     const cb=document.getElementById('sf-cap-bac').value;
     staffList.push({id:newMaNV,'Mã NV':newMaNV,name,password:pw,roleTitle:document.getElementById('sf-role-title').value,phone:document.getElementById('sf-phone').value,email:document.getElementById('sf-email').value,capBac:cb,'Vai trò':cb,perm:capBacToPerm(cb),username:document.getElementById('sf-email').value||document.getElementById('sf-phone').value,active:document.getElementById('sf-active').value==='true',capDuyet:document.getElementById('sf-cap-duyet').value,'Cấp duyệt':document.getElementById('sf-cap-duyet').value,color,initials});
-    toast(`✓ Đã thêm: ${name}`);
+    toast(`Đã thêm: ${name}`);
   }
   saveStaffList(staffList);closeStaffModal();renderStaff();populateOwnerDropdown();
   pushStaff(staffList); // Đẩy lên Sheets để đồng bộ mobile
@@ -1134,7 +1138,7 @@ function saveStaffMember(){
 
 function confirmDeleteStaff(id){
   const s=loadStaffList().find(s=>s.id===id);if(!s)return;
-  if(s.id===currentUser.id){toast('⚠️ Không thể khóa tài khoản đang dùng','⚠️');return;}
+  if(s.id===currentUser.id){toast('Không thể khóa tài khoản đang dùng','⚠️');return;}
   showConfirm('🔒','Cho nghỉ việc',`Đánh dấu "${s.name}" đã nghỉ việc? Tài khoản sẽ bị khóa ở CẢ CRM và PM, nhưng lịch sử công việc được giữ lại.`,()=>{
     const list=loadStaffList();
     const t=list.find(x=>x.id===id);
@@ -1142,7 +1146,7 @@ function confirmDeleteStaff(id){
     saveStaffList(list);
     renderStaff();populateOwnerDropdown();
     pushStaff(list);
-    toast(`🔒 Đã cho nghỉ: ${s.name}`);
+    toast(`Đã cho nghỉ: ${s.name}`);
   });
 }
 
@@ -1714,7 +1718,7 @@ async function claimTask(id, event){
   touch(t);
   saveLocal(); renderTasks(); updateBadges();
   await pushTask(t);
-  toast('✓ Đã nhận việc: '+(t.text||'').slice(0,30)+'…','✅');
+  toast('Đã nhận việc: '+(t.text||'').slice(0,30)+'…','✅');
 }
 
 // Cấp trên giao việc cho một nhân viên cụ thể
@@ -1729,7 +1733,7 @@ async function assignTaskTo(id, staffId, event){
   saveLocal(); renderTasks(); updateBadges();
   await pushTask(t);
   const who = (loadStaffList().find(s=>s.id===staffId)||{}).name || '';
-  toast('✓ Đã giao việc cho '+who,'✅');
+  toast('Đã giao việc cho '+who,'✅');
 }
 
 // Mở hộp chọn nhân viên để giao việc (chỉ cấp quản lý thấy)
@@ -1779,13 +1783,13 @@ async function syncNow(){
     const ok=await syncFromSheets();
     if(ok){
       rerenderCurrent();
-      toast('✓ Đồng bộ thành công!','✅');
+      toast('Đồng bộ thành công!','✅');
     }else{
-      toast('❌ Đồng bộ thất bại, kiểm tra kết nối','❌');
+      toast('Đồng bộ thất bại, kiểm tra kết nối','❌');
     }
   }catch(e){
     console.error('Sync error:', e);
-    toast('❌ Lỗi: '+e.message,'❌');
+    toast('Lỗi: '+e.message,'❌');
   }finally{
     isSyncing=false;
     btn.textContent='Sync';
@@ -1960,11 +1964,11 @@ function renderDashboard(){
     <!-- TỔNG QUAN PIPELINE -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div class="chart-card">
-        <div class="chart-title" style="display:flex;align-items:center;gap:8px"><span style="background:#EBF3FC;color:#0F3460;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700">🎨 THIẾT KẾ</span>${tkA.length} active · ${formatShort(tkA.reduce((s,l)=>s+(Number(l.valueTk)||0),0))}</div>
+        <div class="chart-title" style="display:flex;align-items:center;gap:8px"><span style="background:#EBF3FC;color:#0F3460;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700">THIẾT KẾ</span>${tkA.length} active · ${formatShort(tkA.reduce((s,l)=>s+(Number(l.valueTk)||0),0))}</div>
         ${STAGES_TK.filter(s=>!['tk_lost'].includes(s.id)).map(s=>{const n=vl.filter(l=>l.stage===s.id).length;const pct=tkL.length?Math.round(n/tkL.length*100):0;return n?`<div class="funnel-row"><div class="funnel-label">${s.label}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.max(pct,3)}%;background:${s.color}"></div></div><div class="funnel-num">${n}</div></div>`:'';}).join('')||'<div class="empty-state" style="padding:16px">Chưa có KH</div>'}
       </div>
       <div class="chart-card">
-        <div class="chart-title" style="display:flex;align-items:center;gap:8px"><span style="background:#E0F4F1;color:#8F6A2B;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700">🔨 THI CÔNG</span>${tcA.length} active · ${formatShort(tcA.reduce((s,l)=>s+(Number(l.valueTc)||0),0))}</div>
+        <div class="chart-title" style="display:flex;align-items:center;gap:8px"><span style="background:#E0F4F1;color:#8F6A2B;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700">THI CÔNG</span>${tcA.length} active · ${formatShort(tcA.reduce((s,l)=>s+(Number(l.valueTc)||0),0))}</div>
         ${STAGES_TC.filter(s=>!['tc_lost'].includes(s.id)).map(s=>{const n=vl.filter(l=>l.stage===s.id).length;const pct=tcL.length?Math.round(n/tcL.length*100):0;return n?`<div class="funnel-row"><div class="funnel-label">${s.label}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.max(pct,3)}%;background:${s.color}"></div></div><div class="funnel-num">${n}</div></div>`:'';}).join('')||'<div class="empty-state" style="padding:16px">Chưa có KH</div>'}
       </div>
     </div>`;
@@ -1976,14 +1980,14 @@ function scrollToHot(){document.getElementById('hot-section')?.scrollIntoView({b
 // Ghi nhanh "đã liên hệ" — cập nhật lastContact + lịch sử
 async function quickLogContact(id){
   const l=leads.find(l=>l.id==id);if(!l)return;
-  if(!canEditLead(l)){toast('⛔ Không có quyền','⛔');return;}
+  if(!canEditLead(l)){toast('Không có quyền','⛔');return;}
   l.lastContact=new Date().toISOString().split('T')[0];
   if(!Array.isArray(l.history))l.history=[];
   l.history.unshift({t:'📞 Đã liên hệ KH (ghi nhanh từ Dashboard)',time:nowStr(),ts:Date.now(),kind:'call',by:(currentUser&&currentUser.name)||''});
   logActivity('logContact','KH',l.id,l.name,'Ghi nhận liên hệ nhanh từ Dashboard',l.stage||'','');
   saveLocal();rerenderCurrent();
   await pushLead(l);
-  toast(`✓ Đã ghi nhận liên hệ: ${l.name}`);
+  toast(`Đã ghi nhận liên hệ: ${l.name}`);
 }
 
 // ── PIPELINE BOARD// ── PIPELINE BOARD ────────────────────────────────────────────
@@ -2140,7 +2144,7 @@ function renderLeads(){
         </div>`).join('')}
     </div>
     <div class="adv-filter">
-      <input class="form-input adv-search" placeholder="🔍 Tìm tên, SĐT, khu vực, ghi chú..." value="${esc2(searchQuery)}" oninput="searchQuery=this.value;clearTimeout(window.__advTmr);window.__advTmr=setTimeout(renderLeads,250)">
+      <input class="form-input adv-search" placeholder="Tìm tên, SĐT, khu vực, ghi chú..." value="${esc2(searchQuery)}" oninput="searchQuery=this.value;clearTimeout(window.__advTmr);window.__advTmr=setTimeout(renderLeads,250)">
       <select class="form-input adv-sel" onchange="setAdvFilter('source',this.value)"><option value="">📣 Mọi nguồn</option>${srcOpts.map(s=>`<option value="${esc2(s)}" ${advFilter.source===s?'selected':''}>${esc2(s)}</option>`).join('')}</select>
       <select class="form-input adv-sel" onchange="setAdvFilter('owner',this.value)"><option value="">Mọi NV</option>${ownOpts.map(o=>`<option value="${esc2(o)}" ${advFilter.owner===o?'selected':''}>${esc2(staffName(o))}</option>`).join('')}</select>
       <select class="form-input adv-sel" onchange="setAdvFilter('tag',this.value)"><option value="">• Mọi nhãn</option>${tagOpts.map(t=>`<option value="${esc2(t)}" ${advFilter.tag===t?'selected':''}>${esc2(t)}</option>`).join('')}</select>
@@ -2213,7 +2217,7 @@ function tagChipHtml(tag, removable, leadId){
 }
 async function addTag(leadId, tag){
   const l=leads.find(l=>l.id==leadId); if(!l||!tag) return;
-  if(!canEditLead(l)){toast('⛔ Không có quyền','⛔');return;}
+  if(!canEditLead(l)){toast('Không có quyền','⛔');return;}
   tag=String(tag).trim(); if(!tag) return;
   const t=leadTags(l);
   if(t.includes(tag)){ toast('Nhãn đã có','🏷️'); return; }
@@ -2224,7 +2228,7 @@ async function addTag(leadId, tag){
 }
 async function removeTag(leadId, tag){
   const l=leads.find(l=>l.id==leadId); if(!l) return;
-  if(!canEditLead(l)){toast('⛔ Không có quyền','⛔');return;}
+  if(!canEditLead(l)){toast('Không có quyền','⛔');return;}
   l.tags=leadTags(l).filter(x=>x!==tag); touch(l);
   saveLocal(); openPanel(leadId);
   await pushLead(l);
@@ -2666,7 +2670,7 @@ async function createMissingChecklistTasks(leadId, stage){
   if(!templates) return;
   const existingTexts = tasks.filter(t=>t.leadId==leadId&&t.stage===stage&&t.isTemplate).map(t=>t.text);
   const missing = templates.filter(tpl=>!existingTexts.includes(tpl.text));
-  if(!missing.length){ toast('✓ Tất cả việc mẫu đã tồn tại!'); return; }
+  if(!missing.length){ toast('Tất cả việc mẫu đã tồn tại!'); return; }
   const deadlineDays={red:1,orange:3,green:7};
   const newTasks = missing.map((tpl,idx)=>{
     const dd=deadlineDays[tpl.urgency]||3;
@@ -2743,9 +2747,9 @@ function populateTaskAssigneeDropdown(selectedId=''){
 
 async function saveTask(){
   const text = document.getElementById('t-text').value.trim();
-  if(!text){toast('⚠️ Nhập nội dung công việc!','⚠️');return;}
+  if(!text){toast('Nhập nội dung công việc!','⚠️');return;}
   const date = document.getElementById('t-date').value;
-  if(!date){toast('⚠️ Chọn ngày thực hiện!','⚠️');return;}
+  if(!date){toast('Chọn ngày thực hiện!','⚠️');return;}
 
   const leadIdRaw = document.getElementById('t-lead-id').value;
   // Không ép Number (ID mới là chuỗi). Tìm đúng lead bằng so sánh ==, lấy lại id gốc.
@@ -2756,7 +2760,7 @@ async function saveTask(){
     if(!t) return;
     Object.assign(t,{text, type:document.getElementById('t-type').value, urgency:document.getElementById('t-urgency').value, leadId, date, time:document.getElementById('t-time').value, assignee:document.getElementById('t-assignee').value, note:document.getElementById('t-note').value});
     touch(t);
-    toast('✓ Đã cập nhật công việc!');
+    toast('Đã cập nhật công việc!');
   } else {
     const task = {
       id: newId(),
@@ -2780,7 +2784,7 @@ async function saveTask(){
       `KH: ${task.lead||'Chung'} · Ngày: ${task.date}`,task.stage||'','');
     // Set active KH to this lead after adding
     if(leadId) activeKhId = leadId;
-    toast('📝 Đã thêm công việc!');
+    toast('Đã thêm công việc!');
   }
 
   saveLocal();
@@ -3073,7 +3077,7 @@ function renderLogTable(){
   <div class="table-wrap">
     <div class="table-toolbar">
       <input type="text" class="form-input" style="width:260px;padding:6px 11px"
-        placeholder="🔍 Tìm nhân viên, thao tác, KH..."
+        placeholder="Tìm nhân viên, thao tác, KH..."
         oninput="actLogFilter=this.value.toLowerCase();actLogPage=1;renderLogTable()"
         value="${actLogFilter}">
       <span style="font-size:12px;color:var(--mgray);margin-left:auto">${total} bản ghi · Trang ${actLogPage}/${totalPages}</span>
@@ -3146,7 +3150,7 @@ function renderConnect(){
 
 async function testAndSaveUrl(){
   const url=document.getElementById('api-url-input').value.trim();
-  if(!url||!url.includes('script.google.com')){toast('⚠️ URL không hợp lệ','⚠️');return;}
+  if(!url||!url.includes('script.google.com')){toast('URL không hợp lệ','⚠️');return;}
   setApiUrl(url); showLoading('Đang kiểm tra kết nối...');
   try{
     // Test kết nối: chỉ cần server phản hồi JSON hợp lệ (pong hoặc ok) là đạt.
@@ -3160,13 +3164,13 @@ async function testAndSaveUrl(){
     // Kiểm tra phiên bản backend để chắc chắn đã deploy bản mới
     let verMsg='';
     try{ const g=await apiFetch({action:'getAll'}); if(g&&g.ver){ verMsg=' · Backend '+g.ver; window.__backendVer=g.ver; } }catch(e){}
-    toast('✓ Kết nối thành công!'+verMsg);
+    toast('Kết nối thành công!'+verMsg);
     await syncFromSheets();
     showPage('dashboard',document.querySelector('[data-page=dashboard]'));
   }catch(e){
     hideLoading();
     setSyncState('error','❌ Không kết nối: '+e.message);
-    toast('❌ Lỗi: '+e.message,'❌');
+    toast('Lỗi: '+e.message,'❌');
   }
 }
 
@@ -3206,7 +3210,7 @@ function renderSettings(){
 
 function saveSettingsForm(){
   persistSettings({name:document.getElementById('s-name').value,role:document.getElementById('s-role').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value||''});
-  toast('✓ Đã lưu cài đặt!');
+  toast('Đã lưu cài đặt!');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3252,7 +3256,7 @@ function renderTimelineHtml(l){
 // Ghi nhận 1 tương tác nhanh (nút Gọi/Gặp/Zalo/Gửi)
 async function addInteraction(id, kind){
   const l=leads.find(l=>l.id==id); if(!l) return;
-  if(!canEditLead(l)){toast('⛔ Không có quyền','⛔');return;}
+  if(!canEditLead(l)){toast('Không có quyền','⛔');return;}
   const m=itMeta(kind);
   if(!Array.isArray(l.history)) l.history=[];
   l.history.unshift({t:`${m.icon} ${m.label} với khách`, time:nowStr(), ts:Date.now(), kind, by:(currentUser&&currentUser.name)||''});
@@ -3429,7 +3433,7 @@ function switchPanelToTC(id){
 // ── UPDATE STAGE (logic tự động chuyển TC) ───────────────────
 async function updateStage(id,stage){
   const l=leads.find(l=>l.id==id); if(!l) return;
-  if(!canEditLead(l)){toast('⛔ Bạn không có quyền cập nhật KH này','⛔');return;}
+  if(!canEditLead(l)){toast('Bạn không có quyền cập nhật KH này','⛔');return;}
   const old=getStageObj(l.stage).label;
 
   // ⚡ AUTO-TRANSFER TRIGGER: Báo giá TC trong pipeline TK
@@ -3494,7 +3498,7 @@ async function handleTransferAccept(id){
   touch(l);
   saveLocal(); closePanel(); rerenderCurrent();
   await pushLead(l);
-  toast(`⚡ ${l.name} đã chuyển sang Pipeline Thi công!`);
+  toast(`${l.name} đã chuyển sang Pipeline Thi công!`);
 
   // Chuyển sang trang TC để thấy ngay
   setTimeout(()=>showPage('pipeline_tc',document.querySelector('[data-page=pipeline_tc]')),500);
@@ -3523,7 +3527,7 @@ async function completeStage(id){
     l.history.unshift({t:'✓ Hoàn thành giai đoạn THIẾT KẾ',time:nowStr()});
     logActivity('completeStage','KH',l.id,l.name,'Hoàn thành Thiết kế','tk_accept','');
     touch(l); saveLocal(); closePanel(); rerenderCurrent(); await pushLead(l);
-    toast(`✓ ${l.name}: hoàn thành Thiết kế. Tiếp tục theo dõi Thi công.`);
+    toast(`${l.name}: hoàn thành Thiết kế. Tiếp tục theo dõi Thi công.`);
     return;
   }
 
@@ -3585,7 +3589,7 @@ async function saveNote(id){
   logActivity('addNote','KH',l.id,l.name,txt.slice(0,80),l.stage||'','');
   ta.value=''; saveLocal(); openPanel(id);
   await pushLead(l);
-  toast('💾 Đã lưu ghi chú!');
+  toast('Đã lưu ghi chú!');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3599,7 +3603,7 @@ function updateStageDropdown(){
 }
 
 function openAddLead(pipe='tk', defaultStage=null){
-  if(!isManager()){toast('⛔ Bạn không có quyền thêm KH','⛔');return;}
+  if(!isManager()){toast('Bạn không có quyền thêm KH','⛔');return;}
   editingLeadId=null;
   document.getElementById('modal-title').textContent='Thêm Khách hàng mới';
   document.getElementById('modal-save-btn').textContent='Lưu';
@@ -3619,7 +3623,7 @@ function openAddLead(pipe='tk', defaultStage=null){
 
 function openEditLead(id){
   const l=leads.find(l=>l.id==id); if(!l) return;
-  if(!canEditLead(l)){toast('⛔ Bạn không có quyền sửa KH này','⛔');return;}
+  if(!canEditLead(l)){toast('Bạn không có quyền sửa KH này','⛔');return;}
   editingLeadId=id;
   document.getElementById('modal-title').textContent=`✏️ Sửa – ${l.name}`;
   document.getElementById('modal-save-btn').textContent='💾 Cập nhật';
@@ -3650,7 +3654,7 @@ function closeModal(){document.getElementById('modal-overlay').classList.remove(
 async function saveLead(){
   const name=document.getElementById('f-name').value.trim();
   const phone=document.getElementById('f-phone').value.trim();
-  if(!name||!phone){toast('⚠️ Nhập Tên và SĐT!','⚠️');return;}
+  if(!name||!phone){toast('Nhập Tên và SĐT!','⚠️');return;}
   const now=new Date().toISOString().split('T')[0];
   const stage=document.getElementById('f-stage').value;
 
@@ -3665,7 +3669,7 @@ async function saveLead(){
     saveLocal(); closeModal(); rerenderCurrent();
     await pushLead(l);
     logActivity('editLead','KH',l.id,l.name,`Sửa thông tin KH`,'','');
-    toast(`✓ Đã cập nhật: ${name}!`);
+    toast(`Đã cập nhật: ${name}!`);
   } else {
     const _fScore=document.getElementById('f-score').value;
     const newLead={id:newId(),name,phone,email:document.getElementById('f-email').value,type:document.getElementById('f-type').value,source:document.getElementById('f-source').value,budget:document.getElementById('f-budget').value,valueTk:parseInt(document.getElementById('f-value-tk').value)||0,valueTc:parseInt(document.getElementById('f-value-tc').value)||0,area:document.getElementById('f-area').value,timeline:document.getElementById('f-timeline').value,stage,owner:document.getElementById('f-owner').value,note:document.getElementById('f-note').value,nextAction:(document.getElementById('f-next-action')||{}).value||'',nextDate:(document.getElementById('f-next-date')||{}).value||'',created:now,lastContact:now,inBothPipelines:false,updatedAt:Date.now(),history:[{t:`KH mới từ ${document.getElementById('f-source').value}`,time:nowStr()}]};
@@ -3673,13 +3677,13 @@ async function saveLead(){
     leads.unshift(newLead); saveLocal(); closeModal(); rerenderCurrent();
     await pushLead(newLead);
     logActivity('addLead','KH',newLead.id,newLead.name,`Nguồn: ${newLead.source} · Giai đoạn: ${newLead.stage}`,'',newLead.stage);
-    toast(`✓ Đã thêm: ${name}!`);
+    toast(`Đã thêm: ${name}!`);
   }
   updateBadges();
 }
 
 async function confirmDeleteLead(id){
-  if(!isAdmin()){toast('⛔ Chỉ Admin mới xóa được KH','⛔');return;}
+  if(!isAdmin()){toast('Chỉ Admin mới xóa được KH','⛔');return;}
   const l=leads.find(l=>l.id==id); if(!l) return;
   showConfirm('🗑️','Chuyển vào thùng rác',`Đưa "${l.name}" vào thùng rác? Bạn có thể khôi phục lại bất cứ lúc nào trong mục Thùng rác.`,async()=>{
     // SOFT-DELETE: giữ lại bản ghi, chỉ đánh dấu đã xóa → khôi phục được
@@ -3699,7 +3703,7 @@ async function confirmDeleteLead(id){
 
 // Khôi phục KH từ thùng rác
 async function restoreLead(id){
-  if(!isAdmin()){toast('⛔ Chỉ Admin','⛔');return;}
+  if(!isAdmin()){toast('Chỉ Admin','⛔');return;}
   const l=leads.find(l=>l.id==id); if(!l) return;
   l.deleted=false; delete l.deletedAt; delete l.deletedBy;
   if(!Array.isArray(l.history)) l.history=[];
@@ -3708,25 +3712,25 @@ async function restoreLead(id){
   saveLocal(); rerenderCurrent(); updateBadges();
   await pushLead(l);
   logActivity('restoreLead','KH',id,l.name,'Khôi phục KH từ thùng rác','','');
-  toast(`♻️ Đã khôi phục: ${l.name}`);
+  toast(`Đã khôi phục: ${l.name}`);
 }
 
 // Xóa vĩnh viễn (không hoàn tác)
 async function purgeLead(id){
-  if(!isAdmin()){toast('⛔ Chỉ Admin','⛔');return;}
+  if(!isAdmin()){toast('Chỉ Admin','⛔');return;}
   const l=leads.find(l=>l.id==id); if(!l) return;
   showConfirm('⚠️','Xóa vĩnh viễn',`Xóa VĨNH VIỄN "${l.name}"? Thao tác này KHÔNG THỂ hoàn tác và sẽ xóa khỏi Google Sheets.`,async()=>{
     leads=leads.filter(x=>x.id!=id);
     saveLocal(); rerenderCurrent(); updateBadges();
     await removeLead(id);
     logActivity('purgeLead','KH',id,l.name,'Xóa vĩnh viễn KH','','');
-    toast(`⚠️ Đã xóa vĩnh viễn: ${l.name}`);
+    toast(`Đã xóa vĩnh viễn: ${l.name}`);
   });
 }
 
 // Dọn sạch thùng rác
 async function emptyTrash(){
-  if(!isAdmin()){toast('⛔ Chỉ Admin','⛔');return;}
+  if(!isAdmin()){toast('Chỉ Admin','⛔');return;}
   const ds=deletedLeads(); if(!ds.length){toast('Thùng rác trống','🗑️');return;}
   showConfirm('⚠️','Dọn sạch thùng rác',`Xóa VĨNH VIỄN toàn bộ ${ds.length} KH trong thùng rác? Không thể hoàn tác.`,async()=>{
     const ids=ds.map(l=>l.id);
@@ -3734,7 +3738,7 @@ async function emptyTrash(){
     saveLocal(); rerenderCurrent(); updateBadges();
     for(const id of ids){ await removeLead(id); }
     logActivity('emptyTrash','KH','','',`Dọn sạch thùng rác (${ids.length} KH)`,'','');
-    toast(`⚠️ Đã dọn sạch thùng rác (${ids.length} KH)`);
+    toast(`Đã dọn sạch thùng rác (${ids.length} KH)`);
   });
 }
 
@@ -3774,7 +3778,7 @@ function renderTrash(){
 // IMPORT HÀNG LOẠT — dán danh sách từ Excel / Facebook Ads
 // ══════════════════════════════════════════════════════════════
 function openImport(){
-  if(!isManager()){toast('⛔ Chỉ quản lý mới được import','⛔');return;}
+  if(!isManager()){toast('Chỉ quản lý mới được import','⛔');return;}
   const pipeOpts=`<option value="tk">Thiết kế</option><option value="tc">Thi công</option>`;
   const ownerOpts=loadStaffList().filter(s=>s.active!==false).map(s=>`<option value="${s.id}">${esc2(s.name)}</option>`).join('');
   modal2('📥 Import khách hàng hàng loạt', `
@@ -3869,13 +3873,13 @@ async function importCommit(){
   });
   saveLocal(); dongModal2(); showPage('leads',document.querySelector('[data-page=leads]')); updateBadges();
   logActivity('importLeads','KH','','',`Import ${created.length} khách hàng`,'','');
-  toast(`✓ Đã nhập ${created.length} khách hàng`);
+  toast(`Đã nhập ${created.length} khách hàng`);
   // Đẩy lên Sheets tuần tự
   for(const l of created){ await pushLead(l); }
 }
 
 function exportCSV(){
-  if(!isAdmin()){toast('⛔ Chỉ Admin mới xuất CSV','⛔');return;}
+  if(!isAdmin()){toast('Chỉ Admin mới xuất CSV','⛔');return;}
   const h=['ID','Tên','SĐT','Email','Loại CT','Nguồn','Ngân sách','Pipeline','Giai đoạn','GT TK','GT TC','Khu vực','Score','Owner','Ghi chú'];
   const rows=leads.map(l=>[l.id,l.name,l.phone,l.email||'',l.type,l.source,l.budget,getPipelineOfStage(l.stage||'tk_new').toUpperCase(),l.stage,l.valueTk||0,l.valueTc||0,l.area||'',l.score||0,l.owner,`"${(l.note||'').replace(/"/g,'""')}"`].join(','));
   const csv=[h.join(','),...rows].join('\n');
@@ -3911,7 +3915,12 @@ function formatShort(v){if(v>=1e9)return(v/1e9).toFixed(1)+' tỷ';if(v>=1e6)ret
 function ownerColor(o){return o==='AN'?'#0F3460':o==='BT'?'#0F5132':o==='EM'?'#3D0D6E':'#666'}
 function nowStr(){const d=new Date();return d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}
 function setFilter(f){activeFilter=f;renderLeads()}
-function handleSearch(q){searchQuery=q;if(currentPage==='leads')renderLeads()}
+function handleSearch(q){
+  searchQuery=q;
+  // Debounce: tránh render lại toàn bộ danh sách trên mỗi phím gõ (mượt hơn trên điện thoại).
+  clearTimeout(window.__searchTmr);
+  window.__searchTmr=setTimeout(function(){ if(currentPage==='leads')renderLeads(); },220);
+}
 function updateBadges(){
   const vl=visibleLeads();
   const tkN=vl.filter(l=>getPipelineOfStage(l.stage||'tk_new')==='tk').length;
@@ -4213,7 +4222,7 @@ function moDoTrung(){
               + (l.created?' · tạo '+esc2(l.created):'')+(l.projectCode?' · <b>'+esc2(l.projectCode)+'</b>':'')+'</div></div>'
               + (t.ngay!==null?'<div style="color:#9A8F82;font-size:11px">'+t.ngay+'n</div>':'')
               + '<button class="btn btn-outline" style="padding:3px 9px;font-size:11px" '
-              + 'onclick="closeModal();openLeadDetail(\''+l.id+'\')">Xem</button></div>';
+              + 'onclick="closeModal();openPanel(\''+l.id+'\')">Xem</button></div>';
           }).join('')
         + '</div>').join('');
   }
@@ -4288,7 +4297,7 @@ function crmInsightHtml(){
     nguoi.slice(0,5).forEach(x=>{
       const l = x.l;
       const own = (typeof staffName==='function' ? staffName(l.owner) : l.owner) || '—';
-      h += '<div style="display:flex;align-items:center;gap:9px;padding:9px 15px;border-bottom:1px solid #F5F1EA;cursor:pointer" onclick="openLeadDetail(\''+l.id+'\')">'
+      h += '<div style="display:flex;align-items:center;gap:9px;padding:9px 15px;border-bottom:1px solid #F5F1EA;cursor:pointer" onclick="openPanel(\''+l.id+'\')">'
         + '<div style="flex:1;min-width:0"><b style="font-size:13px">'+esc2(l.name)+'</b>'
         + '<div style="font-size:11px;color:#9A8F82">'+esc2(stageLabelOf(l.stage))+' · '+esc2(own)
         + (l.nextAction?' · • '+esc2(l.nextAction):'')+'</div></div>'
@@ -4313,7 +4322,7 @@ function moLeadNguoi(){
       + ds.map(x=>{
           const l = x.l;
           const own = (typeof staffName==='function' ? staffName(l.owner) : l.owner) || '—';
-          return '<div style="display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid #F1EBE0;cursor:pointer" onclick="closeModal();openLeadDetail(\''+l.id+'\')">'
+          return '<div style="display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid #F1EBE0;cursor:pointer" onclick="closeModal();openPanel(\''+l.id+'\')">'
             + '<div style="flex:1;min-width:0"><b style="font-size:13px">'+esc2(l.name)+'</b>'
             + '<div style="font-size:11px;color:#9A8F82">'+esc2(stageLabelOf(l.stage))+' · '+esc2(own)
             + ' · '+esc2(l.phone||'')+(l.nextAction?' · • '+esc2(l.nextAction):'')+'</div></div>'
@@ -4778,7 +4787,7 @@ function htGhiNhanh(loai, noidung){
   if(typeof touch==='function') touch(l);
   if(typeof saveLocal==='function') saveLocal();
   htGui('saveLichSuLV', rec); if(typeof pushLead==='function') pushLead(l);
-  htRender(); toast('✓ Đã ghi: '+loai);
+  htRender(); toast('Đã ghi: '+loai);
 }
 function htFormGhiChu(ma){
   var l = window.__htLead; if(!l) return;
@@ -4801,7 +4810,7 @@ function htFormGhiChu(ma){
 function htLuuGhiChu(ma){
   var l = window.__htLead;
   var nd = (document.getElementById('ht-nd')||{}).value || '';
-  if(!nd.trim()) return toast('⚠️ Chưa nhập nội dung','⚠️');
+  if(!nd.trim()) return toast('Chưa nhập nội dung','⚠️');
   var loai = (document.getElementById('ht-loai')||{}).value || 'Ghi chú';
   var rec;
   if(ma){
@@ -4817,7 +4826,7 @@ function htLuuGhiChu(ma){
     if(typeof saveLocal==='function') saveLocal();
     if(typeof pushLead==='function') pushLead(l);
   }
-  htSave(); htGui('saveLichSuLV', rec); htRender(); toast('✓ Đã lưu');
+  htSave(); htGui('saveLichSuLV', rec); htRender(); toast('Đã lưu');
 }
 function htXoaGhiChu(ma){
   if(!confirm('Xóa ghi nhận này?')) return;
@@ -4855,7 +4864,7 @@ function htFormKhaoSat(ma){
 function htLuuKhaoSat(ma){
   var l = window.__htLead;
   var dc = (document.getElementById('ks-dc')||{}).value||'';
-  if(!dc.trim()) return toast('⚠️ Chưa nhập địa chỉ','⚠️');
+  if(!dc.trim()) return toast('Chưa nhập địa chỉ','⚠️');
   var rec = ma ? (HT.khaosat||[]).filter(function(r){return r['Mã KS']===ma;})[0]
                : {'Mã KS':htMaMoi('khaosat','KS'),'Mã KH':l.id};
   rec['Ngày'] = (document.getElementById('ks-ngay')||{}).value||'';
@@ -4867,7 +4876,7 @@ function htLuuKhaoSat(ma){
   if(!ma) HT.khaosat.push(rec);
   htSave(); htGui('saveKhaoSat', rec);
   if(!ma) htGhiNhanh('Khảo sát','Khảo sát hiện trạng tại '+dc.trim());
-  else { htRender(); toast('✓ Đã lưu khảo sát'); }
+  else { htRender(); toast('Đã lưu khảo sát'); }
 }
 function htXoaKhaoSat(ma){
   if(!confirm('Xóa bản khảo sát này?')) return;
@@ -4922,7 +4931,7 @@ function htFormBaoGia(ma){
 function htLuuBaoGia(ma){
   var l = window.__htLead;
   var ten = (document.getElementById('bg-ten')||{}).value||'';
-  if(!ten.trim()) return toast('⚠️ Chưa nhập tiêu đề','⚠️');
+  if(!ten.trim()) return toast('Chưa nhập tiêu đề','⚠️');
   var gt = +((document.getElementById('bg-gt')||{}).value)||0;
   var ops = [];
   var rec;
@@ -4954,7 +4963,7 @@ function htLuuBaoGia(ma){
   ops.push({action:'saveBaoGia', data:rec});
   htSave();
   ops.forEach(function(o){ htGui(o.action, o.data); });
-  htRender(); toast('✓ Đã lưu báo giá');
+  htRender(); toast('Đã lưu báo giá');
 }
 function htXoaBaoGia(ma){
   if(!confirm('Xóa báo giá này?')) return;
@@ -4971,14 +4980,14 @@ function htDoiTTBaoGia(ma, tt){
   var rec = (HT.baogia||[]).filter(function(r){return r['Mã BG']===ma;})[0];
   if(!rec) return;
   if(tt==='Đã duyệt' && typeof isAdmin==='function' && !isAdmin())
-    return toast('⛔ Chỉ Admin mới duyệt được báo giá','⛔');
+    return toast('Chỉ Admin mới duyệt được báo giá','⛔');
   htApDungTTBaoGia(rec, tt);
   htSave(); htGui('saveBaoGia', rec);
   var l = window.__htLead;
   var mo = {'Chờ duyệt':'Trình duyệt báo giá v','Đã duyệt':'Duyệt nội bộ báo giá v',
             'Đã gửi khách':'Gửi khách báo giá v','Khách chấp thuận':'Khách chấp thuận báo giá v'}[tt];
   if(mo) htGhiNhanh('Gửi báo giá', mo+(rec['Phiên bản']||1)+' — '+formatShort(+rec['Giá trị (đ)']||0));
-  else { htRender(); toast('✓ '+tt); }
+  else { htRender(); toast(''+tt); }
 }
 
 /* --- Ký hợp đồng + chốt chặn thanh toán --- */
@@ -5103,9 +5112,9 @@ function htCanhBaoDot(){
 function htLuuHopDong(ma){
   var l = window.__htLead;
   var file = (document.getElementById('hd-file')||{}).value||'';
-  if(!file.trim()) return toast('⚠️ Bắt buộc có bản scan hợp đồng đã ký','⚠️');
+  if(!file.trim()) return toast('Bắt buộc có bản scan hợp đồng đã ký','⚠️');
   var gt = +((document.getElementById('hd-gt')||{}).value)||0;
-  if(!gt) return toast('⚠️ Chưa nhập giá trị hợp đồng','⚠️');
+  if(!gt) return toast('Chưa nhập giá trị hợp đồng','⚠️');
   var H = tinhHanhTrinh(l);
   var rec = ma ? (HT.hopdongKH||[]).filter(function(r){return r['Mã HĐKH']===ma;})[0]
                : {'Mã HĐKH':htMaMoi('hopdongKH','HĐKH'),'Mã KH':l.id};
@@ -5150,7 +5159,7 @@ function htLuuHopDong(ma){
   ops.forEach(function(o){ htGui(o.action, o.data); });
   htGhiNhanh('Ghi chú','Ký hợp đồng '+(rec['Số HĐ']||'')+' — '+formatShort(gt)
     + ((window.__htDot||[]).length?' · khai '+(window.__htDot||[]).filter(function(d){return d.ten&&d.tien;}).length+' đợt thanh toán':''));
-  toast('✓ Đã ghi nhận ký hợp đồng');
+  toast('Đã ghi nhận ký hợp đồng');
 }
 
 /* --- Hẹn liên hệ lại / đánh dấu thất bại / chuyển dự án --- */
@@ -5160,7 +5169,7 @@ function htDatHen(v){
   if(typeof touch==='function') touch(l);
   if(typeof saveLocal==='function') saveLocal();
   if(typeof pushLead==='function') pushLead(l);
-  toast('✓ Đã đặt hẹn liên hệ lại');
+  toast('Đã đặt hẹn liên hệ lại');
 }
 function htDanhDauThatBai(){
   var l = window.__htLead; if(!l) return;
@@ -5177,7 +5186,7 @@ function htDanhDauThatBai(){
 function htChuyenDuAn(){
   var l = window.__htLead; if(!l) return;
   var H = tinhHanhTrinh(l);
-  if(!H.hd.length) return toast('⚠️ Cần ký hợp đồng trước khi tạo dự án','⚠️');
+  if(!H.hd.length) return toast('Cần ký hợp đồng trước khi tạo dự án','⚠️');
   var dot = (HT.thanhtoan||[]).filter(function(d){ return String(d['Mã KH'])===String(l.id); });
   modal2('🏛 Chuyển sang hệ thống Quản lý dự án',
     '<div style="font-size:13px;line-height:1.7">'
