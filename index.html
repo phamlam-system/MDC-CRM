@@ -1828,7 +1828,7 @@ function showPage(page,el){
   currentPage=page;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
-  const titles={dashboard:'Dashboard',pipeline_tk:'Pipeline Thiết kế',pipeline_tc:'Pipeline Thi công',pipeline_cs:'Chăm sóc sau bán',leads:'Tất cả Khách hàng',tasks:'Công việc',calendar:'Lịch hẹn',catalog:'Danh mục sản phẩm & bảng giá',reports:'Báo cáo',staff:'Nhân sự & Phân quyền',connect:'Kết nối Google Sheets',settings:'Cài đặt',actlog:'Nhật ký thao tác',trash:'Thùng rác'};
+  const titles={dashboard:'Dashboard',pipeline_tk:'Pipeline Thiết kế',pipeline_tc:'Pipeline Thi công',pipeline_cs:'Chăm sóc sau bán',leads:'Tất cả Khách hàng',tasks:'Công việc',calendar:'Lịch hẹn',catalog:'Danh mục Công tác & Vật tư',reports:'Báo cáo',staff:'Nhân sự & Phân quyền',connect:'Kết nối Google Sheets',settings:'Cài đặt',actlog:'Nhật ký thao tác',trash:'Thùng rác'};
   const _pt=document.getElementById('page-title'); if(_pt) _pt.textContent=titles[page]||page;
   const renders={
     dashboard:renderDashboard,
@@ -4498,7 +4498,72 @@ var BG_HINT = {
    entity đồng bộ Sheet ở đợt sau.)
    ═══════════════════════════════════════════════════════════════ */
 var CAT_KEY='mdc_crm_catalog';
-function catSeed(){ var out=[], id=1; Object.keys(BAOGIA_MAU).forEach(function(loai){ (BAOGIA_MAU[loai]||[]).forEach(function(it){ out.push({id:'SP'+(id++),loai:loai,ten:it.ten,dvt:it.dvt||'',dg:+it.dg||0,mt:it.mt||''}); }); }); return out; }
+/* Bộ CÔNG TÁC THI CÔNG đầy đủ theo giai đoạn — [tên, ĐVT, đơn giá gợi ý, diễn giải] */
+var WORK_GROUPS = {
+  'Thiết kế kiến trúc':[
+    ['Phí thiết kế kiến trúc (trọn bộ hồ sơ)','m²',180000,'Hồ sơ KT + kết cấu + M&E. Tính theo m² sàn (quy đổi hệ số).'],
+    ['Phối cảnh 3D ngoại thất','bộ',3000000,'1–2 phương án, chỉnh sửa theo yêu cầu.']
+  ],
+  'Thiết kế nội thất':[
+    ['Phí thiết kế nội thất','m²',150000,'Mặt bằng bố trí, chi tiết đồ, trần – đèn, thống kê vật tư.'],
+    ['Phối cảnh 3D nội thất (theo phòng)','phòng',2000000,'Từng không gian: khách, bếp, ngủ, WC…']
+  ],
+  'Thiết kế trọn gói (KT + NT)':[
+    ['Phí thiết kế trọn gói Kiến trúc + Nội thất','m²',250000,'Đồng bộ một đầu mối.']
+  ],
+  'Thi công xây dựng phần thô':[
+    ['Chuẩn bị mặt bằng, định vị tim cốt','gói',0,''],
+    ['Đào đất hố móng','m³',0,'Đào thủ công/máy theo mặt bằng.'],
+    ['Bê tông lót móng đá 4×6','m²',0,''],
+    ['Cốt thép móng – đài – giằng','kg',0,'Đúng chủng loại thép thiết kế.'],
+    ['Cốp pha móng, cổ cột','m²',0,''],
+    ['Đổ bê tông móng, đài, giằng','m³',0,'Mác 250/300.'],
+    ['Cột BTCT (thép + cốp pha + bê tông)','m²',0,''],
+    ['Dầm – sàn BTCT','m²',0,''],
+    ['Cầu thang BTCT','m²',0,''],
+    ['Xây tường bao, tường ngăn','m²',0,'Gạch tuynel / không nung.'],
+    ['Tô trát tường trong & ngoài','m²',0,''],
+    ['Cán nền, tạo dốc','m²',0,''],
+    ['Chống thấm WC – sân thượng – bể nước','m²',0,'Sika / Kova.'],
+    ['Lắp đặt điện âm (ống luồn, đế âm)','hệ',0,'Phần ngầm, chưa thiết bị.'],
+    ['Lắp đặt cấp – thoát nước âm','hệ',0,''],
+    ['Bể tự hoại','cái',0,''],
+    ['Vệ sinh, dọn xà bần theo giai đoạn','gói',0,''],
+    ['Thi công phần thô TRỌN GÓI (nhân công + vật tư thô)','m²',4100000,'Gồm móng, kết cấu BTCT, xây – tô, chống thấm, điện – nước âm. Tính theo m² xây dựng quy đổi. Chưa gồm ép cọc, VAT.']
+  ],
+  'Thi công xây dựng phần hoàn thiện':[
+    ['Ốp lát gạch nền','m²',350000,'Gạch phổ thông; loại theo khách chọn.'],
+    ['Ốp gạch tường WC & bếp','m²',350000,''],
+    ['Lát đá bậc cầu thang','md',0,'Đá granite / marble.'],
+    ['Bả + sơn nước trong nhà','m²',90000,'Bả 2 lớp + lót + 2 lớp phủ.'],
+    ['Bả + sơn nước ngoài nhà','m²',95000,''],
+    ['Trần thạch cao phẳng','m²',180000,''],
+    ['Trần thạch cao giật cấp + phào chỉ','m²',220000,''],
+    ['Lắp cửa đi chính','bộ',0,'Gỗ / nhôm / kính theo chọn.'],
+    ['Lắp cửa phòng','bộ',0,''],
+    ['Lắp cửa sổ nhôm kính','m²',0,'Nhôm Xingfa, kính cường lực.'],
+    ['Lan can – tay vịn cầu thang, ban công','md',1200000,'Inox / sắt mỹ thuật / kính.'],
+    ['Lắp thiết bị vệ sinh','bộ',0,'Trọn bộ 1 WC.'],
+    ['Lắp thiết bị điện, đèn, công tắc – ổ cắm','hệ',0,''],
+    ['Lắp nước nóng (NLMT / bình)','hệ',0,''],
+    ['Chống thấm bổ sung + vệ sinh bàn giao','gói',0,''],
+    ['Thi công hoàn thiện TRỌN GÓI (gói vật tư tiêu chuẩn)','m²',2300000,'Ốp lát, sơn, trần, cửa, thiết bị điện – vệ sinh theo bảng vật tư đính kèm.']
+  ],
+  'Thi công nội thất':[
+    ['Tủ bếp trên + dưới','md',2800000,'Thùng MDF chống ẩm An Cường, cánh Melamine/Laminate; ray – bản lề giảm chấn.'],
+    ['Tủ quần áo','m²',3200000,'MDF chống ẩm phủ Melamine.'],
+    ['Kệ tivi + vách trang trí phòng khách','m²',2500000,''],
+    ['Giường ngủ + tab đầu giường','bộ',9000000,'Gỗ công nghiệp (gỗ tự nhiên tính riêng).'],
+    ['Bàn trang điểm / bàn làm việc','bộ',3500000,''],
+    ['Tủ giày','md',2200000,''],
+    ['Vách CNC / lam gỗ trang trí','m²',2000000,''],
+    ['Trần gỗ / ốp tường trang trí','m²',0,''],
+    ['Sập thờ / bàn thờ','bộ',0,''],
+    ['Rèm cửa','m²',0,'Tính riêng theo loại.'],
+    ['Đồ rời (sofa, bàn ăn, décor)','bộ',0,'Thường tính riêng, ghi rõ.']
+  ]
+};
+function catSeed(){ var out=[], id=1; Object.keys(WORK_GROUPS).forEach(function(loai){ WORK_GROUPS[loai].forEach(function(a){ out.push({id:'SP'+(id++),loai:loai,ten:a[0],dvt:a[1]||'',dg:+a[2]||0,mt:a[3]||''}); }); }); return out; }
 function catAll(){ var a=null; try{ a=JSON.parse(localStorage.getItem(CAT_KEY)||'null'); }catch(e){} if(!Array.isArray(a)){ a=catSeed(); catSave(a); } return a; }
 function catSave(a){ try{ localStorage.setItem(CAT_KEY, JSON.stringify(a)); }catch(e){} }
 function catByLoai(loai){ return catAll().filter(function(x){ return x.loai===loai; }); }
@@ -4507,26 +4572,154 @@ function catMaMoi(){ var a=catAll(), mx=0; a.forEach(function(x){ var n=+String(
 function catUpsert(rec){ var a=catAll(); var i=a.findIndex(function(x){ return x.id===rec.id; }); if(i>=0) a[i]=rec; else a.push(rec); catSave(a); }
 function catDelete(id){ catSave(catAll().filter(function(x){ return x.id!==id; })); }
 
-/* ── Màn quản lý danh mục ── */
+/* ═══ DANH MỤC VẬT TƯ (quản lý được) — nhóm theo giai đoạn ═══ */
+var VTCAT_KEY='mdc_crm_vtcat';
+var VTCAT_GROUPS = {
+  'Phần thô':[
+    ['Xi măng','PCB40 xây & đổ bê tông','Kim Đỉnh / Long Thọ / Nghi Sơn','Việt Nam','bao',''],
+    ['Thép','Thép gân/cuộn CB300–CB400','Hòa Phát / Việt Nhật / Pomina','Việt Nam','kg','Đúng chủng loại KCS'],
+    ['Gạch xây','Tuynel 6 lỗ / gạch không nung','Lò địa phương','Việt Nam','viên',''],
+    ['Cát – đá','Cát vàng xây tô, đá 1×2','Mỏ địa phương','Việt Nam','m³',''],
+    ['Bê tông','Mác 250/300 (trộn tay/thương phẩm)','—','Việt Nam','m³',''],
+    ['Chống thấm','Gốc xi măng / màng chống thấm','Sika / Kova','Việt Nam','kg','WC, sân thượng, bể'],
+    ['Ống điện – nước âm','Ống luồn PVC, ống nước PPR','Bình Minh / Vesbo / Dismy','Việt Nam','hệ','']
+  ],
+  'Phần hoàn thiện':[
+    ['Gạch ốp lát','Granite/ceramic 600×600, 800×800','Viglacera / Đồng Tâm / Prime','Việt Nam','m²','Khách chọn mã theo mẫu'],
+    ['Sơn nước','Bả 2 lớp + lót + 2 phủ (trong & ngoài)','Dulux / Jotun','Việt Nam','m²','Màu theo bảng chọn'],
+    ['Trần thạch cao','Khung Vĩnh Tường, tấm chống ẩm','Vĩnh Tường / Gyproc','Việt Nam','m²','Trần chìm/nổi + phào'],
+    ['Cửa đi & cửa sổ','Nhôm Xingfa hệ 55, kính cường lực 8mm','Xingfa / Việt Pháp','VN / nhập','bộ','Phụ kiện khóa tay gạt'],
+    ['Thiết bị vệ sinh','Bồn cầu, lavabo, sen tắm (trọn bộ/WC)','TOTO / Inax / American Standard','VN / Thái','bộ','Theo gói khách chọn'],
+    ['Thiết bị điện','Công tắc, ổ cắm, CB, dây dẫn','Panasonic / Schneider / Cadivi','Nhật/Pháp/VN','hệ',''],
+    ['Đèn chiếu sáng','LED downlight + đèn trang trí','Duhal / Rạng Đông / Điện Quang','Việt Nam','hệ',''],
+    ['Đá bậc – mặt bếp','Granite / marble tự nhiên','—','VN / nhập','m²',''],
+    ['Lan can – tay vịn','Inox 304 / sắt mỹ thuật / kính','—','Việt Nam','md','']
+  ],
+  'Nội thất':[
+    ['Thùng tủ (gỗ CN)','MDF chống ẩm lõi xanh','An Cường','Việt Nam','m²',''],
+    ['Bề mặt phủ','Melamine / Laminate / Acrylic','An Cường','Việt Nam','m²','Theo lựa chọn'],
+    ['Phụ kiện tủ','Ray âm/hộp, bản lề giảm chấn','Blum / Hafele / Cariny','Áo/Đức/VN','bộ',''],
+    ['Mặt bàn bếp','Đá nhân tạo / granite tự nhiên','—','VN / nhập','md',''],
+    ['Kính – gương','Kính cường lực, gương bỉ','—','Việt Nam','m²',''],
+    ['Sơn hoàn thiện gỗ','Sơn PU / 2K (gỗ tự nhiên)','—','—','m²','Hạng mục gỗ tự nhiên']
+  ]
+};
+var VTCAT_NHOM = ['Phần thô','Phần hoàn thiện','Nội thất'];
+function vtcSeed(){ var out=[], id=1; VTCAT_NHOM.forEach(function(nhom){ (VTCAT_GROUPS[nhom]||[]).forEach(function(a){ out.push({id:'VT'+(id++),nhom:nhom,ten:a[0],chungloai:a[1]||'',thuonghieu:a[2]||'',xuatxu:a[3]||'',dvt:a[4]||'',ghichu:a[5]||''}); }); }); return out; }
+function vtcAll(){ var a=null; try{ a=JSON.parse(localStorage.getItem(VTCAT_KEY)||'null'); }catch(e){} if(!Array.isArray(a)){ a=vtcSeed(); vtcSave(a); } return a; }
+function vtcSave(a){ try{ localStorage.setItem(VTCAT_KEY, JSON.stringify(a)); }catch(e){} }
+function vtcByNhom(nhom){ return vtcAll().filter(function(x){ return x.nhom===nhom; }); }
+function vtcGet(id){ return vtcAll().filter(function(x){ return x.id===id; })[0]; }
+function vtcMaMoi(){ var a=vtcAll(), mx=0; a.forEach(function(x){ var n=+String(x.id).replace(/\D/g,'')||0; if(n>mx) mx=n; }); return 'VT'+(mx+1); }
+function vtcUpsert(rec){ var a=vtcAll(); var i=a.findIndex(function(x){ return x.id===rec.id; }); if(i>=0) a[i]=rec; else a.push(rec); vtcSave(a); }
+function vtcDelete(id){ vtcSave(vtcAll().filter(function(x){ return x.id!==id; })); }
+/* Map loại báo giá → nhóm vật tư */
+function vtcNhomTheoLoai(loai){
+  loai=(loai||'').toLowerCase();
+  if(loai.indexOf('trọn gói')>=0 && loai.indexOf('thô')>=0) return ['Phần thô','Phần hoàn thiện'];
+  if(loai.indexOf('thô')>=0) return ['Phần thô'];
+  if(loai.indexOf('hoàn thiện')>=0) return ['Phần hoàn thiện'];
+  if(loai.indexOf('nội thất')>=0) return ['Nội thất'];
+  return VTCAT_NHOM.slice();
+}
+
+/* ── Màn quản lý danh mục (2 tab: Công tác & Vật tư) ── */
+var _catTab = 'cong';
+function catSetTab(t){ _catTab=t; renderCatalog(); }
 function renderCatalog(){
   var admin = (typeof isAdmin==='function') ? isAdmin() : true;
-  document.getElementById('page-content').innerHTML =
-    '<div class="table-wrap" style="padding:0;overflow:hidden">'
-    + '<div style="padding:16px 18px;border-bottom:1px solid var(--lgray,#eee);display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-    + '<div><div style="font-size:16px;font-weight:800;color:#3A2E22">Danh mục sản phẩm & bảng giá</div>'
-    + '<div style="font-size:12px;color:#9A8F82;margin-top:2px">Kho hạng mục chuẩn để lập báo giá nhanh & thống nhất đơn giá.</div></div>'
-    + '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">'
-    + (admin?'<button class="btn btn-primary btn-sm" onclick="catForm()">＋ Thêm hạng mục</button>':'')
-    + (admin?'<button class="btn btn-outline btn-sm" onclick="catResetSeed()" title="Nạp lại bộ mẫu gốc">↻ Nạp lại mẫu gốc</button>':'')
-    + '</div></div>'
-    + '<div style="padding:12px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#FBF9F4">'
-    + '<input id="cat-q" placeholder="🔍 Tìm hạng mục…" oninput="catRenderList()" style="flex:1;min-width:180px;padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px">'
-    + '<select id="cat-floai" onchange="catRenderList()" style="padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"><option value="">Tất cả loại</option>'
-    + LOAI_BAOGIA.map(function(t){return '<option>'+esc2(t)+'</option>';}).join('') + '</select>'
-    + '</div>'
-    + '<div id="cat-list" style="overflow-x:auto"></div>'
-    + '</div>';
-  catRenderList();
+  var tabBtn=function(id,txt){ var on=_catTab===id; return '<button onclick="catSetTab(\''+id+'\')" style="padding:8px 16px;border:none;border-bottom:3px solid '+(on?'#B08D57':'transparent')+';background:none;cursor:pointer;font-size:13px;font-weight:'+(on?'800':'600')+';color:'+(on?'#8A6D3B':'#9A8F82')+'">'+txt+'</button>'; };
+  var head='<div class="table-wrap" style="padding:0;overflow:hidden">'
+    + '<div style="padding:16px 18px 0;border-bottom:1px solid var(--lgray,#eee)">'
+    + '<div style="font-size:16px;font-weight:800;color:#3A2E22">Danh mục Công tác &amp; Vật tư</div>'
+    + '<div style="font-size:12px;color:#9A8F82;margin:2px 0 8px">Bảng công tác thi công &amp; bảng vật tư tùy chỉnh — dùng để lập báo giá linh động và giúp khách nắm rõ toàn bộ công việc, vật tư.</div>'
+    + '<div style="display:flex;gap:4px">'+tabBtn('cong','🔨 Công tác &amp; bảng giá')+tabBtn('vattu','📦 Vật tư')+'</div></div>';
+  var body;
+  if(_catTab==='vattu'){
+    body='<div style="padding:12px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#FBF9F4">'
+      + (admin?'<button class="btn btn-primary btn-sm" onclick="vtcForm()">＋ Thêm vật tư</button>':'')
+      + (admin?'<button class="btn btn-outline btn-sm" onclick="vtcResetSeed()" title="Nạp lại bộ vật tư gốc">↻ Nạp lại mẫu</button>':'')
+      + '<input id="vtc-q" placeholder="🔍 Tìm vật tư…" oninput="vtcRenderList()" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px">'
+      + '<select id="vtc-fnhom" onchange="vtcRenderList()" style="padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"><option value="">Tất cả giai đoạn</option>'
+      + VTCAT_NHOM.map(function(t){return '<option>'+esc2(t)+'</option>';}).join('') + '</select></div>'
+      + '<div id="vtc-list" style="overflow-x:auto"></div>';
+    document.getElementById('page-content').innerHTML = head + body + '</div>';
+    vtcRenderList();
+  } else {
+    body='<div style="padding:12px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#FBF9F4">'
+      + (admin?'<button class="btn btn-primary btn-sm" onclick="catForm()">＋ Thêm công tác</button>':'')
+      + (admin?'<button class="btn btn-outline btn-sm" onclick="catResetSeed()" title="Nạp lại bộ công tác gốc">↻ Nạp lại mẫu</button>':'')
+      + '<input id="cat-q" placeholder="🔍 Tìm công tác…" oninput="catRenderList()" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px">'
+      + '<select id="cat-floai" onchange="catRenderList()" style="padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"><option value="">Tất cả giai đoạn</option>'
+      + LOAI_BAOGIA.map(function(t){return '<option>'+esc2(t)+'</option>';}).join('') + '</select></div>'
+      + '<div id="cat-list" style="overflow-x:auto"></div>';
+    document.getElementById('page-content').innerHTML = head + body + '</div>';
+    catRenderList();
+  }
+}
+/* ── Danh mục vật tư: bảng + form ── */
+function vtcRenderList(){
+  var box=document.getElementById('vtc-list'); if(!box) return;
+  var admin=(typeof isAdmin==='function')?isAdmin():true;
+  var q=((document.getElementById('vtc-q')||{}).value||'').toLowerCase().trim();
+  var fn=(document.getElementById('vtc-fnhom')||{}).value||'';
+  var rows=vtcAll().filter(function(x){ if(fn&&x.nhom!==fn) return false; if(q&&(x.ten+' '+x.chungloai+' '+x.thuonghieu).toLowerCase().indexOf(q)<0) return false; return true; });
+  if(!rows.length){ box.innerHTML='<div style="padding:26px;text-align:center;color:#9A8F82;font-size:13px">Không có vật tư phù hợp.</div>'; return; }
+  var byN={}; rows.forEach(function(x){ (byN[x.nhom]=byN[x.nhom]||[]).push(x); });
+  var h='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:720px">';
+  Object.keys(byN).forEach(function(nhom){
+    h+='<tr><td colspan="6" style="background:#F3EEE4;padding:7px 14px;font-size:11px;font-weight:800;color:#8A6D3B;text-transform:uppercase;letter-spacing:.4px">'+esc2(nhom)+' · '+byN[nhom].length+' vật tư</td></tr>';
+    h+='<tr style="color:#9A8F82;font-size:10px;text-transform:uppercase;letter-spacing:.3px"><td style="padding:5px 14px">Hạng mục</td><td style="padding:5px">Chủng loại / quy cách</td><td style="padding:5px">Thương hiệu</td><td style="padding:5px;width:72px">Xuất xứ</td><td style="padding:5px">Ghi chú</td><td style="width:74px"></td></tr>';
+    byN[nhom].forEach(function(x){
+      h+='<tr style="border-top:1px solid #EFEAE0">'
+        +'<td style="padding:7px 14px;font-weight:700;color:#3A2E22">'+esc2(x.ten)+'</td>'
+        +'<td style="padding:7px 5px;color:#5A5045">'+esc2(x.chungloai||'')+'</td>'
+        +'<td style="padding:7px 5px;color:#8A6D3B">'+esc2(x.thuonghieu||'')+'</td>'
+        +'<td style="padding:7px 5px;color:#6F6355">'+esc2(x.xuatxu||'')+'</td>'
+        +'<td style="padding:7px 5px;color:#7A756C;font-size:11px">'+esc2(x.ghichu||'')+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;white-space:nowrap">'
+        +(admin?'<button title="Sửa" onclick="vtcForm(\''+x.id+'\')" style="border:none;background:none;cursor:pointer;font-size:14px;color:#8A6D3B">✎</button> <button title="Xóa" onclick="vtcDel(\''+x.id+'\')" style="border:none;background:none;cursor:pointer;font-size:14px;color:#B23A2E">✕</button>':'')
+        +'</td></tr>';
+    });
+  });
+  h+='</table>'; box.innerHTML=h;
+}
+function vtcForm(id){
+  var x=id?vtcGet(id):null;
+  var lab='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.4px';
+  var inp='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px;box-sizing:border-box';
+  var curN=(document.getElementById('vtc-fnhom')||{}).value||'';
+  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div><label style="'+lab+'">Giai đoạn</label><select id="vtc-nhom" style="'+inp+'">'+VTCAT_NHOM.map(function(t){return '<option'+((x?x.nhom===t:t===curN)?' selected':'')+'>'+esc2(t)+'</option>';}).join('')+'</select></div>'
+    +'<div><label style="'+lab+'">Hạng mục vật tư</label><input id="vtc-ten" value="'+esc2(x?x.ten:'')+'" placeholder="vd: Gạch ốp lát" style="'+inp+'"></div>'
+    +'<div style="grid-column:1/3"><label style="'+lab+'">Chủng loại / quy cách</label><input id="vtc-cl" value="'+esc2(x?x.chungloai:'')+'" placeholder="vd: Granite 600×600 men matt" style="'+inp+'"></div>'
+    +'<div><label style="'+lab+'">Thương hiệu</label><input id="vtc-th" value="'+esc2(x?x.thuonghieu:'')+'" placeholder="vd: Viglacera / Đồng Tâm" style="'+inp+'"></div>'
+    +'<div><label style="'+lab+'">Xuất xứ</label><input id="vtc-xx" value="'+esc2(x?x.xuatxu:'')+'" placeholder="vd: Việt Nam" style="'+inp+'"></div>'
+    +'<div style="grid-column:1/3"><label style="'+lab+'">Ghi chú</label><input id="vtc-gc" value="'+esc2(x?x.ghichu:'')+'" placeholder="vd: Khách chọn mã theo mẫu" style="'+inp+'"></div>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-outline" onclick="dongModal2()">Hủy</button><button class="btn btn-primary" onclick="vtcSaveForm(\''+(id||'')+'\')">Lưu</button></div>';
+  modal2(id?'Sửa vật tư':'Thêm vật tư vào danh mục', h);
+}
+function vtcSaveForm(id){
+  var ten=((document.getElementById('vtc-ten')||{}).value||'').trim();
+  if(!ten) return toast('Chưa nhập hạng mục vật tư','⚠️');
+  var rec={ id:id||vtcMaMoi(), nhom:(document.getElementById('vtc-nhom')||{}).value||'Phần hoàn thiện',
+    ten:ten, chungloai:((document.getElementById('vtc-cl')||{}).value||'').trim(),
+    thuonghieu:((document.getElementById('vtc-th')||{}).value||'').trim(),
+    xuatxu:((document.getElementById('vtc-xx')||{}).value||'').trim(),
+    ghichu:((document.getElementById('vtc-gc')||{}).value||'').trim() };
+  vtcUpsert(rec); dongModal2(); vtcRenderList(); toast('Đã lưu vào danh mục vật tư');
+}
+function vtcDel(id){
+  var x=vtcGet(id); if(!x) return;
+  var go=function(){ vtcDelete(id); vtcRenderList(); toast('Đã xóa vật tư'); };
+  if(typeof showConfirm==='function') showConfirm('🗑️','Xóa vật tư','Xóa "'+(x.ten||'')+'" khỏi danh mục vật tư?', go);
+  else if(confirm('Xóa "'+(x.ten||'')+'"?')) go();
+}
+function vtcResetSeed(){
+  var go=function(){ vtcSave(vtcSeed()); vtcRenderList(); toast('Đã nạp lại bộ vật tư gốc'); };
+  if(typeof showConfirm==='function') showConfirm('↻','Nạp lại mẫu vật tư','Thay toàn bộ danh mục vật tư bằng bộ mẫu gốc? (Các mục tự thêm sẽ mất)', go);
+  else if(confirm('Nạp lại mẫu vật tư? Mất mục tự thêm.')) go();
 }
 function catRenderList(){
   var box=document.getElementById('cat-list'); if(!box) return;
@@ -5412,7 +5605,7 @@ function htFormBaoGia(ma){
     + '<details style="border:1px solid #E7E3DA;border-radius:9px;margin-bottom:12px;background:#FCFAF5"'+((ext.vt&&ext.vt.length)||ext.qt?' open':'')+'>'
     + '<summary style="padding:10px 13px;cursor:pointer;font-weight:700;font-size:12.5px;color:#3A2E22">📋 Bảng vật tư áp dụng &amp; quy trình <span style="font-weight:400;color:#9A8F82">— nêu rõ chủng loại · thương hiệu · xuất xứ &amp; cam kết để khách yên tâm</span></summary>'
     + '<div style="padding:2px 13px 13px">'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><button type="button" class="btn btn-outline btn-sm" onclick="bgVtAddRow()">+ Thêm dòng vật tư</button><button type="button" class="btn btn-outline btn-sm" onclick="bgVtGoiY()">✨ Gợi ý theo loại</button></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><button type="button" class="btn btn-outline btn-sm" onclick="bgVtAddRow()">+ Thêm dòng vật tư</button><button type="button" class="btn btn-outline btn-sm" onclick="bgVtPick()">≣ Chọn từ danh mục vật tư</button><button type="button" class="btn btn-outline btn-sm" onclick="bgVtGoiY()">✨ Gợi ý theo loại</button></div>'
     + '<div style="overflow-x:auto"><div style="min-width:720px">'
     + '<div style="display:grid;grid-template-columns:1.1fr 1.6fr 1.1fr .8fr 1fr 24px;gap:5px;font-size:10px;font-weight:700;color:#9A8F82;text-transform:uppercase;letter-spacing:.3px;padding:0 2px 3px"><div>Hạng mục</div><div>Chủng loại / quy cách</div><div>Thương hiệu</div><div>Xuất xứ</div><div>Ghi chú</div><div></div></div>'
     + '<div id="bg-vt">'+((ext.vt&&ext.vt.length)?ext.vt.map(bgVtRowHtml).join(''):'')+'</div>'
@@ -5560,12 +5753,52 @@ function bgVtCollect(){
 }
 function bgVtGoiY(){
   var loai=(document.getElementById('bg-loai')||{}).value||'';
-  var mau=VATTU_MAU[loai]||[];
-  if(!mau.length) return toast('Loại này chưa có bộ vật tư mẫu — hãy tự thêm dòng','⚠️');
+  var nhoms=vtcNhomTheoLoai(loai);
+  var mau=[]; nhoms.forEach(function(n){ vtcByNhom(n).forEach(function(v){ mau.push({hangmuc:v.ten,chungloai:v.chungloai,thuonghieu:v.thuonghieu,xuatxu:v.xuatxu,ghichu:v.ghichu}); }); });
+  if(!mau.length) return toast('Chưa có vật tư mẫu — thêm ở Danh mục › Vật tư','⚠️');
   var c=document.getElementById('bg-vt'); if(!c) return;
-  if(bgVtCollect().length && !confirm('Thay bảng vật tư hiện tại bằng bộ mẫu của "'+loai+'"?')) return;
+  if(bgVtCollect().length && !confirm('Thay bảng vật tư hiện tại bằng bộ mẫu ('+nhoms.join(', ')+')?')) return;
   c.innerHTML = mau.map(bgVtRowHtml).join(''); bgVtOpen();
-  toast('Đã nạp '+mau.length+' dòng vật tư mẫu — chỉnh theo dự án');
+  toast('Đã nạp '+mau.length+' dòng vật tư — chỉnh theo dự án');
+}
+/* Picker: chọn vật tư từ danh mục thêm vào bảng vật tư báo giá */
+function bgVtPick(){
+  var old=document.getElementById('bg-vtpick'); if(old) old.remove();
+  var loai=(document.getElementById('bg-loai')||{}).value||'';
+  var nhoms=vtcNhomTheoLoai(loai); var defN = nhoms.length===1?nhoms[0]:'';
+  var inner='<div style="background:#fff;border-radius:12px;max-width:600px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 18px 50px rgba(0,0,0,.3)">'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">Chọn từ danh mục vật tư</b><button onclick="bgVtPickClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="padding:14px 18px;overflow:auto">'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"><input id="bgvtp-q" placeholder="🔍 Tìm vật tư…" oninput="bgVtPickRender()" style="flex:1;min-width:150px;padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"><select id="bgvtp-nhom" onchange="bgVtPickRender()" style="padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"><option value="">Tất cả giai đoạn</option>'+VTCAT_NHOM.map(function(t){return '<option'+(t===defN?' selected':'')+'>'+esc2(t)+'</option>';}).join('')+'</select></div>'
+    +'<div style="font-size:11.5px;color:#9A8F82;margin-bottom:8px">Bấm ＋ để thêm vật tư vào bảng. Có thể thêm nhiều rồi bấm Xong.</div>'
+    +'<div id="bgvtp-list" style="max-height:52vh;overflow:auto"></div>'
+    +'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-primary" onclick="bgVtPickClose()">Xong</button></div>'
+    +'</div></div>';
+  var el=document.createElement('div'); el.id='bg-vtpick';
+  el.style.cssText='position:fixed;inset:0;background:rgba(20,14,10,.5);z-index:10002;display:flex;align-items:center;justify-content:center;padding:16px';
+  el.onclick=function(e){ if(e.target===el) bgVtPickClose(); };
+  el.innerHTML=inner; document.body.appendChild(el);
+  bgVtPickRender();
+}
+function bgVtPickClose(){ var e=document.getElementById('bg-vtpick'); if(e) e.remove(); }
+function bgVtPickRender(){
+  var box=document.getElementById('bgvtp-list'); if(!box) return;
+  var q=((document.getElementById('bgvtp-q')||{}).value||'').toLowerCase().trim();
+  var fn=(document.getElementById('bgvtp-nhom')||{}).value||'';
+  var rows=vtcAll().filter(function(x){ if(fn&&x.nhom!==fn) return false; if(q&&(x.ten+' '+x.chungloai+' '+x.thuonghieu).toLowerCase().indexOf(q)<0) return false; return true; });
+  if(!rows.length){ box.innerHTML='<div style="padding:22px;text-align:center;color:#9A8F82;font-size:13px">Không có vật tư phù hợp.</div>'; return; }
+  box.innerHTML=rows.map(function(x){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #F0EBE1">'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#3A2E22">'+esc2(x.ten)+' <span style="font-weight:400;color:#9A8F82;font-size:11px">· '+esc2(x.nhom)+'</span></div>'
+      +'<div style="font-size:11px;color:#7A756C">'+esc2(x.chungloai||'')+(x.thuonghieu?' · '+esc2(x.thuonghieu):'')+(x.xuatxu?' · '+esc2(x.xuatxu):'')+'</div></div>'
+      +'<button class="btn btn-outline btn-sm" onclick="bgVtAddFromCat(\''+x.id+'\')">＋</button></div>';
+  }).join('');
+}
+function bgVtAddFromCat(id){
+  var x=vtcGet(id); if(!x) return;
+  var c=document.getElementById('bg-vt'); if(!c) return toast('Hãy mở form báo giá','⚠️');
+  c.insertAdjacentHTML('beforeend', bgVtRowHtml({hangmuc:x.ten,chungloai:x.chungloai,thuonghieu:x.thuonghieu,xuatxu:x.xuatxu,ghichu:x.ghichu}));
+  bgVtOpen(); toast('Đã thêm: '+x.ten);
 }
 /* Bảng vật tư (HTML in cho khách) */
 function bgVtPrintHtml(vt){
@@ -5925,7 +6158,7 @@ var MENU_CRM = [
     {id:'pipeline_cs', ten:'Chăm sóc sau bán',  icon:'♡', mb:false},
     {id:'tasks',       ten:'Công việc',         icon:'✓', mb:true, mbTen:'Công việc'},
     {id:'calendar',    ten:'Lịch hẹn',          icon:'◷', mb:false},
-    {id:'catalog',     ten:'Danh mục & bảng giá', icon:'▧', mb:false}
+    {id:'catalog',     ten:'Danh mục (Công tác & Vật tư)', icon:'▧', mb:false}
   ]},
   {nhom:'Phân tích', muc:[
     {id:'reports', ten:'Báo cáo & Dự báo', icon:'◱', mb:true, mbTen:'Báo cáo'}
