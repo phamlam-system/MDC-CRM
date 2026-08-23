@@ -5602,6 +5602,14 @@ function htFormBaoGia(ma){
     + '<div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span>Thuế VAT (%)</span><input id="bg-vat" type="number" value="'+esc2(x?(x['VAT %']||0):0)+'" oninput="bgCalc()" style="width:80px;padding:5px 7px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;text-align:right"></div>'
     + '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:1px solid var(--gold);padding-top:8px;margin-top:2px"><span>TỔNG CỘNG</span><span id="bg-tong" style="color:var(--charcoal)">0</span></div>'
     + '<div id="bg-duyet" style="margin-top:6px;text-align:right"></div><input type="hidden" id="bg-gt"></div>'
+    + '<details style="border:1px solid #E7E3DA;border-radius:9px;margin-bottom:12px;background:#FCFAF5"'+((ext.ct&&ext.ct.length)?' open':'')+'>'
+    + '<summary style="padding:10px 13px;cursor:pointer;font-weight:700;font-size:12.5px;color:#3A2E22">🧱 Danh mục công tác thực hiện <span style="font-weight:400;color:#9A8F82">— liệt kê đầy đủ đầu việc theo giai đoạn để khách nắm rõ toàn bộ công việc</span></summary>'
+    + '<div style="padding:2px 13px 13px">'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><button type="button" class="btn btn-outline btn-sm" onclick="bgCtAddRow()">+ Thêm công tác</button><button type="button" class="btn btn-outline btn-sm" onclick="bgCtGoiY()">✨ Nạp đầy đủ theo loại</button></div>'
+    + '<div style="overflow-x:auto"><div style="min-width:560px">'
+    + '<div style="display:grid;grid-template-columns:1.7fr .7fr 1.4fr 24px;gap:5px;font-size:10px;font-weight:700;color:#9A8F82;text-transform:uppercase;letter-spacing:.3px;padding:0 2px 3px"><div>Công tác / đầu việc</div><div>ĐVT</div><div>Ghi chú / quy cách</div><div></div></div>'
+    + '<div id="bg-ct">'+((ext.ct&&ext.ct.length)?ext.ct.map(bgCtRowHtml).join(''):'')+'</div>'
+    + '</div></div></div></details>'
     + '<details style="border:1px solid #E7E3DA;border-radius:9px;margin-bottom:12px;background:#FCFAF5"'+((ext.vt&&ext.vt.length)||ext.qt?' open':'')+'>'
     + '<summary style="padding:10px 13px;cursor:pointer;font-weight:700;font-size:12.5px;color:#3A2E22">📋 Bảng vật tư áp dụng &amp; quy trình <span style="font-weight:400;color:#9A8F82">— nêu rõ chủng loại · thương hiệu · xuất xứ &amp; cam kết để khách yên tâm</span></summary>'
     + '<div style="padding:2px 13px 13px">'
@@ -5665,7 +5673,7 @@ function htLuuBaoGia(ma){
     HT.baogia.push(rec);
   }
   ops.push({action:'saveBaoGia', data:rec});
-  bgExtSave(rec['Mã BG'], { vt: bgVtCollect(), qt:(document.getElementById('bg-qt')||{}).value||'' });
+  bgExtSave(rec['Mã BG'], { ct: bgCtCollect(), vt: bgVtCollect(), qt:(document.getElementById('bg-qt')||{}).value||'' });
   htSave();
   ops.forEach(function(o){ htGui(o.action, o.data); });
   htRender(); toast('Đã lưu báo giá');
@@ -5686,8 +5694,8 @@ function bgMtHtml(mt){
    ═══════════════════════════════════════════════════════════════ */
 var BGEXT_KEY='mdc_crm_bgext';
 function bgExtAll(){ try{ var o=JSON.parse(localStorage.getItem(BGEXT_KEY)||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
-function bgExtLoad(ma){ var o=ma?bgExtAll()[ma]:null; return {vt:(o&&o.vt)||[], qt:(o&&o.qt)||''}; }
-function bgExtSave(ma, obj){ if(!ma) return; var all=bgExtAll(); all[ma]={vt:(obj&&obj.vt)||[], qt:(obj&&obj.qt)||''}; try{ localStorage.setItem(BGEXT_KEY, JSON.stringify(all)); }catch(e){} }
+function bgExtLoad(ma){ var o=ma?bgExtAll()[ma]:null; return {ct:(o&&o.ct)||[], vt:(o&&o.vt)||[], qt:(o&&o.qt)||''}; }
+function bgExtSave(ma, obj){ if(!ma) return; var all=bgExtAll(); all[ma]={ct:(obj&&obj.ct)||[], vt:(obj&&obj.vt)||[], qt:(obj&&obj.qt)||''}; try{ localStorage.setItem(BGEXT_KEY, JSON.stringify(all)); }catch(e){} }
 function bgExtDelete(ma){ var all=bgExtAll(); if(all[ma]){ delete all[ma]; try{ localStorage.setItem(BGEXT_KEY, JSON.stringify(all)); }catch(e){} } }
 
 /* Bộ vật tư mẫu theo loại — {hangmuc, chungloai, thuonghieu, xuatxu, ghichu} */
@@ -5727,6 +5735,61 @@ var VATTU_MAU = {
     {hangmuc:'Sơn hoàn thiện gỗ',chungloai:'Sơn PU/2K (nếu gỗ tự nhiên)',thuonghieu:'—',xuatxu:'—',ghichu:'Hạng mục gỗ tự nhiên'}
   ]
 };
+
+/* ── BẢNG CÔNG TÁC THỰC HIỆN (danh mục công việc chi tiết in cho khách) ── */
+/* Map loại báo giá → (các) loại trong danh mục CÔNG TÁC để lấy đầy đủ đầu việc */
+function catLoaiThucHien(loai){
+  var l=(loai||'').toLowerCase();
+  if(l.indexOf('trọn gói')>=0 && l.indexOf('thô')>=0) return ['Thi công xây dựng phần thô','Thi công xây dựng phần hoàn thiện'];
+  if(l.indexOf('thô')>=0) return ['Thi công xây dựng phần thô'];
+  if(l.indexOf('hoàn thiện')>=0) return ['Thi công xây dựng phần hoàn thiện'];
+  if(l.indexOf('nội thất')>=0) return ['Thi công nội thất'];
+  return [loai];
+}
+function bgCtRowHtml(v){ v=v||{};
+  var cell='padding:6px;border:1px solid #DED8CE;border-radius:6px;font-size:12px';
+  return '<div class="bg-ct-row" style="display:grid;grid-template-columns:1.7fr .7fr 1.4fr 24px;gap:5px;margin:5px 0">'
+    +'<input class="ct-congtac" value="'+esc2(v.congtac||'')+'" placeholder="Công tác / đầu việc" style="'+cell+';font-weight:600">'
+    +'<input class="ct-dvt" value="'+esc2(v.dvt||'')+'" placeholder="ĐVT" style="'+cell+'">'
+    +'<input class="ct-ghichu" value="'+esc2(v.ghichu||'')+'" placeholder="Ghi chú / quy cách" style="'+cell+'">'
+    +'<button type="button" onclick="bgCtDel(this)" title="Xóa dòng" style="border:none;background:none;color:#B23A2E;cursor:pointer;font-size:14px">✕</button>'
+    +'</div>';
+}
+function bgCtOpen(){ var c=document.getElementById('bg-ct'); var d=c&&c.closest('details'); if(d) d.open=true; }
+function bgCtAddRow(){ var c=document.getElementById('bg-ct'); if(c){ c.insertAdjacentHTML('beforeend', bgCtRowHtml({})); bgCtOpen(); } }
+function bgCtDel(btn){ var r=btn.closest('.bg-ct-row'); if(r) r.remove(); }
+function bgCtCollect(){
+  var out=[];
+  (document.querySelectorAll('#bg-ct .bg-ct-row')||[]).forEach(function(r){
+    var g=function(c){ return ((r.querySelector('.'+c)||{}).value||'').trim(); };
+    var o={congtac:g('ct-congtac'),dvt:g('ct-dvt'),ghichu:g('ct-ghichu')};
+    if(o.congtac||o.dvt||o.ghichu) out.push(o);
+  });
+  return out;
+}
+function bgCtGoiY(){
+  var loai=(document.getElementById('bg-loai')||{}).value||'';
+  var loais=catLoaiThucHien(loai);
+  var rows=[]; loais.forEach(function(L){ catByLoai(L).forEach(function(w){ if(/TRỌN GÓI/i.test(w.ten||'')) return; rows.push({congtac:w.ten,dvt:w.dvt,ghichu:w.mt}); }); });
+  if(!rows.length) return toast('Chưa có công tác mẫu cho loại này — thêm ở Danh mục › Công tác','⚠️');
+  var c=document.getElementById('bg-ct'); if(!c) return;
+  if(bgCtCollect().length && !confirm('Thay danh mục công tác hiện tại bằng bộ đầy đủ của loại này?')) return;
+  c.innerHTML = rows.map(bgCtRowHtml).join(''); bgCtOpen();
+  toast('Đã nạp '+rows.length+' công tác — bỏ bớt dòng không áp dụng nếu cần');
+}
+/* Bảng công tác (HTML in cho khách) */
+function bgCtPrintHtml(ct){
+  if(!ct || !ct.length) return '';
+  var head='<tr style="background:#8A6D3B;color:#fff"><th style="width:34px;padding:7px;text-align:center">TT</th><th style="padding:7px;text-align:left">Công tác thực hiện</th><th style="padding:7px;text-align:left;width:70px">ĐVT</th><th style="padding:7px;text-align:left">Ghi chú / quy cách</th></tr>';
+  var body=ct.map(function(v,i){
+    return '<tr style="'+(i%2?'background:#FBF9F4':'')+'">'
+      +'<td style="border:1px solid #E7E3DA;padding:6px;text-align:center">'+(i+1)+'</td>'
+      +'<td style="border:1px solid #E7E3DA;padding:6px;font-weight:600;color:#3A2E22">'+esc2(v.congtac||'')+'</td>'
+      +'<td style="border:1px solid #E7E3DA;padding:6px">'+esc2(v.dvt||'')+'</td>'
+      +'<td style="border:1px solid #E7E3DA;padding:6px;color:#7A756C">'+esc2(v.ghichu||'')+'</td></tr>';
+  }).join('');
+  return '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px">'+head+body+'</table>';
+}
 
 function bgVtRowHtml(v){ v=v||{};
   var cell='padding:6px;border:1px solid #DED8CE;border-radius:6px;font-size:12px';
@@ -5875,6 +5938,13 @@ function bgPrint(ma){
     S+='</div>';
   }
   var extP = bgExtLoad(ma);
+  if(extP.ct && extP.ct.length){
+    S+='<div style="margin-top:20px;page-break-inside:avoid">';
+    S+='<div style="font-size:13px;font-weight:800;color:#8A6D3B;border-bottom:2px solid #B08D57;padding-bottom:5px;margin-bottom:8px">PHỤ LỤC — DANH MỤC CÔNG TÁC THỰC HIỆN</div>';
+    S+='<div style="font-size:11px;color:#5A6470;margin-bottom:8px;line-height:1.5">Toàn bộ đầu việc sẽ thực hiện cho công trình — để Quý khách nắm rõ phạm vi công việc. Đơn giá được tính trọn gói theo m² ở bảng trên; danh mục dưới đây giải trình chi tiết các công tác đã bao gồm.</div>';
+    S+=bgCtPrintHtml(extP.ct);
+    S+='</div>';
+  }
   if(extP.vt && extP.vt.length){
     S+='<div style="margin-top:20px;page-break-inside:avoid">';
     S+='<div style="font-size:13px;font-weight:800;color:#8A6D3B;border-bottom:2px solid #B08D57;padding-bottom:5px;margin-bottom:8px">PHỤ LỤC — BẢNG VẬT TƯ ÁP DỤNG</div>';
