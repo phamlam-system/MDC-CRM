@@ -386,6 +386,8 @@ textarea.form-input{resize:vertical;height:65px}
 .nav-item.hidden-nav{display:none}
 .permission-locked{display:flex;align-items:center;gap:8px;background:var(--lred);border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--ruby);margin-bottom:12px}
 .sidebar-footer{padding:14px 16px;border-top:1px solid rgba(203,162,90,.12);margin-top:auto}
+.dev-credit{margin-top:10px;padding-top:9px;border-top:1px solid rgba(203,162,90,.1);font-size:9px;line-height:1.5;letter-spacing:.4px;text-transform:uppercase;text-align:center;color:rgba(203,162,90,.45)}
+.dev-credit b{display:block;margin-top:1px;font-size:10.5px;letter-spacing:1.2px;color:rgba(203,162,90,.8)}
 .user-role-tag{font-size:10px;color:rgba(203,162,90,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .logout-btn{margin-top:12px;width:100%;padding:9px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(203,162,90,.22);color:rgba(255,255,255,.62);font-size:12px;font-weight:500;cursor:pointer;font-family:Arial, sans-serif;transition:all .16s;text-align:center;letter-spacing:.3px}
 .logout-btn:hover{background:rgba(192,57,43,.14);border-color:rgba(192,57,43,.4);color:#F0B4AC}
@@ -593,6 +595,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
       </div>
     </div>
     <button class="logout-btn" onclick="confirmLogout()">⏻ Đăng xuất</button>
+    <div class="dev-credit">Hệ thống được phát triển bởi<br><b>PHẠM LÂM GROUP</b></div>
   </div>
 </nav>
 
@@ -5626,7 +5629,9 @@ var MENU_CRM = [
     {id:'leads',       ten:'Tất cả khách hàng', icon:'◎', mb:true, mbTen:'Khách hàng'},
     {id:'pipeline_tk', ten:'Pipeline Thiết kế', icon:'◈', mb:false},
     {id:'pipeline_tc', ten:'Pipeline Thi công', icon:'▤', mb:false},
-    {id:'tasks',       ten:'Công việc',         icon:'✓', mb:true, mbTen:'Công việc'}
+    {id:'pipeline_cs', ten:'Chăm sóc sau bán',  icon:'♡', mb:false},
+    {id:'tasks',       ten:'Công việc',         icon:'✓', mb:true, mbTen:'Công việc'},
+    {id:'calendar',    ten:'Lịch hẹn',          icon:'◷', mb:false}
   ]},
   {nhom:'Phân tích', muc:[
     {id:'reports', ten:'Báo cáo & Dự báo', icon:'◱', mb:true, mbTen:'Báo cáo'}
@@ -5634,8 +5639,9 @@ var MENU_CRM = [
   {nhom:'Quản trị', muc:[
     {id:'staff',    ten:'Nhân sự & Phân quyền', icon:'◉', mb:false, admin:true},
     {id:'actlog',   ten:'Nhật ký thao tác',     icon:'▥', mb:false, admin:true},
-    {id:'connect',  ten:'Kết nối Google Sheets',icon:'⊚', mb:false},
-    {id:'settings', ten:'Cài đặt',              icon:'⚙', mb:true, mbTen:'Cài đặt'}
+    {id:'trash',    ten:'Thùng rác',            icon:'⊘', mb:false, admin:true},
+    {id:'connect',  ten:'Kết nối Google Sheets',icon:'⊚', mb:false, admin:true},
+    {id:'settings', ten:'Cài đặt',              icon:'⚙', mb:false, admin:true, mbTen:'Cài đặt'}
   ]}
 ];
 
@@ -5679,7 +5685,8 @@ function capNhatBadge(){
 function dungThanhDuoi(){
   if(document.getElementById('crm-tabbar')) return;
   var muc = [];
-  MENU_CRM.forEach(function(g){ g.muc.forEach(function(m){ if(m.mb) muc.push(m); }); });
+  var admin = (typeof isAdmin === 'function') ? isAdmin() : true;
+  MENU_CRM.forEach(function(g){ g.muc.forEach(function(m){ if(m.mb && (!m.admin || admin)) muc.push(m); }); });
   var el = document.createElement('nav');
   el.id = 'crm-tabbar';
   el.innerHTML = muc.map(function(m){
