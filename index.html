@@ -4503,46 +4503,181 @@ function bgDocViet(n){
   return out+' đồng';
 }
 function bgLoaiHint(){ var loai=(document.getElementById('bg-loai')||{}).value||''; var e=document.getElementById('bg-hint'); if(e) e.textContent=BG_HINT[loai]||''; }
-/* Công cụ tính nhanh diện tích xây dựng (m²XD) theo hệ số quy đổi */
+/* ════════ Công cụ BÓC TÁCH diện tích xây dựng (m²XD) theo hệ số quy đổi ════════
+   Tách chi tiết từng phần: móng · thân (từng tầng) · mái · sân thượng · ban công · tầng hầm.
+   Có bảng bóc tách + hình minh họa mặt cắt (SVG). Kết quả lưu kèm dòng hạng mục
+   (data-bt trong Hạng mục JSON) → in phụ lục cho khách. Không cần backend. */
+var M2_MONG=[['Móng đơn',0.30],['Móng băng',0.50],['Móng cọc (đài + giằng)',0.40],['Móng bè',1.00]];
+var M2_MAI =[['Mái BTCT (chưa lát)',0.50],['Mái BTCT dán ngói',1.00],['Mái ngói vì kèo',0.70],['Mái tôn',0.30],['Không có mái riêng',0]];
+var M2_HAM =[['Không có tầng hầm',0],['Hầm nông (sâu ≤ 1,5m)',1.50],['Hầm vừa (1,5–2,0m)',1.70],['Hầm sâu (> 2,0m)',2.00]];
+var M2_HS_ST=0.5, M2_HS_BC=0.7, M2_HS_SAN=0.5; /* sân thượng ko mái · ban công/lô gia · sân-gara-lối đi */
+function bgFmtM2(n){ n=Math.round((+n||0)*10)/10; return n.toLocaleString('vi-VN',{maximumFractionDigits:1}); }
+/* Màu từng nhóm — dùng chung bảng & hình minh họa */
+var M2_COL={ham:'#5A5048', mong:'#7A6A50', floorA:'#B99A6B', floorB:'#C9AE7C', mai:'#9C6B43', st:'#8FA98C', bc:'#C99A5E', san:'#A8A192'};
 function bgM2Open(){
   var old=document.getElementById('bg-m2'); if(old) old.remove();
-  var inp='width:100%;padding:8px;border:1px solid #DED8CE;border-radius:6px;font-size:13px;margin-top:4px';
+  var inp='width:100%;padding:8px;border:1px solid #DED8CE;border-radius:6px;font-size:13px;margin-top:4px;box-sizing:border-box';
   var lab='font-size:11px;font-weight:700;color:#6F6355';
-  var mongOpt=[['Móng đơn',0.3],['Móng băng',0.5],['Móng cọc (đài giằng)',0.4],['Móng bè',1.0]];
-  var maiOpt=[['Mái BTCT (chưa lát)',0.5],['Mái BTCT dán ngói',1.0],['Mái ngói kèo',0.7],['Mái tôn',0.3],['Không có mái riêng',0]];
-  var html='<div style="background:#fff;border-radius:12px;max-width:430px;width:100%;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.3)">'
-    +'<b style="font-size:15px">📐 Tính diện tích xây dựng (m²XD)</b>'
-    +'<div style="font-size:11.5px;color:#9A8F82;margin:4px 0 12px">Quy đổi theo hệ số từng phần → áp vào ô Khối lượng của dòng đầu tiên.</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    +'<div><label style="'+lab+'">Diện tích 1 sàn (m²)</label><input id="m2-san" type="number" oninput="bgM2Calc()" style="'+inp+'"></div>'
-    +'<div><label style="'+lab+'">Số tầng (gồm trệt)</label><input id="m2-tang" type="number" value="1" oninput="bgM2Calc()" style="'+inp+'"></div>'
-    +'<div><label style="'+lab+'">Móng</label><select id="m2-mong" onchange="bgM2Calc()" style="'+inp+'">'+mongOpt.map(function(o){return '<option value="'+o[1]+'">'+o[0]+' ('+Math.round(o[1]*100)+'%)</option>';}).join('')+'</select></div>'
-    +'<div><label style="'+lab+'">Mái</label><select id="m2-mai" onchange="bgM2Calc()" style="'+inp+'">'+maiOpt.map(function(o){return '<option value="'+o[1]+'">'+o[0]+' ('+Math.round(o[1]*100)+'%)</option>';}).join('')+'</select></div>'
-    +'<div><label style="'+lab+'">Sân thượng ko mái (m²)</label><input id="m2-st" type="number" oninput="bgM2Calc()" style="'+inp+'"></div>'
-    +'<div><label style="'+lab+'">Ban công (m²)</label><input id="m2-bc" type="number" oninput="bgM2Calc()" style="'+inp+'"></div>'
+  var optHtml=function(arr){ return arr.map(function(o,i){return '<option value="'+o[1]+'"'+(i===0?'':'')+'>'+o[0]+' ('+Math.round(o[1]*100)+'%)</option>';}).join(''); };
+  var html='<div style="background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:18px 20px;box-shadow:0 18px 50px rgba(0,0,0,.3)">'
+    +'<b style="font-size:15px">📐 Bóc tách diện tích xây dựng (m²XD)</b>'
+    +'<div style="font-size:11.5px;color:#9A8F82;margin:4px 0 14px">Nhập diện tích thực từng phần → hệ thống quy đổi theo hệ số và lập bảng chi tiết để khách hiểu vì sao ra tổng m². Bảng + hình minh họa sẽ in kèm báo giá.</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">'
+    /* ── CỘT TRÁI: nhập liệu ── */
+    +'<div>'
+      +'<div style="display:grid;grid-template-columns:1fr 92px;gap:10px">'
+        +'<div><label style="'+lab+'">Diện tích sàn điển hình (m²)</label><input id="m2-dtdh" type="number" placeholder="vd: 80" oninput="bgM2Floors(true)" style="'+inp+'"></div>'
+        +'<div><label style="'+lab+'">Số tầng</label><input id="m2-tang" type="number" value="2" min="0" max="30" oninput="bgM2Floors(true)" style="'+inp+'"></div>'
+      +'</div>'
+      +'<div style="font-size:10.5px;color:#9A8F82;margin:6px 0 4px">Thân nhà — mỗi tầng 100%. Sửa được diện tích riêng từng tầng nếu khác nhau:</div>'
+      +'<div id="m2-floors" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>'
+      +'<div style="border-top:1px dashed #E3DDD2;margin:12px 0 8px"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 88px;gap:8px;align-items:end">'
+        +'<div><label style="'+lab+'">Móng</label><select id="m2-mong" onchange="bgM2Calc()" style="'+inp+'">'+optHtml(M2_MONG)+'</select></div>'
+        +'<div><label style="'+lab+'">DT móng (m²)</label><input id="m2-mong-dt" type="number" placeholder="= trệt" oninput="bgM2Calc()" style="'+inp+'"></div>'
+        +'<div><label style="'+lab+'">Mái</label><select id="m2-mai" onchange="bgM2Calc()" style="'+inp+'">'+optHtml(M2_MAI)+'</select></div>'
+        +'<div><label style="'+lab+'">DT mái (m²)</label><input id="m2-mai-dt" type="number" placeholder="= tầng trên" oninput="bgM2Calc()" style="'+inp+'"></div>'
+        +'<div><label style="'+lab+'">Tầng hầm</label><select id="m2-ham" onchange="bgM2Calc()" style="'+inp+'">'+optHtml(M2_HAM)+'</select></div>'
+        +'<div><label style="'+lab+'">DT hầm (m²)</label><input id="m2-ham-dt" type="number" placeholder="= trệt" oninput="bgM2Calc()" style="'+inp+'"></div>'
+      +'</div>'
+      +'<div style="border-top:1px dashed #E3DDD2;margin:12px 0 8px"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+        +'<div><label style="'+lab+'">Sân thượng ko mái (m²)<br><span style="font-weight:400;color:#9A8F82">×50%</span></label><input id="m2-st" type="number" oninput="bgM2Calc()" style="'+inp+'"></div>'
+        +'<div><label style="'+lab+'">Ban công / lô gia (m²)<br><span style="font-weight:400;color:#9A8F82">×70%</span></label><input id="m2-bc" type="number" oninput="bgM2Calc()" style="'+inp+'"></div>'
+        +'<div><label style="'+lab+'">Sân / gara / lối đi (m²)<br><span style="font-weight:400;color:#9A8F82">×50%</span></label><input id="m2-sango" type="number" oninput="bgM2Calc()" style="'+inp+'"></div>'
+      +'</div>'
     +'</div>'
-    +'<div style="background:var(--goldbg);border:1px solid var(--gold);border-radius:8px;padding:10px 12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12.5px">Diện tích xây dựng</span><b id="m2-kq" style="font-size:17px;color:var(--charcoal)">0 m²</b></div>'
-    +'<div style="font-size:10.5px;color:#9A8F82;margin-top:6px">Sàn 100%/tầng · móng & mái × diện tích sàn theo hệ số · sân thượng 50% · ban công 70%.</div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn btn-outline" onclick="bgM2Close()">Đóng</button><button class="btn btn-primary" onclick="bgM2Apply()">Áp vào dòng đầu tiên</button></div>'
+    /* ── CỘT PHẢI: hình minh họa + bảng ── */
+    +'<div>'
+      +'<div style="font-size:11px;font-weight:700;color:#6F6355;margin-bottom:4px">Hình minh họa mặt cắt</div>'
+      +'<div id="m2-svg" style="border:1px solid #EDE7DB;border-radius:8px;background:#FCFAF5;padding:6px;min-height:150px"></div>'
+      +'<div id="m2-table" style="margin-top:10px"></div>'
+    +'</div>'
+    +'</div>'
+    +'<div style="background:var(--goldbg);border:1px solid var(--gold);border-radius:8px;padding:10px 12px;margin-top:14px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12.5px">TỔNG diện tích xây dựng quy đổi</span><b id="m2-kq" style="font-size:18px;color:var(--charcoal)">0 m²</b></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap"><button class="btn btn-outline" onclick="bgM2Close()">Đóng</button><button class="btn btn-primary" onclick="bgM2Apply()">✔ Áp tổng &amp; lưu bảng bóc tách vào dòng đầu</button></div>'
     +'</div>';
   var el=document.createElement('div'); el.id='bg-m2';
   el.style.cssText='position:fixed;inset:0;background:rgba(20,14,10,.5);z-index:10001;display:flex;align-items:center;justify-content:center;padding:16px';
   el.onclick=function(e){ if(e.target===el) bgM2Close(); };
   el.innerHTML=html; document.body.appendChild(el);
+  bgM2Floors(false); bgM2Calc();
 }
-function bgM2Val(id){ return +((document.getElementById(id)||{}).value)||0; }
-function bgM2Total(){
-  var san=bgM2Val('m2-san'), tang=bgM2Val('m2-tang')||1;
-  var mong=+((document.getElementById('m2-mong')||{}).value)||0;
-  var mai=+((document.getElementById('m2-mai')||{}).value)||0;
-  var t=san*tang + san*mong + san*mai + bgM2Val('m2-st')*0.5 + bgM2Val('m2-bc')*0.7;
-  return Math.round(t*10)/10;
+/* Sinh danh sách ô nhập diện tích từng tầng (giữ giá trị cũ theo chỉ số) */
+function bgM2Floors(fromTypical){
+  var box=document.getElementById('m2-floors'); if(!box) return;
+  var tang=Math.max(0, Math.min(30, Math.round(+((document.getElementById('m2-tang')||{}).value)||0)));
+  var dh=+((document.getElementById('m2-dtdh')||{}).value)||0;
+  var cur=[]; for(var j=0;j<30;j++){ var e=document.getElementById('m2-fl'+j); if(e) cur[j]=e.value; }
+  var inp='width:100%;padding:7px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;box-sizing:border-box';
+  var h='';
+  for(var i=0;i<tang;i++){
+    var ten=i===0?'Tầng trệt':('Lầu '+i);
+    var val=(cur[i]!=null && cur[i]!=='')?cur[i]:(dh?dh:'');
+    if(fromTypical && dh) val=dh; /* khi đổi DT điển hình → đồng bộ mọi tầng chưa sửa tay */
+    h+='<div><label style="font-size:10px;color:#8A7E6E;font-weight:600">'+ten+' (m²)</label><input id="m2-fl'+i+'" type="number" value="'+(val===''?'':val)+'" oninput="bgM2Calc()" style="'+inp+'"></div>';
+  }
+  box.innerHTML=h; bgM2Calc();
 }
-function bgM2Calc(){ var e=document.getElementById('m2-kq'); if(e) e.textContent=bgFmt(bgM2Total())+' m²'; }
+function bgM2num(id){ return +((document.getElementById(id)||{}).value)||0; }
+function bgM2selVal(id){ return +((document.getElementById(id)||{}).value)||0; }
+function bgM2selText(id){ var e=document.getElementById(id); if(!e||e.selectedIndex<0) return ''; var t=(e.options[e.selectedIndex]||{}).text||''; return t.replace(/\s*\(\d+%\)\s*$/,''); }
+/* Gom toàn bộ nhập liệu → object bóc tách {rows, floors, tong} dùng chung cho bảng, SVG, lưu & in */
+function bgM2State(){
+  var tang=Math.max(0, Math.min(30, Math.round(bgM2num('m2-tang'))));
+  var floors=[];
+  for(var i=0;i<tang;i++){ floors.push({ten:i===0?'Tầng trệt':('Lầu '+i), dt:bgM2num('m2-fl'+i)}); }
+  var g0=floors.length?floors[0].dt:0, gT=floors.length?floors[floors.length-1].dt:0;
+  var rows=[];
+  var r1=function(n){ return Math.round((+n||0)*10)/10; };
+  /* Tầng hầm */
+  var hamHs=bgM2selVal('m2-ham'), hamDt=bgM2num('m2-ham-dt')||g0;
+  if(hamHs>0 && hamDt>0) rows.push({ten:bgM2selText('m2-ham'), nhom:'Tầng hầm', dt:r1(hamDt), hs:hamHs, qd:r1(hamDt*hamHs), col:M2_COL.ham, kind:'ham'});
+  /* Móng */
+  var mongHs=bgM2selVal('m2-mong'), mongDt=bgM2num('m2-mong-dt')||g0;
+  if(mongHs>0 && mongDt>0) rows.push({ten:bgM2selText('m2-mong'), nhom:'Móng', dt:r1(mongDt), hs:mongHs, qd:r1(mongDt*mongHs), col:M2_COL.mong, kind:'mong'});
+  /* Thân — từng tầng */
+  floors.forEach(function(f,idx){ if(f.dt>0) rows.push({ten:f.ten, nhom:'Thân nhà', dt:r1(f.dt), hs:1, qd:r1(f.dt), col: idx%2?M2_COL.floorB:M2_COL.floorA, kind:'floor'}); });
+  /* Mái */
+  var maiHs=bgM2selVal('m2-mai'), maiDt=bgM2num('m2-mai-dt')||gT;
+  if(maiHs>0 && maiDt>0) rows.push({ten:bgM2selText('m2-mai'), nhom:'Mái', dt:r1(maiDt), hs:maiHs, qd:r1(maiDt*maiHs), col:M2_COL.mai, kind:'mai'});
+  /* Sân thượng ko mái */
+  var st=bgM2num('m2-st'); if(st>0) rows.push({ten:'Sân thượng không mái', nhom:'Khác', dt:r1(st), hs:M2_HS_ST, qd:r1(st*M2_HS_ST), col:M2_COL.st, kind:'st'});
+  /* Ban công */
+  var bc=bgM2num('m2-bc'); if(bc>0) rows.push({ten:'Ban công / lô gia', nhom:'Khác', dt:r1(bc), hs:M2_HS_BC, qd:r1(bc*M2_HS_BC), col:M2_COL.bc, kind:'bc'});
+  /* Sân/gara */
+  var sn=bgM2num('m2-sango'); if(sn>0) rows.push({ten:'Sân / gara / lối đi', nhom:'Khác', dt:r1(sn), hs:M2_HS_SAN, qd:r1(sn*M2_HS_SAN), col:M2_COL.san, kind:'san'});
+  var tong=r1(rows.reduce(function(a,r){return a+r.qd;},0));
+  return {rows:rows, floors:floors, tong:tong};
+}
+/* Bảng bóc tách (HTML, inline-style — dùng cả trong modal lẫn bản in) */
+function bgM2TableHtml(s){
+  if(!s || !s.rows || !s.rows.length) return '<div style="font-size:11.5px;color:#9A8F82;padding:10px;text-align:center">Nhập diện tích để xem bảng bóc tách…</div>';
+  var h='<table style="width:100%;border-collapse:collapse;font-size:11.5px">'
+    +'<thead><tr style="background:#8A6D3B;color:#fff">'
+    +'<th style="padding:6px 7px;text-align:left">Hạng mục</th>'
+    +'<th style="padding:6px 7px;text-align:right;white-space:nowrap">DT thực (m²)</th>'
+    +'<th style="padding:6px 7px;text-align:center">Hệ số</th>'
+    +'<th style="padding:6px 7px;text-align:right;white-space:nowrap">Quy đổi (m²)</th></tr></thead><tbody>';
+  var lastNhom='';
+  s.rows.forEach(function(r){
+    if(r.nhom!==lastNhom){ h+='<tr style="background:#F3EEE4"><td colspan="4" style="padding:4px 7px;font-size:10px;font-weight:700;color:#8A6D3B;text-transform:uppercase;letter-spacing:.4px">'+esc2(r.nhom)+'</td></tr>'; lastNhom=r.nhom; }
+    h+='<tr style="border-bottom:1px solid #EDE7DB">'
+      +'<td style="padding:5px 7px"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+r.col+';margin-right:6px;vertical-align:middle"></span>'+esc2(r.ten)+'</td>'
+      +'<td style="padding:5px 7px;text-align:right">'+bgFmtM2(r.dt)+'</td>'
+      +'<td style="padding:5px 7px;text-align:center">'+Math.round(r.hs*100)+'%</td>'
+      +'<td style="padding:5px 7px;text-align:right;font-weight:600">'+bgFmtM2(r.qd)+'</td></tr>';
+  });
+  h+='<tr style="background:#FBF6EC;border-top:2px solid #B08D57"><td colspan="3" style="padding:7px;font-weight:800;color:#8A6D3B">TỔNG DIỆN TÍCH XÂY DỰNG</td><td style="padding:7px;text-align:right;font-weight:800;color:#8A6D3B">'+bgFmtM2(s.tong)+' m²</td></tr>';
+  h+='</tbody></table>';
+  return h;
+}
+/* Hình minh họa mặt cắt (SVG) — các lớp từ MÁI → MÓNG/HẦM, mỗi lớp ghi DT×hệ số=quy đổi */
+function bgM2Svg(s){
+  if(!s || !s.rows || !s.rows.length) return '<div style="font-size:11.5px;color:#9A8F82;padding:24px 10px;text-align:center">Chưa có dữ liệu để vẽ.</div>';
+  /* Thứ tự vẽ từ trên xuống: mái → sân thượng → ban công → lầu…trệt → móng → hầm → sân */
+  var ord={mai:0, st:1, bc:2, floor:3, mong:5, ham:6, san:7};
+  var arr=s.rows.slice().map(function(r,i){ return {r:r, i:i}; });
+  arr.sort(function(a,b){
+    var oa=ord[a.r.kind]!=null?ord[a.r.kind]:4, ob=ord[b.r.kind]!=null?ord[b.r.kind]:4;
+    if(a.r.kind==='floor' && b.r.kind==='floor') return b.i - a.i; /* lầu cao vẽ trên */
+    return oa-ob;
+  });
+  var W=340, bandH=27, gap=3, roofH=26, padTop=6, padBot=8, x0=30, bandW=W-2*x0;
+  var n=arr.length, H=padTop+roofH+n*(bandH+gap)+padBot;
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:340px;display:block;margin:0 auto" font-family="Arial,Helvetica,sans-serif">';
+  /* mái dốc trang trí trên cùng */
+  var roofY=padTop, apexX=W/2;
+  svg+='<polygon points="'+(x0-10)+','+(roofY+roofH)+' '+apexX+','+roofY+' '+(x0+bandW+10)+','+(roofY+roofH)+'" fill="#7A5231"/>';
+  var y=padTop+roofH;
+  arr.forEach(function(o){
+    var r=o.r, foundation=(r.kind==='mong'||r.kind==='ham');
+    svg+='<rect x="'+x0+'" y="'+y+'" width="'+bandW+'" height="'+bandH+'" fill="'+r.col+'"'+(foundation?' stroke="#4A4038" stroke-width="1" stroke-dasharray="3 2"':'')+' />';
+    /* tên */
+    svg+='<text x="'+(x0+8)+'" y="'+(y+bandH/2+4)+'" font-size="10.5" font-weight="700" fill="#FFF">'+esc2(r.ten)+'</text>';
+    /* dt×hs=qd */
+    svg+='<text x="'+(x0+bandW-8)+'" y="'+(y+bandH/2+4)+'" font-size="9.5" fill="#FFF" text-anchor="end">'+bgFmtM2(r.dt)+'×'+Math.round(r.hs*100)+'% = '+bgFmtM2(r.qd)+'m²</text>';
+    y+=bandH+gap;
+  });
+  /* nền đất */
+  svg+='<line x1="'+(x0-14)+'" y1="'+y+'" x2="'+(x0+bandW+14)+'" y2="'+y+'" stroke="#8A7E6E" stroke-width="2"/>';
+  svg+='</svg>';
+  return svg;
+}
+function bgM2Calc(){
+  var s=bgM2State();
+  var kq=document.getElementById('m2-kq'); if(kq) kq.textContent=bgFmtM2(s.tong)+' m²';
+  var tb=document.getElementById('m2-table'); if(tb) tb.innerHTML=bgM2TableHtml(s);
+  var sv=document.getElementById('m2-svg'); if(sv) sv.innerHTML=bgM2Svg(s);
+}
 function bgM2Apply(){
-  var t=bgM2Total(); var r=document.querySelector('#bg-items .bg-row');
-  if(r){ var sl=r.querySelector('.bg-i-sl'); if(sl) sl.value=t; bgCalc(); toast('Đã áp '+bgFmt(t)+' m² vào dòng đầu'); }
-  else toast('Chưa có dòng hạng mục nào','⚠️');
+  var s=bgM2State();
+  if(!s.rows.length) return toast('Chưa nhập diện tích nào','⚠️');
+  var r=document.querySelector('#bg-items .bg-row');
+  if(!r) return toast('Chưa có dòng hạng mục nào','⚠️');
+  var sl=r.querySelector('.bg-i-sl'); if(sl) sl.value=s.tong;
+  try{ r.setAttribute('data-bt', JSON.stringify(s)); }catch(e){}
+  bgCalc(); toast('Đã áp '+bgFmt(s.tong)+' m² + lưu bảng bóc tách vào dòng đầu');
   bgM2Close();
 }
 function bgM2Close(){ var el=document.getElementById('bg-m2'); if(el) el.remove(); }
@@ -5024,7 +5159,8 @@ function htXoaKhaoSat(ma){
 function bgRowHtml(it){
   it=it||{};
   var cell='padding:7px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px';
-  return '<div class="bg-row" data-mt="'+esc2(it.mt||'')+'" style="display:grid;grid-template-columns:1fr 62px 60px 104px 108px 28px;gap:6px;align-items:center;margin:6px 0">'
+  var btAttr=''; if(it.bt){ try{ btAttr=' data-bt="'+esc2(typeof it.bt==='string'?it.bt:JSON.stringify(it.bt))+'"'; }catch(e){} }
+  return '<div class="bg-row" data-mt="'+esc2(it.mt||'')+'"'+btAttr+' style="display:grid;grid-template-columns:1fr 62px 60px 104px 108px 28px;gap:6px;align-items:center;margin:6px 0">'
     + '<input class="bg-i-ten" value="'+esc2(it.ten||'')+'" placeholder="Nội dung hạng mục" title="'+esc2(it.mt||'')+'" style="'+cell+'">'
     + '<input class="bg-i-dvt" value="'+esc2(it.dvt||'')+'" list="bg-dvt-list" placeholder="ĐVT" style="'+cell+'">'
     + '<input class="bg-i-sl" type="number" value="'+(it.sl!=null&&it.sl!==0?esc2(it.sl):(it.sl===0?'':''))+'" oninput="bgCalc()" style="'+cell+';text-align:right">'
@@ -5043,7 +5179,9 @@ function bgCollect(){
     var sl=+((r.querySelector('.bg-i-sl')||{}).value)||0;
     var dg=+((r.querySelector('.bg-i-dg')||{}).value)||0;
     if(!ten && !sl && !dg) return;
-    out.push({ten:ten,dvt:dvt,sl:sl,dg:dg,tt:Math.round(sl*dg),mt:r.getAttribute('data-mt')||''});
+    var o={ten:ten,dvt:dvt,sl:sl,dg:dg,tt:Math.round(sl*dg),mt:r.getAttribute('data-mt')||''};
+    var btRaw=r.getAttribute('data-bt'); if(btRaw){ try{ o.bt=JSON.parse(btRaw); }catch(e){} }
+    out.push(o);
   });
   return out;
 }
@@ -5169,12 +5307,13 @@ function bgPrint(ma){
   var x=(HT.baogia||[]).filter(function(r){return r['Mã BG']===ma;})[0]; if(!x) return toast('Không tìm thấy báo giá');
   var l=window.__htLead||{};
   var items=[]; try{ items=JSON.parse(x['Hạng mục JSON']||'[]')||[]; }catch(e){}
+  var btPL=null; for(var bi=0;bi<items.length;bi++){ if(items[bi] && items[bi].bt && items[bi].bt.rows && items[bi].bt.rows.length){ btPL=items[bi].bt; break; } }
   var tam=+(x['Tạm tính (đ)'])|| items.reduce(function(a,i){return a+(+i.tt||0);},0);
   var ck=+(x['Chiết khấu %'])||0, vat=+(x['VAT %'])||0, tong=+(x['Giá trị (đ)'])||0;
   var ckTien=Math.round(tam*ck/100), vatTien=Math.round((tam-ckTien)*vat/100);
   var rows = items.map(function(i,idx){
     return '<tr><td class="c">'+(idx+1)+'</td><td><b>'+esc2(i.ten||'')+'</b>'+(i.mt?'<div class="mt">'+esc2(i.mt)+'</div>':'')+'</td><td class="c">'+esc2(i.dvt||'')+'</td>'
-      +'<td class="r">'+(i.sl?bgFmt(i.sl):'')+'</td><td class="r">'+(i.dg?bgFmt(i.dg):'')+'</td><td class="r">'+bgFmt(i.tt||0)+'</td></tr>';
+      +'<td class="r">'+(i.sl?bgFmtM2(i.sl):'')+'</td><td class="r">'+(i.dg?bgFmt(i.dg):'')+'</td><td class="r">'+bgFmt(i.tt||0)+'</td></tr>';
   }).join('') || '<tr><td colspan="6" class="c" style="color:#888;padding:14px">Chưa có hạng mục</td></tr>';
   var hieuLuc=''; if(x['Ngày lập']&&x['Hiệu lực (ngày)']){ var d=new Date(x['Ngày lập']); d.setDate(d.getDate()+(+x['Hiệu lực (ngày)']||0)); if(!isNaN(d)) hieuLuc=d.toLocaleDateString('vi-VN'); }
   var S='';
@@ -5210,6 +5349,17 @@ function bgPrint(ma){
   S+='<div class="words">Bằng chữ: <i>'+esc2(bgDocViet(tong))+'</i></div>';
   if(x['Điều khoản']) S+='<div class="terms"><b>Điều khoản thanh toán:</b> '+esc2(x['Điều khoản'])+'</div>';
   if(x['Ghi chú']) S+='<div class="terms" style="border-color:#9AA3AD">'+esc2(x['Ghi chú'])+'</div>';
+  if(btPL){
+    S+='<div style="margin-top:20px;page-break-inside:avoid">';
+    S+='<div style="font-size:13px;font-weight:800;color:#8A6D3B;border-bottom:2px solid #B08D57;padding-bottom:5px;margin-bottom:8px">PHỤ LỤC — CÁCH TÍNH DIỆN TÍCH XÂY DỰNG (m²)</div>';
+    S+='<div style="font-size:11px;color:#5A6470;margin-bottom:12px;line-height:1.5">Đơn giá theo m² được áp cho <b>diện tích xây dựng quy đổi</b> — không phải diện tích sàn thông thủy. Mỗi phần công trình (móng, các tầng thân, mái, ban công…) được quy đổi theo hệ số kỹ thuật phản ánh khối lượng thi công thực tế, cộng lại thành <b>'+bgFmtM2(btPL.tong)+' m²</b>. Bảng và hình dưới đây giải trình chi tiết:</div>';
+    S+='<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">';
+    S+='<div style="flex:1;min-width:250px">'+bgM2TableHtml(btPL)+'</div>';
+    S+='<div style="width:290px;max-width:100%">'+bgM2Svg(btPL)+'<div style="font-size:9.5px;color:#9AA3AD;text-align:center;margin-top:4px">Mặt cắt minh họa · mỗi lớp: DT thực × hệ số = quy đổi</div></div>';
+    S+='</div>';
+    S+='<div style="font-size:10px;color:#9AA3AD;margin-top:10px;font-style:italic">Hệ số quy đổi tham khảo: móng 30–100%, sàn tầng 100%, mái 30–100%, sân thượng không mái 50%, ban công 70%, sân/gara 50%, tầng hầm 150–200% tùy độ sâu. Áp dụng theo thông lệ dự toán xây dựng dân dụng.</div>';
+    S+='</div>';
+  }
   S+='<div class="sign"><div>KHÁCH HÀNG<br><span style="font-size:11px;color:#9AA3AD">(Ký, ghi rõ họ tên)</span><div class="sp"></div></div>';
   S+='<div>MỘC ĐÔNG CHÂU<br><span style="font-size:11px;color:#9AA3AD">(Ký, đóng dấu)</span><div class="sp"></div><b>'+esc2(x['Người lập']||'')+'</b></div></div>';
   S+='<div class="ft">Báo giá có giá trị trong '+esc2(x['Hiệu lực (ngày)']||30)+' ngày kể từ ngày lập · Cảm ơn Quý khách đã tin tưởng Mộc Đông Châu</div>';
