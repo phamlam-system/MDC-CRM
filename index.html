@@ -5680,9 +5680,29 @@ function htLuuBaoGia(ma){
 }
 /* ★ Xuất/In báo giá chuyên nghiệp gửi khách */
 /* Biến mô tả hạng mục thành khối rõ ràng cho khách: nhiều dòng → gạch đầu dòng */
+/* Tách mô tả hạng mục thành GẠCH ĐẦU DÒNG mỗi ý một hàng.
+   Cắt theo: xuống dòng · ; · · (middot) · dấu phẩy & dấu chấm ở NGOÀI ngoặc.
+   Giữ nguyên phần trong ngoặc "(cột, dầm, sàn)" và số thập phân "1,9". Bỏ tiền tố "Gồm:". */
+function bgMtSplit(mt){
+  mt=(mt==null?'':String(mt)).trim(); if(!mt) return [];
+  mt=mt.replace(/^\s*(bao\s*gồm|gồm)\s*[:：]?\s*/i,'');
+  var out=[], cur='', depth=0;
+  for(var i=0;i<mt.length;i++){
+    var ch=mt[i], prev=mt[i-1], next=mt[i+1], brk=false;
+    if(ch==='('||ch==='[') depth++;
+    else if(ch===')'||ch===']') depth=Math.max(0,depth-1);
+    if(ch==='\n'||ch===';'||ch==='·') brk=true;
+    else if(depth===0 && ch===',' && !(/\d/.test(prev||'') && /\d/.test(next||''))) brk=true; /* giữ số thập phân 1,9 */
+    else if(depth===0 && ch==='.' && (next===undefined || /\s/.test(next))) brk=true; /* chấm câu (không phải 1.500) */
+    if(brk){ if(cur.trim()) out.push(cur.trim()); cur=''; }
+    else cur+=ch;
+  }
+  if(cur.trim()) out.push(cur.trim());
+  return out.map(function(s){ return s.replace(/^[\s•\-–]+/,'').replace(/[.,;]+$/,'').trim(); }).filter(function(s){ return s.length>1; });
+}
 function bgMtHtml(mt){
   mt=(mt==null?'':String(mt)).trim(); if(!mt) return '';
-  var lines=mt.split(/\r?\n/).map(function(s){ return s.replace(/^[\s•\-–•]+/,'').trim(); }).filter(function(s){ return s; });
+  var lines=bgMtSplit(mt);
   if(lines.length<=1) return '<div class="mt">'+esc2(lines[0]||mt)+'</div>';
   return '<ul class="mt-list">'+lines.map(function(s){ return '<li>'+esc2(s)+'</li>'; }).join('')+'</ul>';
 }
