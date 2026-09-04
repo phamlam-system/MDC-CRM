@@ -899,7 +899,7 @@ async function doLogin(){
     err.textContent='⏳ Đang kiểm tra đăng nhập...';err.classList.add('show');
     let serverResponded=false, serverResult=null;
     try{
-      const res=await fetch(getApiUrl()+'?'+new URLSearchParams({action:'verifyLogin',username:raw,password:p,_ts:Date.now()}).toString(),{method:'GET',redirect:'follow',cache:'no-store'});
+      const res=await fetch(getApiUrl()+'?'+new URLSearchParams({action:'verifyLogin',username:raw,password:p,token:SECRET_TOKEN,_ts:Date.now()}).toString(),{method:'GET',redirect:'follow',cache:'no-store'});
       if(res.ok){ serverResult=await res.json(); serverResponded=true; }
     }catch(e){ /* mất mạng → serverResponded=false */ }
 
@@ -1555,6 +1555,7 @@ function applySettingsUI(s){
 // ══════════════════════════════════════════════════════════════
 // URL backend hiện hành (v5-selfheal). Mọi thiết bị PHẢI dùng URL này.
 const CANONICAL_API='https://script.google.com/macros/s/AKfycbxamtecKswoDZh4kX1xTlco_-319E4dKEOBjrLwpjS541HVI-kW1AxNsquLBdMJ55gk/exec';
+const SECRET_TOKEN='MDC-Secure-2026-Kp9Qv3Ls2Tn8w'; // ★ P0 bảo mật: phải khớp SECRET_TOKEN ở backend
 // Các URL deployment CŨ (không có verifyLogin) — tự động thay bằng CANONICAL_API khi gặp.
 const OBSOLETE_APIS=[
   'AKfycbzVMYIh9fgmNo3omy9b0xL4OAKoQt7EZJ1jTgXTDlE1JzgRRGORVeZgshODS5Smpw4S'
@@ -1582,7 +1583,7 @@ async function apiFetch(params){
   // → tránh CORS preflight OPTIONS mà Google Apps Script không xử lý được.
   // ★ Thêm _ts (cache-buster) + cache:'no-store' để điện thoại (Safari) KHÔNG dùng
   //   bản trả về cũ đã lưu cache → luôn gọi đúng backend hiện hành.
-  const q=new URLSearchParams(params); q.set('_ts', Date.now());
+  const q=new URLSearchParams(params); q.set('_ts', Date.now()); q.set('token', SECRET_TOKEN);
   const res=await fetch(url+'?'+q.toString(),{
     method:'GET',
     redirect:'follow',
@@ -1603,7 +1604,7 @@ async function apiPost(body){
     method:'POST',
     redirect:'follow',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(body)
+    body:JSON.stringify(Object.assign({token:SECRET_TOKEN}, body))
   });
   if(!res.ok) throw new Error('HTTP '+res.status);
   const json=await res.json();
@@ -3161,7 +3162,7 @@ async function testAndSaveUrl(){
     // Test kết nối: chỉ cần server phản hồi JSON hợp lệ (pong hoặc ok) là đạt.
     // KHÔNG dùng apiFetch ở đây vì apiFetch bắt buộc json.ok, mà action 'ping'
     // ở một số bản Apps Script trả {pong:true} không kèm ok.
-    const res=await fetch(getApiUrl()+'?action=ping&_ts='+Date.now(),{method:'GET',redirect:'follow',cache:'no-store'});
+    const res=await fetch(getApiUrl()+'?action=ping&token='+encodeURIComponent(SECRET_TOKEN)+'&_ts='+Date.now(),{method:'GET',redirect:'follow',cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
     const json=await res.json();
     if(!(json.ok||json.pong)) throw new Error(json.error||'Phản hồi không hợp lệ');
