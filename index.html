@@ -8028,8 +8028,8 @@ function hdSaveDoc(){
 
 /* ---------- Xuất PDF / Word ---------- */
 function hdDocHtml(){
-  var css='@page{size:A4;margin:18mm 16mm}*{box-sizing:border-box}body{margin:0}';
-  return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>'+esc2(__hd.so||'Hợp đồng')+'</title><style>'+css+'</style></head><body>'+hdPreviewHtml(__hd,true)+'</body></html>';
+  var css='@page{size:A4;margin:20mm 16mm 18mm}@page{@bottom-center{content:"Trang " counter(page) " / " counter(pages);font-size:9px;color:#9AA3AD;font-family:Arial,sans-serif}}*{box-sizing:border-box}body{margin:0}';
+  return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>'+esc2(__hd.so?('HopDong_'+__hd.so):'HopDong')+'</title><style>'+css+'</style></head><body>'+hdPreviewHtml(__hd,true)+'</body></html>';
 }
 function hdPrintDoc(){
   hdRecalc();
