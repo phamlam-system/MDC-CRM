@@ -5521,7 +5521,7 @@ function bgRowHtml(it){
     + '</div>'
     + '<textarea class="bg-i-mt" rows="2" placeholder="Mô tả chi tiết để khách nắm rõ &amp; yên tâm: vật tư · thương hiệu · quy cách · bao gồm / không bao gồm · bảo hành… (mỗi ý một dòng)" '
     + 'style="width:100%;margin-top:6px;padding:7px 9px;border:1px dashed #D8D2C6;border-radius:6px;font-size:11.5px;font-family:inherit;color:#5A5045;box-sizing:border-box;resize:vertical;background:#FCFAF5">'+esc2(it.mt||'')+'</textarea>'
-    + (it.cfg?'<div style="margin-top:5px;font-size:11px;color:#8A6D3B">🧮 Có cấu hình vật liệu · <a style="cursor:pointer;text-decoration:underline" onclick="dmCfgEditRow(this)">Sửa cấu hình</a></div>':'')
+    + (it.cfg?'<div style="margin-top:5px;font-size:11px;color:#8A6D3B">🧮 Có cấu hình vật liệu · <a style="cursor:pointer;text-decoration:underline" onclick="dmCfgEditRow(this)">Sửa cấu hình</a> · <a style="cursor:pointer;text-decoration:underline" onclick="presetSaveRow(this)">Lưu mẫu</a></div>':'')
     + '</div>';
 }
 function bgAddRow(){ var c=document.getElementById('bg-items'); if(!c) return; c.insertAdjacentHTML('beforeend', bgRowHtml({dvt:'m²'})); bgCalc(); }
@@ -5593,7 +5593,7 @@ function htFormBaoGia(ma){
     + '<div><label style="'+lab+'">Hiệu lực (ngày)</label><input id="bg-hl" type="number" value="'+esc2(x?(x['Hiệu lực (ngày)']||30):30)+'" style="'+inp+'"></div></div>'
     + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap"><label style="'+lab+'">Hạng mục báo giá</label>'
     + '<button type="button" class="btn btn-outline btn-sm" style="margin-left:auto" onclick="bgM2Open()">📐 Tính m²XD</button>'
-    + '<button type="button" class="btn btn-outline btn-sm" onclick="bgApplyMau(true)">Nạp mẫu theo loại</button><button type="button" class="btn btn-outline btn-sm" style="background:#FBF4E6;border-color:#EBD9B8;color:#8A6D3B;font-weight:700" onclick="dmCfgOpen()">🧮 Cấu hình theo vật liệu</button><button type="button" class="btn btn-outline btn-sm" style="background:#EAF3EE;border-color:#CBE3D5;color:#0F5132;font-weight:700" onclick="boTachOpen()">📐 Bốc tách vật liệu</button>'
+    + '<button type="button" class="btn btn-outline btn-sm" onclick="bgApplyMau(true)">Nạp mẫu theo loại</button><button type="button" class="btn btn-outline btn-sm" style="background:#FBF4E6;border-color:#EBD9B8;color:#8A6D3B;font-weight:700" onclick="dmCfgOpen()">🧮 Cấu hình theo vật liệu</button><button type="button" class="btn btn-outline btn-sm" style="background:#EAF3EE;border-color:#CBE3D5;color:#0F5132;font-weight:700" onclick="boTachOpen()">📐 Bốc tách vật liệu</button><button type="button" class="btn btn-outline btn-sm" style="background:#EDE7F6;border-color:#D6CBEA;color:#5E35B1;font-weight:700" onclick="presetPicker()">📚 Mẫu đã lưu</button>'
     + '<button type="button" class="btn btn-outline btn-sm" onclick="bgCatalogPick()">≣ Chọn từ danh mục</button></div>'
     + '<div style="font-size:11px;color:#8A6D3B;background:#FBF4E6;border:1px solid #EBD9B8;border-radius:7px;padding:7px 10px;margin-bottom:8px">💡 Với mỗi hạng mục hãy ghi <b>mô tả chi tiết</b> (vật tư · thương hiệu · quy cách · bao gồm/không bao gồm · bảo hành) — giúp khách nắm rõ và yên tâm. Phần mô tả sẽ in ngay dưới tên hạng mục trên báo giá gửi khách.</div>'
     + '<div style="overflow-x:auto;border:1px solid #E7E3DA;border-radius:8px;margin-bottom:8px"><div style="min-width:560px">'
@@ -7192,6 +7192,137 @@ function boAdd(){ var item=boItem();
   if(__bo.rowEl){ try{ __bo.rowEl.outerHTML=bgRowHtml(item); }catch(e){} if(typeof bgCalc==='function') bgCalc(); toast('Đã cập nhật dòng bốc tách — '+dmFmt(item.dg)); boClose(); }
   else { var c=document.getElementById('bg-items'); if(!c){ toast('Mở form Lập báo giá trước','⚠️'); return; } c.insertAdjacentHTML('beforeend', bgRowHtml(item)); if(typeof bgCalc==='function') bgCalc(); boPushVt(); toast('Đã thêm "'+item.ten+'" (bốc tách) — '+dmFmt(item.dg)); boClose(); } }
 function dmCfgEditRow(el){ var row=el.closest('.bg-row'); if(!row) return; var cfg=null; try{ cfg=JSON.parse(row.getAttribute('data-cfg')); }catch(e){} if(!cfg) return toast('Dòng này không có cấu hình','⚠️'); if(cfg.kind==='bom') boTachOpen(cfg,row); else dmCfgOpen(cfg,row); }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ★ P1++ (bổ sung) — MẪU BỐC TÁCH MỚI (Giường·Bàn·Tủ rượu) + THƯ VIỆN MẪU SẢN PHẨM
+   ═══════════════════════════════════════════════════════════════ */
+/* mở rộng đơn giá phụ */
+BO_RATE_DEF.chan=250000; BO_RATE_DEF.led=180000;
+BO_RATE_LB.chan='Chân bàn/tủ (/cái)'; BO_RATE_LB.led='Đèn LED dây (/md)';
+
+/* sơ đồ đơn giản cho giường & bàn */
+function boSvgBed(W,Hdg){
+  var VW=440,pad=30,iw=VW-pad*2,ih=Math.max(150,Math.min(240,iw*0.5)),VH=ih+pad*2, x0=pad,y0=pad;
+  var hb=Math.max(30,Math.min(ih*0.55,(Hdg/2600)*ih)); // đầu giường
+  var s='<svg viewBox="0 0 '+VW+' '+VH+'" style="width:100%;max-width:'+VW+'px;height:auto;display:block;margin:0 auto">';
+  s+='<rect x="'+x0+'" y="'+y0+'" width="'+(iw*0.16)+'" height="'+ih+'" fill="#EADFCB" stroke="#8A6D3B" stroke-width="2"/>'; // đầu giường
+  s+='<rect x="'+(x0+iw*0.16)+'" y="'+(y0+ih*0.22)+'" width="'+(iw*0.84)+'" height="'+(ih*0.62)+'" rx="8" fill="#FBF6EC" stroke="#B08D57" stroke-width="1.6"/>'; // nệm
+  s+='<text x="'+(x0+iw*0.55)+'" y="'+(y0+ih*0.55)+'" text-anchor="middle" font-size="12" fill="#9A8F82">Nệm '+W+' mm</text>';
+  s+='<text x="'+(x0+iw*0.08)+'" y="'+(y0+ih+20)+'" text-anchor="middle" font-size="11" fill="#6F6355">Đầu giường</text>';
+  s+='<text x="'+(x0+iw*0.6)+'" y="'+(y0+ih+20)+'" text-anchor="middle" font-size="12" fill="#6F6355">Rộng '+W+' mm · đầu cao '+Hdg+' mm</text>';
+  s+='</svg>'; return s;
+}
+function boSvgTable(L,H){
+  var VW=440,pad=30,iw=VW-pad*2,ih=Math.max(120,Math.min(220,iw*((H||750)/1600))),VH=ih+pad*2,x0=pad,y0=pad;
+  var top=y0+ih*0.16;
+  var s='<svg viewBox="0 0 '+VW+' '+VH+'" style="width:100%;max-width:'+VW+'px;height:auto;display:block;margin:0 auto">';
+  s+='<rect x="'+x0+'" y="'+top+'" width="'+iw+'" height="'+(ih*0.14)+'" fill="#EADFCB" stroke="#8A6D3B" stroke-width="2"/>'; // mặt bàn
+  var legW=iw*0.05, legTop=top+ih*0.14, legH=ih-(legTop-y0)-4;
+  [0.03,0.92-0.03+0.05].forEach(function(fx){ s+='<rect x="'+(x0+iw*fx).toFixed(1)+'" y="'+legTop.toFixed(1)+'" width="'+legW.toFixed(1)+'" height="'+legH.toFixed(1)+'" fill="#D8C7A6" stroke="#8A6D3B" stroke-width="1.4"/>'; });
+  s+='<text x="'+(x0+iw/2)+'" y="'+(y0+ih+20)+'" text-anchor="middle" font-size="12" fill="#6F6355">Dài '+L+' mm · cao '+H+' mm</text>';
+  s+='</svg>'; return s;
+}
+
+/* ---- 3 mẫu mới ---- */
+BO_TPL.giuong={ label:'Giường ngủ',
+  params:[{k:'W',label:'Rộng nệm (mm)',def:1800},{k:'L',label:'Dài nệm (mm)',def:2000},{k:'Hdg',label:'Cao đầu giường (mm)',def:1100},{k:'nTab',label:'Số tab đầu giường',def:2,int:1}],
+  mats:['thung','canh','lpCanh','taynam'], rates:['canh','nc','keo'],
+  svg:function(p){ return boSvgBed(p.W,p.Hdg); },
+  bom:function(p,g,r){ var W=p.W/1000,L=p.L/1000,Hdg=p.Hdg/1000,nTab=+p.nTab||0;
+    var aThanh=2*(L*0.35)+W*0.35, aDau=W*Hdg, aDat=W*L*0.4, gT=g('thung');
+    var Lst=[boLine('Thành + chân giường','2·(D×0.35)+R×0.35',aThanh,'m²',gT),
+      boLine('Đầu giường – ván lõi','R×Cđg',aDau,'m²',g('canh')),
+      boLine('Lớp phủ đầu giường','R×Cđg',aDau,'m²',g('lpCanh')),
+      boLine('Dát/vạt giường','~40% R×D',aDat,'m²',gT),
+      boLine('Cạnh dán PVC','chu vi',2*(L+W)+2*(W+Hdg),'md',r.canh)];
+    if(nTab>0){ Lst.push(boLine('Tab đầu giường (hộc)',nTab+' cái',nTab,'cái',r.keo)); Lst.push(boLine('Tay nắm tab',nTab+' cái',nTab,'cái',g('taynam'))); }
+    Lst.push(boLine('Nhân công GC+lắp','theo m²',aThanh+aDau+aDat,'m²',r.nc));
+    return Lst; } };
+BO_TPL.ban={ label:'Bàn (làm việc/ăn)',
+  params:[{k:'L',label:'Dài (mm)',def:1400},{k:'W',label:'Rộng (mm)',def:700},{k:'H',label:'Cao (mm)',def:750},{k:'nKeo',label:'Số hộc kéo',def:0,int:1}],
+  mats:['thung','lpCanh','taynam'], rates:['canh','nc','chan','keo'],
+  svg:function(p){ return boSvgTable(p.L,p.H); },
+  bom:function(p,g,r){ var L=p.L/1000,W=p.W/1000,nKeo=+p.nKeo||0;
+    var aMat=L*W, gT=g('thung');
+    var Lst=[boLine('Mặt bàn – ván','D×R',aMat,'m²',gT),
+      boLine('Lớp phủ mặt bàn','D×R',aMat,'m²',g('lpCanh')),
+      boLine('Cạnh dán PVC','chu vi mặt',2*(L+W),'md',r.canh),
+      boLine('Chân bàn','4 cái',4,'cái',r.chan)];
+    if(nKeo>0){ Lst.push(boLine('Hộc kéo',nKeo+' cái',nKeo,'cái',r.keo)); Lst.push(boLine('Tay nắm hộc',nKeo+' cái',nKeo,'cái',g('taynam'))); }
+    Lst.push(boLine('Nhân công GC+lắp','theo m²',aMat,'m²',r.nc));
+    return Lst; } };
+BO_TPL.tuRuou={ label:'Tủ rượu / trưng bày (kính+LED)',
+  params:[{k:'H',label:'Cao (mm)',def:2000},{k:'W',label:'Rộng (mm)',def:1200},{k:'D',label:'Sâu (mm)',def:400},{k:'nDoc',label:'Vách dọc',def:1,int:1},{k:'nDot',label:'Đợt kính',def:5,int:1},{k:'nCanh',label:'Cánh kính',def:2,int:1}],
+  mats:['thung','lpThung','banle'], rates:['canh','nc','kinh','led'],
+  svg:function(p){ return boSvgFront(p.W,p.H,{nDoc:p.nDoc,nDot:p.nDot,nCanh:p.nCanh,nKeo:0}); },
+  bom:function(p,g,r){ var H=p.H/1000,W=p.W/1000,D=p.D/1000,nDoc=+p.nDoc||0,nDot=+p.nDot||0,nCanh=Math.max(+p.nCanh||1,1);
+    var aThung=2*W*D+2*H*D+nDoc*H*D, aHau=W*H, gT=g('thung');
+    return [boLine('Thùng: nóc·đáy·hông·vách','2WD+2HD+'+nDoc+'HD',aThung,'m²',gT),
+      boLine('Ván hậu','R×C',aHau,'m²',gT*0.5),
+      boLine('Lớp phủ mặt trong','thùng',aThung,'m²',g('lpThung')),
+      boLine('Đợt kính',nDot+'×RS',nDot*W*D,'m²',r.kinh),
+      boLine('Cánh kính + khung nhôm',nCanh+' cánh·RC',W*H,'m²',r.kinh),
+      boLine('Cạnh dán PVC','chu vi',2*(W+D)+2*(H+D)+nDoc*H,'md',r.canh),
+      boLine('Bản lề kính',nCanh+'×2',nCanh*2,'cái',g('banle')),
+      boLine('Đèn LED dây','viền đợt+trần',H*(nDoc+1)+W,'md',r.led),
+      boLine('Nhân công GC+lắp','theo m²',aThung+aHau+W*H,'m²',r.nc)]; } };
+BO_TYPES.push({t:'Giường ngủ',tpl:'giuong'},{t:'Bàn làm việc',tpl:'ban'},{t:'Bàn ăn',tpl:'ban'},{t:'Tủ rượu / trưng bày',tpl:'tuRuou'});
+
+/* ═══════════ THƯ VIỆN MẪU SẢN PHẨM (lưu & tái dùng) ═══════════ */
+var PRESET_KEY='mdc_crm_presets';
+function presetAll(){ try{ var a=JSON.parse(localStorage.getItem(PRESET_KEY)||'[]'); if(Array.isArray(a)) return a; }catch(e){} return []; }
+function presetSave(a){ try{ localStorage.setItem(PRESET_KEY, JSON.stringify(a)); }catch(e){} }
+function boItemFromCfg(cfg){ var s=__bo, it; __bo={type:cfg.type,tpl:cfg.tpl,p:cfg.p,m:cfg.m,rates:cfg.rates,rowEl:null}; try{ it=boItem(); }finally{ __bo=s; } return it; }
+function dmItemFromCfg(cfg){ var s=__dmCfg, it; __dmCfg={type:cfg.type,dienTich:cfg.dienTich,rowEl:null}; try{ dmCfgInit(); if(cfg.slots) cfg.slots.forEach(function(es){ var sl=(__dmCfg.slots||[]).filter(function(x){return x.k===es.k;})[0]; if(sl){ if(es.matIdx!=null)sl.matIdx=es.matIdx; if(es.sl!=null)sl.sl=es.sl; } }); it=dmCfgItem(); }finally{ __dmCfg=s; } return it; }
+function presetItemFromCfg(cfg){ return (cfg&&cfg.kind==='bom')?boItemFromCfg(cfg):dmItemFromCfg(cfg); }
+function presetSaveRow(el){
+  var row=el.closest('.bg-row'); if(!row) return; var cfg=null; try{ cfg=JSON.parse(row.getAttribute('data-cfg')); }catch(e){}
+  if(!cfg) return toast('Dòng này không có cấu hình để lưu mẫu','⚠️');
+  var goi=((row.querySelector('.bg-i-ten')||{}).value)||'Mẫu sản phẩm';
+  var name=prompt('Tên mẫu sản phẩm (để tái dùng nhanh):', goi); if(!name||!name.trim()) return;
+  var a=presetAll(); a.push({id:'M'+Date.now(), name:name.trim(), cfg:cfg}); presetSave(a);
+  toast('Đã lưu mẫu "'+name.trim()+'" — dùng lại ở 📚 Mẫu đã lưu');
+}
+function presetPicker(){
+  if(typeof dmEnsureCloud==='function') dmEnsureCloud();
+  var old=document.getElementById('preset-pick'); if(old) old.remove();
+  var el=document.createElement('div'); el.id='preset-pick';
+  el.style.cssText='position:fixed;inset:0;background:rgba(20,14,10,.5);z-index:10055;display:flex;align-items:center;justify-content:center;padding:16px';
+  el.onclick=function(e){ if(e.target===el) el.remove(); };
+  el.innerHTML='<div style="background:#fff;border-radius:13px;max-width:600px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 18px 50px rgba(0,0,0,.3)">'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📚 Thư viện mẫu sản phẩm</b>'
+    +'<button class="btn btn-outline btn-sm" onclick="presetCloudSave()" title="Lưu thư viện lên Sheet">☁ Lưu</button>'
+    +'<button class="btn btn-outline btn-sm" onclick="presetCloudLoad()" title="Tải thư viện từ Sheet">⬇ Tải</button>'
+    +'<button onclick="document.getElementById(\'preset-pick\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div id="preset-list" style="padding:12px 18px;overflow:auto"></div></div>';
+  document.body.appendChild(el); presetRenderList();
+}
+function presetRenderList(){
+  var box=document.getElementById('preset-list'); if(!box) return; var a=presetAll();
+  if(!a.length){ box.innerHTML='<div style="padding:24px;text-align:center;color:#9A8F82;font-size:13px">Chưa có mẫu nào.<br>Tạo 1 dòng bằng Cấu hình/Bốc tách rồi bấm "Lưu mẫu" trên dòng đó.</div>'; return; }
+  box.innerHTML=a.map(function(pr){
+    var it=null; try{ it=presetItemFromCfg(pr.cfg); }catch(e){}
+    var gia=it?dmFmt(it.dg):'—'; var kind=(pr.cfg&&pr.cfg.kind==='bom')?'Bốc tách':'Cấu hình';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid #F1EBE0">'
+      +'<div style="flex:1"><div style="font-weight:600">'+esc2(pr.name)+'</div><div style="font-size:11px;color:#9A8F82">'+kind+' · '+esc2((pr.cfg&&(pr.cfg.type||''))||'')+' · '+gia+(it?' đ/'+(it.dvt||''):'')+'</div></div>'
+      +'<button class="btn btn-primary btn-sm" onclick="presetLoad(\''+pr.id+'\')">Dùng</button>'
+      +'<button onclick="presetDelete(\''+pr.id+'\')" title="Xóa mẫu" style="border:none;background:none;color:#B23A2E;cursor:pointer;font-size:15px">✕</button></div>';
+  }).join('');
+}
+function presetLoad(id){
+  var pr=presetAll().filter(function(x){return x.id===id;})[0]; if(!pr) return;
+  var c=document.getElementById('bg-items'); if(!c) return toast('Hãy mở form Lập báo giá trước','⚠️');
+  var it; try{ it=presetItemFromCfg(pr.cfg); }catch(e){ return toast('Không dựng được mẫu','❌'); }
+  c.insertAdjacentHTML('beforeend', bgRowHtml(it)); if(typeof bgCalc==='function') bgCalc();
+  var e=document.getElementById('preset-pick'); if(e) e.remove();
+  toast('Đã thêm mẫu "'+pr.name+'" — giá cập nhật theo định mức hiện hành');
+}
+function presetDelete(id){ if(!confirm('Xóa mẫu này khỏi thư viện?')) return; presetSave(presetAll().filter(function(x){return x.id!==id;})); presetRenderList(); }
+function presetCloudSave(){ if(typeof apiPost!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
+  apiPost({app:'pm',action:'savePMKV',data:{key:'crm_presets',value:JSON.stringify(presetAll())}}).then(function(){ toast('✅ Đã lưu thư viện mẫu lên Sheet'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
+function presetCloudLoad(){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
+  apiFetch({app:'pm',action:'getPMKV',key:'crm_presets'}).then(function(r){ if(r&&Array.isArray(r.value)){ presetSave(r.value); presetRenderList(); toast('✅ Đã tải thư viện mẫu từ Sheet'); } else toast('Trên Sheet chưa có thư viện mẫu','⚠️'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
 
 </script>
 </body>
