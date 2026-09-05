@@ -3793,7 +3793,7 @@ function openImport(){
     <div style="font-size:13px;color:var(--mgray);margin-bottom:10px;line-height:1.6">
       Dán mỗi khách hàng <b>một dòng</b>. Các cột cách nhau bằng <b>Tab</b> (dán thẳng từ Excel/Google Sheets) hoặc <b>dấu phẩy</b>, theo thứ tự:
       <div style="background:var(--lgray);border-radius:7px;padding:8px 10px;margin-top:6px;font-family:monospace;font-size:12px">
-        Tên · SĐT · Loại CT · Nguồn · Ngân sách · Ghi chú</div>
+        Họ và tên · Số điện thoại · Email · Loại công trình · Nguồn lead · Khu vực · Ngân sách · Người phụ trách · Ghi chú<br><span style="color:#0F5132">Dán cả dòng tiêu đề của template cũng được — hệ tự nhận cột theo tên; dòng ví dụ tự bỏ.</span></div>
       Chỉ <b>Tên</b> và <b>SĐT</b> là bắt buộc; các cột sau có thể bỏ trống.
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
@@ -3814,11 +3814,27 @@ function importParse(){
   if(!raw) return [];
   const existPhones=new Set(leads.filter(l=>!l.deleted).map(l=>chuanSDT(l.phone)).filter(Boolean));
   const seenInBatch=new Set();
-  return raw.split(/\r?\n/).map((line,idx)=>{
+  const splitLine=(line)=> line.includes('\t')?line.split('\t'):line.split(',');
+  let lines=raw.split(/\r?\n/).filter(l=>l.trim()!=='');
+  // Mặc định đọc theo VỊ TRÍ (tương thích cũ): Tên·SĐT·Loại·Nguồn·Ngân sách·Ghi chú
+  let map={name:0,phone:1,type:2,source:3,budget:4,note:5,email:-1,area:-1,owner:-1};
+  const h0=lines.length?splitLine(lines[0]).map(x=>String(x).trim().toLowerCase()):[];
+  const isHeader=h0.some(x=>/tên|ho va ten|họ và tên/.test(x)) && h0.some(x=>/sđt|so dien thoai|số điện thoại|điện thoại/.test(x));
+  if(isHeader){
+    const find=(subs)=>{ for(let i=0;i<h0.length;i++){ for(const su of subs){ if(h0[i].indexOf(su)>-1) return i; } } return -1; };
+    map={ name:find(['họ và tên','ho va ten','tên','ten']), phone:find(['số điện thoại','so dien thoai','sđt','điện thoại']),
+      email:find(['email']), type:find(['loại công trình','loai cong trinh','loại','loai']),
+      source:find(['nguồn','nguon']), area:find(['khu vực','khu vuc']),
+      budget:find(['ngân sách','ngan sach']), owner:find(['phụ trách','phu trach']), note:find(['ghi chú','ghi chu']) };
+    lines=lines.slice(1);
+  }
+  const G=(c,k)=>{ const i=map[k]; return (i!=null&&i>=0&&i<c.length)?String(c[i]).trim():''; };
+  return lines.map((line,idx)=>{
     if(!line.trim()) return null;
-    const cols=line.includes('\t')?line.split('\t'):line.split(',');
-    const c=cols.map(x=>x.trim());
-    const name=c[0]||'', phoneRaw=c[1]||'', type=c[2]||'', source=c[3]||'', budget=c[4]||'', note=c[5]||'';
+    if(/dòng ví dụ|vi du|example/i.test(line)) return null;
+    const c=splitLine(line).map(x=>x.trim());
+    const name=G(c,'name'), phoneRaw=G(c,'phone'), type=G(c,'type'), source=G(c,'source'),
+          budget=G(c,'budget'), note=G(c,'note'), email=G(c,'email'), area=G(c,'area'), owner=G(c,'owner');
     const phone=chuanSDT(phoneRaw);
     let status='ok', reason='';
     if(!name){ status='error'; reason='Thiếu tên'; }
@@ -3827,7 +3843,7 @@ function importParse(){
     else if(existPhones.has(phone)){ status='dup'; reason='Trùng KH đã có'; }
     else if(seenInBatch.has(phone)){ status='dup'; reason='Trùng trong danh sách dán'; }
     if(phone && status==='ok') seenInBatch.add(phone);
-    return {idx:idx+1, name, phone, type, source, budget, note, status, reason};
+    return {idx:idx+1, name, phone, type, source, budget, note, email, area, owner, status, reason};
   }).filter(Boolean);
 }
 function importPreview(){
@@ -3863,15 +3879,17 @@ async function importCommit(){
   if(!rows.length){ toast('Không có KH hợp lệ để nhập','⚠️'); return; }
   const pipe=document.getElementById('imp-pipe')?.value||'tk';
   const owner=document.getElementById('imp-owner')?.value||(currentUser&&currentUser.id)||'';
+  const _staff=(typeof loadStaffList==='function')?loadStaffList():[];
+  const ownerByName=(nm)=>{ if(!nm) return ''; const s=_staff.find(s=>String(s.name||'').trim().toLowerCase()===String(nm).trim().toLowerCase()); return s?s.id:''; };
   const stage=pipe==='tc'?'tc_new':'tk_new';
   const today=new Date().toISOString().split('T')[0];
   const created=[];
   rows.forEach(r=>{
     const lead={
-      id:newId(), name:r.name, phone:r.phone, email:'',
+      id:newId(), name:r.name, phone:r.phone, email:r.email||'',
       type:r.type||'', source:r.source||'Import', budget:r.budget||'',
-      stage, area:'', timeline:'', valueTk:'', valueTc:'',
-      owner, note:r.note||'', nextAction:'Liên hệ lần đầu', nextDate:today,
+      stage, area:r.area||'', timeline:'', valueTk:'', valueTc:'',
+      owner:(ownerByName(r.owner)||owner), note:r.note||'', nextAction:'Liên hệ lần đầu', nextDate:today,
       created:new Date().toISOString(), lastContact:'',
       history:[{t:'📥 Tạo từ Import hàng loạt', time:nowStr(), ts:Date.now(), kind:'system', by:(currentUser&&currentUser.name)||''}],
       updatedAt:Date.now()
