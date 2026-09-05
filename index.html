@@ -6885,7 +6885,7 @@ function dmCfgEditRow(el){ var row=el.closest('.bg-row'); if(!row) return; var c
 
 /* ─────────── TRANG QUẢN LÝ: ĐỊNH MỨC & ĐƠN GIÁ (CRUD + đồng bộ Sheet) ─────────── */
 var _dmTab='TU_Canh';
-var DM_TABS=[['TU_Khung','Khung tủ'],['TU_Thung','Thùng tủ'],['TU_Canh','Cánh tủ'],['TU_LopPhu_Canh','Lớp phủ cánh'],['TU_LopPhu_KhungThung','Lớp phủ thùng'],['TU_PhuKien','Phụ kiện'],['OP_Xuong','Ốp: Xương'],['OP_KhungBaoQuanh','Ốp: Khung bao'],['OP_TamOp','Ốp: Tấm ốp'],['OP_LopPhu','Ốp: Lớp phủ'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']];
+var DM_TABS=[['__vl','📋 Danh mục vật liệu'],['TU_Khung','Khung tủ'],['TU_Thung','Thùng tủ'],['TU_Canh','Cánh tủ'],['TU_LopPhu_Canh','Lớp phủ cánh'],['TU_LopPhu_KhungThung','Lớp phủ thùng'],['TU_PhuKien','Phụ kiện'],['OP_Xuong','Ốp: Xương'],['OP_KhungBaoQuanh','Ốp: Khung bao'],['OP_TamOp','Ốp: Tấm ốp'],['OP_LopPhu','Ốp: Lớp phủ'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']];
 function dmSetTab(t){ _dmTab=t; renderDinhMuc(); }
 function renderDinhMuc(){
   dmEnsureCloud();
@@ -6904,7 +6904,8 @@ function renderDinhMuc(){
     +(admin?'<button class="btn btn-outline btn-sm" onclick="dmResetSeed()" title="Nạp lại định mức gốc (demo)">↻ Mẫu gốc</button>':'')+'</div></div>'
     +'<div style="display:flex;gap:2px;overflow-x:auto">'+DM_TABS.map(function(t){return tabBtn(t[0],t[1]);}).join('')+'</div></div>';
   var body;
-  if(_dmTab==='__set') body=dmSettingsHtml();
+  if(_dmTab==='__vl') body=vlTableHtml();
+  else if(_dmTab==='__set') body=dmSettingsHtml();
   else if(_dmTab==='__tier') body=dmTierHtml();
   else body=dmMatTableHtml(_dmTab);
   document.getElementById('page-content').innerHTML=head+'<div style="padding:8px 4px">'+body+'</div></div>';
@@ -7323,6 +7324,117 @@ function presetCloudSave(){ if(typeof apiPost!=='function'||!(typeof getApiUrl==
   apiPost({app:'pm',action:'savePMKV',data:{key:'crm_presets',value:JSON.stringify(presetAll())}}).then(function(){ toast('✅ Đã lưu thư viện mẫu lên Sheet'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
 function presetCloudLoad(){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
   apiFetch({app:'pm',action:'getPMKV',key:'crm_presets'}).then(function(r){ if(r&&Array.isArray(r.value)){ presetSave(r.value); presetRenderList(); toast('✅ Đã tải thư viện mẫu từ Sheet'); } else toast('Trên Sheet chưa có thư viện mẫu','⚠️'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
+
+
+/* ===== MODULE: DANH MỤC VẬT LIỆU (v9.9) ===== */
+var VL_SEED=[{"sec":"I.  VÁN MDF CHỐNG ẨM (Green Core / HMR)  –  An Cường · BMH · ACC"},{"stt":"1","brand":"An Cường","code":"AC-MDF-CA-09","ten":"MDF chống ẩm 9mm – lõi xanh STD","dvt":"tấm","day":"9mm","giaTam":220000,"haohut":0.05,"giaDM":77600,"giaDMraw":"77600","gc":"Chưa VAT – ancuong.com 2025-2026"},{"stt":"2","brand":"An Cường","code":"AC-MDF-CA-12","ten":"MDF chống ẩm 12mm – lõi xanh STD","dvt":"tấm","day":"12mm","giaTam":280000,"haohut":0.05,"giaDM":98764,"giaDMraw":"98764","gc":"Vách ngăn, khung tủ nhẹ"},{"stt":"3","brand":"An Cường","code":"AC-MDF-CA-17","ten":"MDF chống ẩm 17mm – lõi xanh STD","dvt":"tấm","day":"17mm","giaTam":385000,"haohut":0.05,"giaDM":135800,"giaDMraw":"135800","gc":"★ Tiêu chuẩn vàng tủ bếp VN"},{"stt":"4","brand":"An Cường","code":"AC-MDF-CA-17E1","ten":"MDF chống ẩm 17mm – lõi xanh E1","dvt":"tấm","day":"17mm","giaTam":460000,"haohut":0.05,"giaDM":162255,"giaDMraw":"162255","gc":"E1 – phòng trẻ em, phòng ngủ"},{"stt":"5","brand":"An Cường","code":"AC-MDF-CA-18","ten":"MDF chống ẩm 18mm – lõi đỏ chống cháy","dvt":"tấm","day":"18mm","giaTam":null,"haohut":0.05,"giaDM":null,"giaDMraw":"Liên hệ AC","gc":"Liên hệ AC – gần bếp gas"},{"stt":"6","brand":"An Cường","code":"AC-MDF-CA-25","ten":"MDF chống ẩm 25mm","dvt":"tấm","day":"25mm","giaTam":600000,"haohut":0.05,"giaDM":211637,"giaDMraw":"211637","gc":"Mặt bàn chịu lực lớn"},{"stt":"7","brand":"BMH Panel","code":"BMH-MDF-CA-12","ten":"MDF chống ẩm 12mm – lõi xanh","dvt":"tấm","day":"12mm","giaTam":265000,"haohut":0.05,"giaDM":93473,"giaDMraw":"93473","gc":"BMH – nhà máy Đà Nẵng"},{"stt":"8","brand":"BMH Panel","code":"BMH-MDF-CA-17","ten":"MDF chống ẩm 17mm – lõi xanh","dvt":"tấm","day":"17mm","giaTam":360000,"haohut":0.05,"giaDM":126982,"giaDMraw":"126982","gc":"★ Giá tốt hơn AC ~6%"},{"stt":"9","brand":"BMH Panel","code":"BMH-MDF-CA-18","ten":"MDF chống ẩm 18mm – lõi xanh","dvt":"tấm","day":"18mm","giaTam":395000,"haohut":0.05,"giaDM":139327,"giaDMraw":"139327","gc":"Đồng màu Plywood BMH 35 mã"},{"stt":"10","brand":"ACC Panel","code":"ACC-MDF-CA-12","ten":"MDF chống ẩm 12mm – lõi xanh MMR","dvt":"tấm","day":"12mm","giaTam":273000,"haohut":0.05,"giaDM":96295,"giaDMraw":"96295","gc":"Ref thị trường – liên hệ ACC"},{"stt":"11","brand":"ACC Panel","code":"ACC-MDF-CA-17","ten":"MDF chống ẩm 17mm – lõi xanh HMR","dvt":"tấm","day":"17mm","giaTam":405000,"haohut":0.05,"giaDM":142855,"giaDMraw":"142855","gc":"HMR = High Moisture Resistance"},{"stt":"12","brand":"ACC Panel","code":"ACC-MDF-CA-25","ten":"MDF chống ẩm 25mm – lõi xanh MMR","dvt":"tấm","day":"25mm","giaTam":670000,"haohut":0.05,"giaDM":236328,"giaDMraw":"236328","gc":"Ref thị trường"},{"sec":"II.  VÁN MDF THƯỜNG (Standard)  –  Cánh tủ, khu vực khô"},{"stt":"1","brand":"An Cường","code":"AC-MDF-17","ten":"MDF thường 17mm STD","dvt":"tấm","day":"17mm","giaTam":360000,"haohut":0.05,"giaDM":126982,"giaDMraw":"126982","gc":"Khung tủ áo – phòng ngủ khô"},{"stt":"2","brand":"An Cường","code":"AC-MDF-18","ten":"MDF thường 18mm","dvt":"tấm","day":"18mm","giaTam":410000,"haohut":0.05,"giaDM":144618,"giaDMraw":"144618","gc":"Cánh tủ áo, kệ TV"},{"stt":"3","brand":"An Cường","code":"AC-MDF-25","ten":"MDF thường 25mm","dvt":"tấm","day":"25mm","giaTam":560000,"haohut":0.05,"giaDM":197528,"giaDMraw":"197528","gc":"Mặt bàn, kệ sách chịu lực"},{"stt":"4","brand":"BMH Panel","code":"BMH-MDF-17","ten":"MDF thường 17mm","dvt":"tấm","day":"17mm","giaTam":340000,"haohut":0.05,"giaDM":119927,"giaDMraw":"119927","gc":"BMH – sản xuất Đà Nẵng"},{"stt":"5","brand":"BMH Panel","code":"BMH-MDF-18","ten":"MDF thường 18mm","dvt":"tấm","day":"18mm","giaTam":375000,"haohut":0.05,"giaDM":132273,"giaDMraw":"132273","gc":"Đồng màu 150+ mã Melamine"},{"stt":"6","brand":"ACC Panel","code":"ACC-MDF-17","ten":"MDF thường 17mm","dvt":"tấm","day":"17mm","giaTam":325000,"haohut":0.05,"giaDM":114637,"giaDMraw":"114637","gc":"ACC – giá cạnh tranh"},{"stt":"7","brand":"ACC Panel","code":"ACC-MDF-18","ten":"MDF thường 18mm","dvt":"tấm","day":"18mm","giaTam":355000,"haohut":0.05,"giaDM":125218,"giaDMraw":"125218","gc":"Liên hệ ACC xác nhận"},{"sec":"III.  VÁN WPB (Water Proof Board – Cốt PVC)  –  An Cường ★ · BMH · ACC · Picomat"},{"stt":"1","brand":"An Cường","code":"AC-WPB-10","ten":"WPB cốt trơn 10mm","dvt":"tấm","day":"10mm","giaTam":null,"haohut":0.05,"giaDM":null,"giaDMraw":"Liên hệ AC","gc":"Chống nước tuyệt đối – ancuong.com/core-boards"},{"stt":"2","brand":"An Cường","code":"AC-WPB-12","ten":"WPB cốt trơn 12mm","dvt":"tấm","day":"12mm","giaTam":null,"haohut":0.05,"giaDM":null,"giaDMraw":"Liên hệ AC","gc":"Tủ lavabo, vách WC – tỷ trọng 600-650 kg/m³"},{"stt":"3","brand":"An Cường","code":"AC-WPB-17","ten":"WPB cốt trơn 17mm","dvt":"tấm","day":"17mm","giaTam":null,"haohut":0.05,"giaDM":null,"giaDMraw":"Liên hệ AC","gc":"★ Thùng tủ bếp khu ẩm cao cấp"},{"stt":"4","brand":"An Cường","code":"AC-WPB-MEL-09","ten":"WPB phủ Melamine 9mm","dvt":"tấm","day":"9mm","giaTam":776000,"haohut":0.05,"giaDM":273717,"giaDMraw":"273717","gc":"★ Giá AC 2026: 776k/tấm 1220×2440"},{"stt":"5","brand":"An Cường","code":"AC-WPB-MEL-12","ten":"WPB phủ Melamine 12mm","dvt":"tấm","day":"12mm","giaTam":970000,"haohut":0.05,"giaDM":342146,"giaDMraw":"342146","gc":"Ước tính dải giá AC WPB Mel 2026"},{"stt":"6","brand":"An Cường","code":"AC-WPB-MEL-17","ten":"WPB phủ Melamine 17mm","dvt":"tấm","day":"17mm","giaTam":1407000,"haohut":0.05,"giaDM":496288,"giaDMraw":"496288","gc":"★ Giá cao nhất dòng WPB Mel An Cường"},{"stt":"7","brand":"BMH Panel","code":"BMH-WBP-09","ten":"Gỗ nhựa WBP 9mm phủ Melamine","dvt":"tấm","day":"9mm","giaTam":680000,"haohut":0.05,"giaDM":239855,"giaDMraw":"239855","gc":"BMH Wood Bond Plastic – nhà máy ĐN"},{"stt":"8","brand":"BMH Panel","code":"BMH-WBP-12","ten":"Gỗ nhựa WBP 12mm phủ Melamine","dvt":"tấm","day":"12mm","giaTam":850000,"haohut":0.05,"giaDM":299819,"giaDMraw":"299819","gc":"Không cong vênh, chịu ẩm tốt"},{"stt":"9","brand":"BMH Panel","code":"BMH-WBP-17","ten":"Gỗ nhựa WBP 17mm phủ Melamine","dvt":"tấm","day":"17mm","giaTam":1100000,"haohut":0.05,"giaDM":388001,"giaDMraw":"388001","gc":"★ Thay MDF CA khu siêu ẩm – 35 mã màu"},{"stt":"10","brand":"ACC Panel","code":"ACC-WBP-09","ten":"Ván nhựa WPC/PVC 9mm","dvt":"tấm","day":"9mm","giaTam":650000,"haohut":0.05,"giaDM":229273,"giaDMraw":"229273","gc":"ACC Panel – liên hệ xác nhận"},{"stt":"11","brand":"ACC Panel","code":"ACC-WBP-17","ten":"Ván nhựa WPC/PVC 17mm","dvt":"tấm","day":"17mm","giaTam":1050000,"haohut":0.05,"giaDM":370364,"giaDMraw":"370364","gc":"Cánh tủ lavabo cao cấp"},{"stt":"12","brand":"Picomat","code":"PIM-PVC-17","ten":"Ván nhựa PVC Foam đặc 17mm","dvt":"tấm","day":"17mm","giaTam":1200000,"haohut":0.05,"giaDM":423273,"giaDMraw":"423273","gc":"Picomat VN – nhà sản xuất trong nước"},{"sec":"IV.  VÁN PLYWOOD (Ván Ép)  –  Chắc hơn MDF, chịu lực & ẩm tốt hơn"},{"stt":"1","brand":"An Cường","code":"AC-PLY-12","ten":"Plywood 12mm – bạch dương","dvt":"tấm","day":"12mm","giaTam":null,"haohut":0.05,"giaDM":null,"giaDMraw":"Liên hệ AC","gc":"Liên hệ AC – ~750-850k thị trường"},{"stt":"2","brand":"An Cường","code":"AC-PLY-17","ten":"Plywood 17mm – bạch dương","dvt":"tấm","day":"17mm","giaTam":null,"haohut":0.05,"giaDM":null,"giaDMraw":"Liên hệ AC","gc":"Liên hệ AC – ~1.000-1.100k thị trường"},{"stt":"3","brand":"BMH Panel","code":"BMH-PLY-T-12","ten":"Plywood trơn 12mm (Poplar/Birch)","dvt":"tấm","day":"12mm","giaTam":520000,"haohut":0.05,"giaDM":183418,"giaDMraw":"183418","gc":"BMH – kháng ẩm 72h ngâm nước"},{"stt":"4","brand":"BMH Panel","code":"BMH-PLY-T-17","ten":"Plywood trơn 17mm","dvt":"tấm","day":"17mm","giaTam":680000,"haohut":0.05,"giaDM":239855,"giaDMraw":"239855","gc":"Khung tủ chịu lực – chắc hơn MDF"},{"stt":"5","brand":"BMH Panel","code":"BMH-PLY-MEL-17","ten":"Plywood phủ Melamine 17mm","dvt":"tấm","day":"17mm","giaTam":850000,"haohut":0.05,"giaDM":299819,"giaDMraw":"299819","gc":"★ Phổ biến – khung cao cấp – 35 mã"},{"stt":"6","brand":"BMH Panel","code":"BMH-PLY-VEN-17","ten":"Plywood phủ Veneer Sồi 17mm","dvt":"tấm","day":"17mm","giaTam":1350000,"haohut":0.08,"giaDM":489788,"giaDMraw":"489788","gc":"Sồi / Tần bì / Óc chó / Xoan đào"},{"stt":"7","brand":"ACC Panel","code":"ACC-PLY-12","ten":"Plywood 12mm","dvt":"tấm","day":"12mm","giaTam":500000,"haohut":0.05,"giaDM":176364,"giaDMraw":"176364","gc":"ACC – phân phối B2B"},{"stt":"8","brand":"ACC Panel","code":"ACC-PLY-17","ten":"Plywood 17mm – chịu lực","dvt":"tấm","day":"17mm","giaTam":650000,"haohut":0.05,"giaDM":229273,"giaDMraw":"229273","gc":""},{"stt":"9","brand":"Thị trường","code":"MKT-PLY-MAR","ten":"Plywood Marine 17mm – chống ẩm 100%","dvt":"tấm","day":"17mm","giaTam":1100000,"haohut":0.05,"giaDM":388001,"giaDMraw":"388001","gc":"Import – khu chậu rửa, siêu ẩm"},{"sec":"V.  KÍNH CƯỜNG LỰC  –  Cánh nhôm kính 5mm · 8mm · 10mm  |  TP.HCM 2025"},{"sec":"VI.  PHỤ KIỆN CHÍNH HÃNG  –  Blum (Giá 01/04/2026) · Hettich · Hafele · Nội địa"}];
+
+/* ═══════════════════════════════════════════════════════════════
+   ★ DANH MỤC VẬT LIỆU & ĐƠN GIÁ (sheet VatLieu_DinhGia) — đầy đủ cột
+   Giá định mức/m² = Giá/tấm × (1 + Hao hụt) / 2.9768 (tấm 1.22×2.44m)
+   ═══════════════════════════════════════════════════════════════ */
+var VL_KEY='mdc_crm_vl', VL_TAM_M2=2.9768;
+function vlClone(o){ return JSON.parse(JSON.stringify(o)); }
+function vlAll(){ try{ var a=JSON.parse(localStorage.getItem(VL_KEY)||'null'); if(Array.isArray(a)) return a; }catch(e){} var s=vlClone(VL_SEED); vlSave(s); return s; }
+function vlSave(a){ try{ localStorage.setItem(VL_KEY, JSON.stringify(a)); }catch(e){} }
+function vlResetSeed(){ if(!confirm('Nạp lại Danh mục vật liệu GỐC (demo)? Chỉnh sửa trên máy này sẽ mất.')) return; vlSave(vlClone(VL_SEED)); toast('Đã nạp lại danh mục gốc'); renderDinhMuc(); }
+function vlBrandColor(b){ b=(b||'').toLowerCase();
+  if(b.indexOf('an cư')>-1||b.indexOf('an cu')>-1) return ['#E3EDF9','#1D4E89'];
+  if(b.indexOf('bmh')>-1) return ['#E3F1E1','#2E6B32'];
+  if(b.indexOf('acc')>-1) return ['#FBEBD9','#B4671A'];
+  if(b.indexOf('pico')>-1) return ['#EDE7F6','#5E35B1'];
+  if(b.indexOf('blum')>-1||b.indexOf('hettich')>-1||b.indexOf('hafele')>-1||b.indexOf('thị tr')>-1) return ['#ECEAE6','#5A5045'];
+  return ['#F2EFEA','#5A5045']; }
+function vlRecalc(row){ if((row.dvt||'')==='tấm' && row.giaTam){ row.giaDM=Math.round(row.giaTam*(1+(+row.haohut||0))/VL_TAM_M2); } }
+var __vlQ='';
+function vlSecList(){ var a=vlAll(),o=[]; a.forEach(function(x){ if(x.sec) o.push(x.sec); }); return o; }
+function vlTableHtml(){
+  var a=vlAll(), q=(__vlQ||'').toLowerCase().trim(), admin=(typeof isAdmin==='function')?isAdmin():true;
+  var h='<div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    +(admin?'<button class="btn btn-primary btn-sm" onclick="vlForm(null)">＋ Thêm vật liệu</button>':'')
+    +(admin?'<button class="btn btn-outline btn-sm" onclick="vlAddSection()">＋ Thêm mục</button>':'')
+    +'<button class="btn btn-outline btn-sm" onclick="vlCloudSave()" title="Lưu danh mục lên Sheet">☁ Lưu</button>'
+    +'<button class="btn btn-outline btn-sm" onclick="vlCloudLoad()" title="Tải danh mục từ Sheet">⬇ Tải</button>'
+    +(admin?'<button class="btn btn-outline btn-sm" onclick="vlResetSeed()">↻ Mẫu gốc</button>':'')
+    +'<input value="'+esc2(__vlQ)+'" oninput="__vlQ=this.value;vlRefresh()" placeholder="🔍 Tìm tên / code / thương hiệu…" style="flex:1;min-width:180px;padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"></div>'
+    +'<div style="font-size:11.5px;color:#8A6D3B;background:#FBF4E6;border:1px solid #EBD9B8;border-radius:7px;padding:7px 12px;margin:0 14px 8px">Màu = thương hiệu · Ô "Giá/tấm" & "Hao hụt" nhập tay → "Giá định mức/m²" tự tính (tấm 1,22×2,44m). Giá chưa VAT.</div>'
+    +'<div id="vl-tbl" style="overflow-x:auto">'+vlRowsHtml(a,q)+'</div>';
+  return h;
+}
+function vlRefresh(){ var el=document.getElementById('vl-tbl'); if(el) el.innerHTML=vlRowsHtml(vlAll(),(__vlQ||'').toLowerCase().trim()); }
+function vlRowsHtml(a,q){
+  var th='<tr style="background:#2E4A3E;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.3px">'
+    +'<th style="padding:8px 6px">STT</th><th style="padding:8px">Thương hiệu</th><th style="padding:8px">Code</th><th style="padding:8px;text-align:left;min-width:220px">Tên sản phẩm</th><th style="padding:8px">ĐVT</th><th style="padding:8px">Dày</th><th style="padding:8px;text-align:right">Giá/tấm (₫)</th><th style="padding:8px;text-align:right">Hao hụt</th><th style="padding:8px;text-align:right">Giá định mức/m² (₫)</th><th style="padding:8px;text-align:left;min-width:180px">Ghi chú / Tiêu chuẩn</th><th style="padding:8px"></th></tr>';
+  var body='';
+  a.forEach(function(x,i){
+    if(x.sec){ body+='<tr><td colspan="11" style="background:#DDE7E0;padding:8px 12px;font-weight:800;font-size:12px;color:#2E4A3E">'+esc2(x.sec)+'</td></tr>'; return; }
+    if(q){ var s=((x.ten||'')+' '+(x.code||'')+' '+(x.brand||'')+' '+(x.gc||'')).toLowerCase(); if(s.indexOf(q)<0) return; }
+    var bc=vlBrandColor(x.brand);
+    var giaTam=x.giaTam!=null?x.giaTam:'';
+    var hao=(x.haohut!=null?Math.round(x.haohut*1000)/10:'');
+    var dmCell = (x.giaDM!=null) ? ('<input type="number" value="'+x.giaDM+'" onchange="vlEdit('+i+',\'giaDM\',this.value)" style="width:110px;padding:5px 6px;border:1px solid #DED8CE;border-radius:5px;font-size:12px;text-align:right;background:#EAF3EE;font-weight:600">') : ('<input value="'+esc2(x.giaDMraw||'')+'" onchange="vlEdit('+i+',\'giaDMraw\',this.value)" style="width:110px;padding:5px 6px;border:1px solid #DED8CE;border-radius:5px;font-size:11.5px;color:#B4671A">');
+    body+='<tr style="border-bottom:1px solid #EEE9DF">'
+      +'<td style="padding:5px 6px;text-align:center;color:#9A8F82">'+esc2(x.stt||'')+'</td>'
+      +'<td style="padding:5px 8px"><span style="background:'+bc[0]+';color:'+bc[1]+';padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:700;white-space:nowrap">'+esc2(x.brand||'')+'</span></td>'
+      +'<td style="padding:5px 8px;font-family:monospace;font-size:11px;color:#6F6355">'+esc2(x.code||'')+'</td>'
+      +'<td style="padding:5px 8px">'+esc2(x.ten||'')+'</td>'
+      +'<td style="padding:5px 8px;text-align:center;color:#6F6355">'+esc2(x.dvt||'')+'</td>'
+      +'<td style="padding:5px 8px;text-align:center;color:#6F6355">'+esc2(x.day||'')+'</td>'
+      +'<td style="padding:5px 6px;text-align:right"><input type="number" value="'+giaTam+'" onchange="vlEdit('+i+',\'giaTam\',this.value)" style="width:96px;padding:5px 6px;border:1px solid #DED8CE;border-radius:5px;font-size:12px;text-align:right;background:#FFF9E6"></td>'
+      +'<td style="padding:5px 6px;text-align:right"><input type="number" step="0.5" value="'+hao+'" onchange="vlEdit('+i+',\'haohut\',this.value)" style="width:56px;padding:5px 6px;border:1px solid #DED8CE;border-radius:5px;font-size:12px;text-align:right">%</td>'
+      +'<td style="padding:5px 6px;text-align:right">'+dmCell+'</td>'
+      +'<td style="padding:5px 8px;font-size:11.5px;color:#7A756C">'+esc2(x.gc||'')+'</td>'
+      +'<td style="padding:5px 8px;white-space:nowrap"><button onclick="vlForm('+i+')" title="Sửa" style="border:none;background:none;cursor:pointer;font-size:13px">✎</button> <button onclick="vlDelete('+i+')" title="Xóa" style="border:none;background:none;cursor:pointer;color:#B23A2E;font-size:13px">✕</button></td></tr>';
+  });
+  return '<table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:1000px">'+th+body+'</table>';
+}
+function vlEdit(i,field,val){
+  var a=vlAll(); var x=a[i]; if(!x||x.sec) return;
+  if(field==='giaTam') x.giaTam=Math.round(+val||0);
+  else if(field==='haohut') x.haohut=(+val||0)/100;
+  else if(field==='giaDM') x.giaDM=Math.round(+val||0);
+  else if(field==='giaDMraw') x.giaDMraw=val;
+  if(field==='giaTam'||field==='haohut') vlRecalc(x);
+  vlSave(a);
+  if(field==='giaTam'||field==='haohut') vlRefresh();
+}
+function vlForm(idx){
+  var a=vlAll(); var x=(idx!=null)?a[idx]:{brand:'An Cường',code:'',ten:'',dvt:'tấm',day:'',giaTam:0,haohut:0.05,giaDM:0,gc:''};
+  var inp='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:4px;font-size:13px', lab='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase';
+  var brands=['An Cường','BMH Panel','ACC Panel','Picomat','Thị trường'];
+  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="'+lab+'">Thương hiệu</label><input id="vlf-brand" list="vlf-brands" value="'+esc2(x.brand)+'" style="'+inp+'"><datalist id="vlf-brands">'+brands.map(function(b){return '<option value="'+b+'">';}).join('')+'</datalist></div>'
+    +'<div><label style="'+lab+'">Code</label><input id="vlf-code" value="'+esc2(x.code)+'" style="'+inp+'"></div></div>'
+    +'<div style="margin-bottom:10px"><label style="'+lab+'">Tên sản phẩm</label><input id="vlf-ten" value="'+esc2(x.ten)+'" style="'+inp+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="'+lab+'">ĐVT</label><input id="vlf-dvt" value="'+esc2(x.dvt)+'" style="'+inp+'"></div>'
+    +'<div><label style="'+lab+'">Dày</label><input id="vlf-day" value="'+esc2(x.day)+'" style="'+inp+'"></div>'
+    +'<div><label style="'+lab+'">Hao hụt (%)</label><input id="vlf-hao" type="number" step="0.5" value="'+(x.haohut!=null?Math.round(x.haohut*1000)/10:5)+'" style="'+inp+';text-align:right"></div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="'+lab+'">Giá/tấm (₫)</label><input id="vlf-giatam" type="number" value="'+(x.giaTam||0)+'" style="'+inp+';text-align:right;background:#FFF9E6"></div>'
+    +'<div><label style="'+lab+'">Giá định mức/m² (₫) <span style="font-weight:400;text-transform:none;color:#9A8F82">— tự tính nếu ĐVT=tấm</span></label><input id="vlf-giadm" type="number" value="'+(x.giaDM||0)+'" style="'+inp+';text-align:right;background:#EAF3EE"></div></div>'
+    +'<div style="margin-bottom:14px"><label style="'+lab+'">Ghi chú / Tiêu chuẩn</label><input id="vlf-gc" value="'+esc2(x.gc||'')+'" style="'+inp+'"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="dongModal2()">Hủy</button><button class="btn btn-primary" onclick="vlSaveForm('+(idx==null?'null':idx)+')">Lưu</button></div>';
+  modal2((idx!=null)?'Sửa vật liệu':'Thêm vật liệu', h);
+}
+function vlSaveForm(idx){
+  var a=vlAll();
+  var rec={brand:(document.getElementById('vlf-brand').value||'').trim(),code:(document.getElementById('vlf-code').value||'').trim(),
+    ten:(document.getElementById('vlf-ten').value||'').trim(),dvt:(document.getElementById('vlf-dvt').value||'').trim(),
+    day:(document.getElementById('vlf-day').value||'').trim(),haohut:(+document.getElementById('vlf-hao').value||0)/100,
+    giaTam:Math.round(+document.getElementById('vlf-giatam').value||0),giaDM:Math.round(+document.getElementById('vlf-giadm').value||0),
+    gc:(document.getElementById('vlf-gc').value||'').trim()};
+  if(!rec.ten){ toast('Nhập tên sản phẩm','⚠️'); return; }
+  vlRecalc(rec);
+  if(idx==null||idx==='null'){ rec.stt=''; a.push(rec); } else { rec.stt=a[idx].stt||''; a[idx]=rec; }
+  vlSave(a); if(typeof dongModal2==='function') dongModal2(); renderDinhMuc(); toast('Đã lưu vật liệu (nhớ ☁ Lưu để đồng bộ)');
+}
+function vlDelete(idx){ if(!confirm('Xóa dòng vật liệu này?')) return; var a=vlAll(); a.splice(idx,1); vlSave(a); vlRefresh(); toast('Đã xóa'); }
+function vlAddSection(){ var name=prompt('Tên mục (ví dụ: VII. VÁN NHỰA PICOMAT):',''); if(!name||!name.trim()) return; var a=vlAll(); a.push({sec:name.trim()}); vlSave(a); renderDinhMuc(); }
+function vlCloudSave(){ if(typeof apiPost!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
+  apiPost({app:'pm',action:'savePMKV',data:{key:'crm_vl',value:JSON.stringify(vlAll())}}).then(function(){ toast('✅ Đã lưu Danh mục vật liệu lên Sheet'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
+function vlCloudLoad(){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
+  apiFetch({app:'pm',action:'getPMKV',key:'crm_vl'}).then(function(r){ if(r&&Array.isArray(r.value)){ vlSave(r.value); renderDinhMuc(); toast('✅ Đã tải Danh mục vật liệu từ Sheet'); } else toast('Trên Sheet chưa có danh mục vật liệu','⚠️'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
 
 </script>
 </body>
