@@ -6756,8 +6756,8 @@ var DM_SLOTS={
 var DM_TIER_MAP={
   tu:{
     khung:['MDF chống ẩm 12mm','MDF chống ẩm 17mm','MDF chống ẩm 17mm','MDF chống ẩm 17mm'],
-    thung:['MDF 17mm + cạnh PVC 1','MDF 17mm + cạnh PVC 2','Plywood 17mm','Plywood Marine'],
-    canh:['MDF 18mm','MDF 18mm','MDF 18mm','MDF 25mm'],
+    thung:['MDF chống ẩm 17mm','MDF chống ẩm 17mm','Plywood trơn 17mm','Plywood Marine'],
+    canh:['MDF thường 17mm','MDF thường 18mm','MDF thường 18mm','MDF thường 25mm'],
     lpCanh:['Laminate AnCường HPL vân gỗ','Acrylic AnCường – màu trơn','Acrylic Senosan','Veneer Óc chó'],
     lpThung:['Laminate AnCường HPL vân gỗ','Laminate AnCường HPL vân gỗ','Laminate AnCường HPL vân gỗ','Laminate AnCường HPL vân gỗ'],
     banle:['thường','Blum CLIP top BLUMOTION','Blum CLIP top BLUMOTION','Blum CLIP top BLUMOTION'],
@@ -6770,7 +6770,12 @@ var DM_TIER_MAP={
   }
 };
 function dmTypeInfo(type){ var t=(dmAll().types||DM_SEED.types).filter(function(x){return x.t===type;})[0]; return t||{t:type,f:'tu',tier:'tu_ao'}; }
-function dmSlotOpts(s){ if(s.rate) return null; var arr=(dmAll().mat[s.sheet]||[]).slice(); if(s.filter) arr=arr.filter(function(m){return (m.gr||'').toUpperCase().indexOf(s.filter.toUpperCase())>-1;}); return arr; }
+/* ===== NGUỒN GIÁ CHUNG: Ván thô lấy từ Danh mục vật liệu (v9.10) ===== */
+var VL_BOARD_SHEETS={TU_Khung:1,TU_Thung:1,TU_Canh:1};
+function vlIsBoardSec(sec){ var s=(sec||'').toUpperCase(); if(s.indexOf('KÍNH')>-1||s.indexOf('PHỤ KIỆN')>-1) return false; return s.indexOf('VÁN')>-1||s.indexOf('MDF')>-1||s.indexOf('PLYWOOD')>-1||s.indexOf('WPB')>-1||s.indexOf('WBP')>-1||s.indexOf('NHỰA')>-1||s.indexOf('PVC')>-1; }
+function vlBoardOpts(){ var a=(typeof vlAll==='function')?vlAll():[]; var out=[],cur=''; a.forEach(function(x){ if(x.sec){ cur=x.sec; return; } if(!vlIsBoardSec(cur)) return; var nm=(x.ten||''); var star=(x.gc&&(''+x.gc).indexOf('★')>-1)?' ★':''; var ex=[]; if(x.brand) ex.push(x.brand); if(x.day) ex.push(x.day); var label=nm+(ex.length?' · '+ex.join(' · '):'')+star; out.push({n:label, g:(+x.giaDM||0), gr:cur, d:'m²', code:(x.code||''), note:(x.giaDM==null?((x.giaDMraw||'Liên hệ')+''):'')}); }); return out; }
+function dmSheetOpts(sheet){ if(VL_BOARD_SHEETS[sheet] && typeof vlBoardOpts==='function'){ var o=vlBoardOpts(); if(o&&o.length) return o; } return ((typeof dmAll==='function'?dmAll().mat[sheet]:null)||[]).slice(); }
+function dmSlotOpts(s){ if(s.rate) return null; var arr=dmSheetOpts(s.sheet); if(s.filter) arr=arr.filter(function(m){return (m.gr||'').toUpperCase().indexOf(s.filter.toUpperCase())>-1;}); return arr; }
 function dmSlotGia(s){ var D=dmAll(); if(s.rate) return +((D.rates||DM_SEED.rates)[s.rate])||0; var o=dmSlotOpts(s); var m=o[s.matIdx]; return m?(+m.g||0):0; }
 function dmSlotName(s){ if(s.rate) return s.label; var o=dmSlotOpts(s); var m=o[s.matIdx]; return m?m.n:''; }
 
@@ -6911,6 +6916,18 @@ function renderDinhMuc(){
   document.getElementById('page-content').innerHTML=head+'<div style="padding:8px 4px">'+body+'</div></div>';
 }
 function dmMatTableHtml(sheet){
+  if(VL_BOARD_SHEETS[sheet]){
+    var opts=vlBoardOpts(), lg='';
+    var h='<div style="margin:8px 14px;padding:12px 14px;background:#EAF3EE;border:1px solid #BFE0CC;border-radius:9px;font-size:12.5px;color:#2F6B47;line-height:1.5">🔗 <b>Nhóm ván này lấy giá TRỰC TIẾP từ Danh mục vật liệu.</b> Sửa giá/tấm tại tab <b>📋 Danh mục vật liệu</b> — mọi <b>Báo giá, Cấu hình &amp; Bốc tách</b> dùng ván sẽ tự cập nhật theo. <button class="btn btn-outline btn-sm" style="margin-left:8px" onclick="_dmTab=\'__vl\';renderDinhMuc();">Mở Danh mục vật liệu →</button></div>';
+    h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<thead><tr style="background:#FBF8F1;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:#9A8F82"><th style="text-align:left;padding:9px 14px">Ván (từ Danh mục vật liệu)</th><th style="text-align:left;padding:9px;width:70px">Mã</th><th style="text-align:right;padding:9px;width:150px">Giá định mức/m² (₫)</th></tr></thead><tbody>';
+    opts.forEach(function(m){ if(m.gr!==lg){ lg=m.gr; h+='<tr><td colspan="3" style="background:#F3EEE3;padding:7px 14px;font-weight:700;font-size:11px;color:#6F5A3B">'+esc2(m.gr||'—')+'</td></tr>'; }
+      var gtxt=m.g?(m.g.toLocaleString('vi-VN')):('<span style="color:#B26A2E">'+esc2(m.note||'Liên hệ')+'</span>');
+      h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:8px 14px">'+esc2(m.n)+'</td><td style="padding:8px;color:#9A8F82;font-size:11px">'+esc2(m.code||'')+'</td><td style="padding:8px 14px;text-align:right;font-weight:600">'+gtxt+'</td></tr>'; });
+    if(!opts.length) h+='<tr><td colspan="3" style="padding:14px;text-align:center;color:#9A8F82">Chưa có ván trong Danh mục vật liệu.</td></tr>';
+    h+='</tbody></table></div>';
+    return h;
+  }
   var D=dmAll(); var rows=D.mat[sheet]||[]; var lastGr='';
   var h='<div style="padding:8px 14px"><button class="btn btn-outline btn-sm" onclick="dmMatForm(\''+sheet+'\',null)">＋ Thêm vật liệu</button></div>'
     +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
@@ -6998,7 +7015,7 @@ var BO_TYPES=[
   {t:'Tủ áo',tpl:'tuAo'},{t:'Kệ tivi / trang trí',tpl:'tuAo'},{t:'Tủ đầu giường',tpl:'tuAo'},{t:'Tủ giày',tpl:'tuAo'},
   {t:'Tủ bếp dưới',tpl:'tuBepDuoi'},{t:'Tủ bếp trên',tpl:'tuBepTren'},{t:'Ốp tường',tpl:'opTuong'}
 ];
-function boOptsK(k){ var d=BO_MAT_DEF[k]; if(!d) return []; var a=(dmAll().mat[d.sheet]||[]).slice(); if(d.filter) a=a.filter(function(m){return (m.gr||'').toUpperCase().indexOf(d.filter)>-1;}); return a; }
+function boOptsK(k){ var d=BO_MAT_DEF[k]; if(!d) return []; var a=dmSheetOpts(d.sheet); if(d.filter) a=a.filter(function(m){return (m.gr||'').toUpperCase().indexOf(d.filter)>-1;}); return a; }
 function boSelK(k){ var o=boOptsK(k); return o[__bo.m[k]]||o[0]||{n:'',g:0}; }
 function boGiaK(k){ return +boSelK(k).g||0; }
 function boNameK(k){ return boSelK(k).n||''; }
