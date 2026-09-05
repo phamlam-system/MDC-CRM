@@ -5593,7 +5593,7 @@ function htFormBaoGia(ma){
     + '<div><label style="'+lab+'">Hiệu lực (ngày)</label><input id="bg-hl" type="number" value="'+esc2(x?(x['Hiệu lực (ngày)']||30):30)+'" style="'+inp+'"></div></div>'
     + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap"><label style="'+lab+'">Hạng mục báo giá</label>'
     + '<button type="button" class="btn btn-outline btn-sm" style="margin-left:auto" onclick="bgM2Open()">📐 Tính m²XD</button>'
-    + '<button type="button" class="btn btn-outline btn-sm" onclick="bgApplyMau(true)">Nạp mẫu theo loại</button><button type="button" class="btn btn-outline btn-sm" style="background:#FBF4E6;border-color:#EBD9B8;color:#8A6D3B;font-weight:700" onclick="dmCfgOpen()">🧮 Cấu hình theo vật liệu</button>'
+    + '<button type="button" class="btn btn-outline btn-sm" onclick="bgApplyMau(true)">Nạp mẫu theo loại</button><button type="button" class="btn btn-outline btn-sm" style="background:#FBF4E6;border-color:#EBD9B8;color:#8A6D3B;font-weight:700" onclick="dmCfgOpen()">🧮 Cấu hình theo vật liệu</button><button type="button" class="btn btn-outline btn-sm" style="background:#EAF3EE;border-color:#CBE3D5;color:#0F5132;font-weight:700" onclick="boTachOpen()">📐 Bốc tách vật liệu</button>'
     + '<button type="button" class="btn btn-outline btn-sm" onclick="bgCatalogPick()">≣ Chọn từ danh mục</button></div>'
     + '<div style="font-size:11px;color:#8A6D3B;background:#FBF4E6;border:1px solid #EBD9B8;border-radius:7px;padding:7px 10px;margin-bottom:8px">💡 Với mỗi hạng mục hãy ghi <b>mô tả chi tiết</b> (vật tư · thương hiệu · quy cách · bao gồm/không bao gồm · bảo hành) — giúp khách nắm rõ và yên tâm. Phần mô tả sẽ in ngay dưới tên hạng mục trên báo giá gửi khách.</div>'
     + '<div style="overflow-x:auto;border:1px solid #E7E3DA;border-radius:8px;margin-bottom:8px"><div style="min-width:560px">'
@@ -6969,6 +6969,186 @@ function dmTierHtml(){
   fam.forEach(function(f){ var xw=(D.tierXW||DM_SEED.tierXW)[f[0]]||[]; h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:9px 14px;font-weight:600">'+esc2(f[1])+'</td>'+xw.map(function(v){return '<td style="text-align:right;padding:9px;font-weight:700;color:#0F5132">'+dmFmt(v*mul)+'</td>';}).join('')+'</tr>'; });
   h+='</tbody></table></div></div>';
   return h;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ★ P1++ — BỐC TÁCH VẬT LIỆU CHI TIẾT THEO KÍCH THƯỚC (+ sơ đồ minh họa)
+   Nhập KT + cấu trúc → tính khối lượng từng vật liệu → giá theo định mức (×1.57)
+   Dùng chung dmAll/DM_SLOTS/markup/dmFmt của module Định mức.
+   ═══════════════════════════════════════════════════════════════ */
+var BO_MATS=[
+  {k:'thung', label:'Ván thùng (nóc/đáy/hông/vách/đợt)', sheet:'TU_Thung'},
+  {k:'canh',  label:'Ván cánh (lõi)',                    sheet:'TU_Canh'},
+  {k:'lpCanh',label:'Lớp phủ bề mặt cánh',              sheet:'TU_LopPhu_Canh'},
+  {k:'lpThung',label:'Lớp phủ mặt trong thùng',        sheet:'TU_LopPhu_KhungThung'},
+  {k:'banle', label:'Bản lề',  sheet:'TU_PhuKien', filter:'BẢN LỀ'},
+  {k:'ray',   label:'Ray ngăn kéo', sheet:'TU_PhuKien', filter:'RAY'},
+  {k:'taynam',label:'Tay nắm', sheet:'TU_PhuKien', filter:'TAY NẮM'}
+];
+var BO_TYPES=['Tủ áo','Tủ bếp dưới','Tủ bếp trên','Tủ đầu giường','Kệ tivi','Tủ giày','Tủ trang trí'];
+function boOpts(mc){ var a=(dmAll().mat[mc.sheet]||[]).slice(); if(mc.filter) a=a.filter(function(m){return (m.gr||'').toUpperCase().indexOf(mc.filter)>-1;}); return a; }
+function boMc(k){ return BO_MATS.filter(function(x){return x.k===k;})[0]; }
+function boSel(k){ var mc=boMc(k), o=boOpts(mc); var i=__bo.m[k]; return o[i]||o[0]||{n:'',g:0}; }
+function boGia(k){ return +boSel(k).g||0; }
+function boName(k){ return boSel(k).n||''; }
+
+var __bo=null;
+function boDefaults(){ return {H:2400,W:2000,D:600,nDoc:2,nDot:6,nCanh:4,nKeo:3,nTreo:2}; }
+function boDefRates(){ var r=dmAll().rates||DM_SEED.rates; return {canh:18000, nc:(+r.tuNhanCong||420000), treo:150000, keo:350000, hauF:0.5}; }
+function boInitMats(){
+  var m={}; BO_MATS.forEach(function(mc){ var o=boOpts(mc), di=0; for(var i=0;i<o.length;i++){ if((o[i].n||'').indexOf('★')>-1){di=i;break;} } m[mc.k]=di; });
+  return m;
+}
+function boTachOpen(existing, rowEl){
+  if(typeof dmEnsureCloud==='function') dmEnsureCloud();
+  __bo={ type:(existing&&existing.type)||'Tủ áo',
+    p:Object.assign(boDefaults(), (existing&&existing.p)||{}),
+    m:(existing&&existing.m)||boInitMats(),
+    rates:Object.assign(boDefRates(),(existing&&existing.rates)||{}),
+    rowEl:rowEl||null };
+  var old=document.getElementById('bo-cfg'); if(old) old.remove();
+  var el=document.createElement('div'); el.id='bo-cfg';
+  el.style.cssText='position:fixed;inset:0;background:rgba(20,14,10,.55);z-index:10060;display:flex;align-items:center;justify-content:center;padding:12px';
+  el.onclick=function(e){ if(e.target===el) boClose(); };
+  el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:960px;width:100%;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📐 Bốc tách vật liệu chi tiết'+(rowEl?' — sửa dòng':'')+'</b><button onclick="boClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div id="bo-body" style="padding:14px 18px;overflow:auto"></div></div>';
+  document.body.appendChild(el); boRender();
+}
+function boClose(){ var e=document.getElementById('bo-cfg'); if(e) e.remove(); __bo=null; }
+function boSetP(k,v){ __bo.p[k]=+v||0; boRender(); }
+function boSetM(k,v){ __bo.m[k]=+v; boRender(); }
+function boSetRate(k,v){ __bo.rates[k]=+v||0; boRender(); }
+
+/* Tính khối lượng vật liệu từ kích thước */
+function boBOM(){
+  var p=__bo.p, r=__bo.rates;
+  var H=(+p.H||0)/1000, W=(+p.W||0)/1000, D=(+p.D||0)/1000;
+  var nDoc=+p.nDoc||0, nDot=+p.nDot||0, nCanh=Math.max(+p.nCanh||1,1), nKeo=+p.nKeo||0, nTreo=+p.nTreo||0;
+  var aThung = 2*W*D + 2*H*D + nDoc*H*D;   // nóc+đáy + 2 hông + vách đứng
+  var aDot = nDot*W*D;                       // đợt ngang
+  var aHau = W*H;                            // hậu
+  var aTrong = aThung + aDot;               // lớp phủ mặt trong
+  var aCanh = W*H;                          // cánh (mặt trước)
+  var mdCanh = 2*(W+D)+2*(H+D)+nDoc*H+nDot*W;// cạnh dán PVC
+  var perDoor = H<=1.6?3:(H<=2.2?4:5); var nBanle=nCanh*perDoor;
+  var mdTreo = nTreo * (W/Math.max(nDoc+1,1));
+  var aNC = aThung+aDot+aHau+aCanh;         // diện tích cho nhân công
+  var gThung=boGia('thung');
+  var L=[];
+  function add(ct,dtl,qty,dvt,gia){ qty=Math.round(qty*1000)/1000; if(qty<=0||gia<=0) {} ; L.push({ct:ct,dtl:dtl,qty:qty,dvt:dvt,gia:Math.round(gia),tt:Math.round(qty*gia)}); }
+  add('Thùng: nóc·đáy·hông·vách','2·(R×S) + 2·(C×S) + '+nDoc+'·(C×S)', aThung,'m²', gThung);
+  if(nDot>0) add('Đợt ngang (kệ)', nDot+' × (R×S)', aDot,'m²', gThung);
+  add('Ván hậu','R×C (ván mỏng)', aHau,'m²', gThung*(+r.hauF||0.5));
+  add('Lớp phủ mặt trong','(thùng+đợt)', aTrong,'m²', boGia('lpThung'));
+  add('Cánh – ván lõi', nCanh+' cánh · R×C', aCanh,'m²', boGia('canh'));
+  add('Lớp phủ bề mặt cánh','R×C', aCanh,'m²', boGia('lpCanh'));
+  add('Cạnh dán PVC','chu vi lộ cạnh', mdCanh,'md', (+r.canh||0));
+  add('Bản lề', nCanh+' cánh × '+perDoor+' (cao '+p.H+'mm)', nBanle,'cái', boGia('banle'));
+  if(nKeo>0){ add('Ray ngăn kéo', nKeo+' bộ', nKeo,'bộ', boGia('ray')); add('Hộp ngăn kéo', nKeo+' cái', nKeo,'cái', (+r.keo||0)); }
+  add('Tay nắm', nCanh+' cánh + '+nKeo+' kéo', nCanh+nKeo,'cái', boGia('taynam'));
+  if(nTreo>0) add('Thanh treo đồ', nTreo+' thanh', mdTreo,'md', (+r.treo||0));
+  add('Nhân công gia công + lắp','theo m² cấu kiện', aNC,'m²', (+r.nc||0));
+  return L;
+}
+function boVals(){
+  var xw=boBOM().reduce(function(a,l){return a+l.tt;},0);
+  var mk=dmAll().markup||DM_SEED.markup; var ban=xw*(1+(+mk.nm||0)+(+mk.tktc||0));
+  return {xw:Math.round(xw), ban:Math.round(ban)};
+}
+/* Sơ đồ minh họa mặt đứng (SVG vẽ theo thông số) */
+function boSvg(){
+  var p=__bo.p; var W=+p.W||1, H=+p.H||1, nDoc=+p.nDoc||0, nDot=+p.nDot||0, nCanh=Math.max(+p.nCanh||1,1), nKeo=+p.nKeo||0;
+  var VW=440, pad=34; var innerW=VW-pad*2; var ratio=H/W; var innerH=Math.max(120,Math.min(300, innerW*ratio)); var VH=innerH+pad*2;
+  var x0=pad, y0=pad, x1=pad+innerW, y1=pad+innerH;
+  var s='<svg viewBox="0 0 '+VW+' '+VH+'" style="width:100%;max-width:'+VW+'px;height:auto;display:block;margin:0 auto">';
+  s+='<rect x="'+x0+'" y="'+y0+'" width="'+innerW+'" height="'+innerH+'" fill="#FBF6EC" stroke="#8A6D3B" stroke-width="2.5"/>';
+  var drawerH = nKeo>0 ? Math.min(innerH*0.28, 22*nKeo) : 0;
+  var bodyBot = y1 - drawerH;
+  // vách đứng
+  for(var i=1;i<=nDoc;i++){ var x=x0+innerW*i/(nDoc+1); s+='<line x1="'+x.toFixed(1)+'" y1="'+y0+'" x2="'+x.toFixed(1)+'" y2="'+bodyBot.toFixed(1)+'" stroke="#B08D57" stroke-width="1.6"/>'; }
+  // đợt ngang
+  for(var j=1;j<=nDot;j++){ var y=y0+(bodyBot-y0)*j/(nDot+1); s+='<line x1="'+x0+'" y1="'+y.toFixed(1)+'" x2="'+x1+'" y2="'+y.toFixed(1)+'" stroke="#CBB68C" stroke-width="1.1"/>'; }
+  // ngăn kéo (đáy)
+  if(nKeo>0){ for(var d=0;d<nKeo;d++){ var dy=bodyBot+ (drawerH/nKeo)*d; s+='<rect x="'+(x0+4)+'" y="'+(dy+2).toFixed(1)+'" width="'+(innerW-8)+'" height="'+((drawerH/nKeo)-3).toFixed(1)+'" fill="#F1E7D3" stroke="#B08D57" stroke-width="1"/>'; s+='<line x1="'+(x0+innerW/2-14)+'" y1="'+(dy+ (drawerH/nKeo)/2).toFixed(1)+'" x2="'+(x0+innerW/2+14)+'" y2="'+(dy+(drawerH/nKeo)/2).toFixed(1)+'" stroke="#8A6D3B" stroke-width="2"/>'; } }
+  // đường chia cánh (nét đứt)
+  for(var c=1;c<nCanh;c++){ var cx=x0+innerW*c/nCanh; s+='<line x1="'+cx.toFixed(1)+'" y1="'+y0+'" x2="'+cx.toFixed(1)+'" y2="'+bodyBot.toFixed(1)+'" stroke="#8A6D3B" stroke-width="1" stroke-dasharray="4 3"/>'; }
+  // tay nắm cánh
+  for(var t=0;t<nCanh;t++){ var hx=x0+innerW*(t+0.5)/nCanh + (innerW/nCanh)*0.32; s+='<circle cx="'+hx.toFixed(1)+'" cy="'+((y0+bodyBot)/2).toFixed(1)+'" r="2.6" fill="#8A6D3B"/>'; }
+  // kích thước
+  s+='<text x="'+((x0+x1)/2)+'" y="'+(y1+22)+'" text-anchor="middle" font-size="12" fill="#6F6355">Rộng '+W+' mm</text>';
+  s+='<text x="14" y="'+((y0+y1)/2)+'" text-anchor="middle" font-size="12" fill="#6F6355" transform="rotate(-90 14 '+((y0+y1)/2)+')">Cao '+H+' mm</text>';
+  s+='<text x="'+x1+'" y="'+(y0-12)+'" text-anchor="end" font-size="11" fill="#9A8F82">Sâu '+(+p.D||0)+' mm · '+nCanh+' cánh · '+nDot+' đợt · '+nDoc+' vách'+(nKeo?' · '+nKeo+' kéo':'')+'</text>';
+  s+='</svg>';
+  return s;
+}
+function boRender(){
+  var box=document.getElementById('bo-body'); if(!box||!__bo) return;
+  var cell='padding:7px 8px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px', lab='font-size:10.5px;font-weight:700;color:#6F6355;text-transform:uppercase';
+  var p=__bo.p, r=__bo.rates;
+  var numP=function(k,l){ return '<div><label style="'+lab+'">'+l+'</label><input type="number" value="'+p[k]+'" onchange="boSetP(\''+k+'\',this.value)" style="width:100%;'+cell+';text-align:right;margin-top:3px"></div>'; };
+  var h='<div style="display:grid;grid-template-columns:1.05fr .95fr;gap:16px">';
+  // cột trái: thông số + sơ đồ
+  h+='<div>'
+    +'<div style="'+lab+';margin-bottom:5px">Loại sản phẩm</div>'
+    +'<select onchange="__bo.type=this.value" style="width:100%;'+cell+';margin-bottom:10px">'+BO_TYPES.map(function(t){return '<option'+(t===__bo.type?' selected':'')+'>'+esc2(t)+'</option>';}).join('')+'</select>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">'+numP('H','Cao (mm)')+numP('W','Rộng (mm)')+numP('D','Sâu (mm)')+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">'+numP('nDoc','Vách dọc')+numP('nDot','Đợt ngang')+numP('nCanh','Số cánh')+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+numP('nKeo','Ngăn kéo')+numP('nTreo','Thanh treo')+'</div>'
+    +'<div style="border:1px solid #EDE7DB;border-radius:10px;padding:8px;background:#fff">'+boSvg()+'</div></div>';
+  // cột phải: vật liệu + đơn giá phụ
+  h+='<div><div style="'+lab+';margin-bottom:5px">Vật liệu áp dụng</div>';
+  BO_MATS.forEach(function(mc){ var o=boOpts(mc), lastGr='';
+    var sel='<select onchange="boSetM(\''+mc.k+'\',this.value)" style="width:100%;'+cell+'">';
+    o.forEach(function(m,mi){ if(m.gr!==lastGr){ if(lastGr) sel+='</optgroup>'; sel+='<optgroup label="'+esc2(m.gr)+'">'; lastGr=m.gr; } sel+='<option value="'+mi+'"'+(mi===__bo.m[mc.k]?' selected':'')+'>'+esc2(m.n)+' — '+dmFmt(m.g)+'</option>'; });
+    if(lastGr) sel+='</optgroup>'; sel+='</select>';
+    h+='<div style="margin-bottom:7px"><div style="font-size:11px;color:#6F6355;margin-bottom:2px">'+esc2(mc.label)+'</div>'+sel+'</div>';
+  });
+  var rr=function(k,l,suf){ return '<div style="display:flex;align-items:center;gap:6px;margin:5px 0"><div style="flex:1;font-size:11.5px">'+l+'</div><input type="number" value="'+r[k]+'" onchange="boSetRate(\''+k+'\',this.value)" style="width:110px;'+cell+';text-align:right"><span style="font-size:10px;color:#9A8F82;width:24px">'+(suf||'')+'</span></div>'; };
+  h+='<div style="'+lab+';margin:8px 0 4px">Đơn giá phụ (chỉnh được)</div>'+rr('canh','Cạnh dán PVC','/md')+rr('nc','Nhân công','/m²')+rr('treo','Thanh treo','/md')+rr('keo','Hộp ngăn kéo','/cái');
+  h+='</div></div>';
+  // bảng bốc tách
+  var L=boBOM();
+  h+='<div style="'+lab+';margin:14px 0 5px">Bảng bốc tách khối lượng vật liệu</div>'
+    +'<div style="overflow-x:auto;border:1px solid #E7E3DA;border-radius:8px"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:560px">'
+    +'<thead><tr style="background:#FBF8F1;font-size:9.5px;text-transform:uppercase;color:#9A8F82"><th style="text-align:left;padding:7px 10px">Cấu thành</th><th style="text-align:left;padding:7px">Công thức</th><th style="text-align:right;padding:7px">KL</th><th style="text-align:left;padding:7px">ĐVT</th><th style="text-align:right;padding:7px">Đơn giá</th><th style="text-align:right;padding:7px 10px">Thành tiền</th></tr></thead><tbody>';
+  L.forEach(function(l){ h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:6px 10px;font-weight:600;color:#3A2E22">'+esc2(l.ct)+'</td><td style="padding:6px;color:#9A8F82;font-size:11px">'+esc2(l.dtl)+'</td><td style="padding:6px;text-align:right">'+l.qty+'</td><td style="padding:6px;color:#9A8F82">'+esc2(l.dvt)+'</td><td style="padding:6px;text-align:right;color:#6F6355">'+dmFmt(l.gia)+'</td><td style="padding:6px 10px;text-align:right;font-weight:600">'+dmFmt(l.tt)+'</td></tr>'; });
+  h+='</tbody></table></div>';
+  var v=boVals();
+  h+='<div style="background:var(--goldbg,#FBF4E6);border:1px solid var(--gold,#EBD9B8);border-radius:10px;padding:12px 14px;margin-top:12px">'
+    +'<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span>Giá xuất xưởng (tổng bốc tách)</span><b>'+dmFmt(v.xw)+'</b></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;border-top:1px solid var(--gold,#EBD9B8);padding-top:7px"><span>GIÁ BÁN (×'+(1+(dmAll().markup.nm)+(dmAll().markup.tktc)).toFixed(2)+', chưa VAT)</span><span style="color:#0F5132">'+dmFmt(v.ban)+'</span></div></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-outline" onclick="boClose()">Đóng</button>'
+    +'<button class="btn btn-primary" onclick="boAdd()">'+(__bo.rowEl?'✓ Cập nhật dòng':'＋ Thêm vào báo giá')+'</button></div>';
+  box.innerHTML=h;
+}
+function boMt(){
+  var p=__bo.p;
+  return 'KT '+p.W+'×'+p.H+'×'+p.D+'mm · '+p.nCanh+' cánh, '+p.nDot+' đợt, '+p.nDoc+' vách'+(p.nKeo?', '+p.nKeo+' ngăn kéo':'')
+    +'. Vật liệu: thùng '+boName('thung')+'; cánh '+boName('canh')+' phủ '+boName('lpCanh')+'; '+boName('banle')+', '+boName('ray');
+}
+function boItem(){
+  var v=boVals(), p=__bo.p;
+  var cfg={kind:'bom', type:__bo.type, p:p, m:__bo.m, rates:__bo.rates};
+  return {ten:__bo.type+' ('+p.W+'×'+p.H+'×'+p.D+')', dvt:'bộ', sl:1, dg:v.ban, tt:v.ban, mt:boMt(), cfg:cfg};
+}
+function boPushVt(){
+  var c=document.getElementById('bg-vt'); if(!c) return;
+  BO_MATS.forEach(function(mc){ var nm=boName(mc.k); if(!nm) return; c.insertAdjacentHTML('beforeend', bgVtRowHtml({hangmuc:mc.label,chungloai:nm,thuonghieu:'',xuatxu:'',ghichu:''})); });
+  if(typeof bgVtOpen==='function') bgVtOpen();
+}
+function boAdd(){
+  var item=boItem();
+  if(__bo.rowEl){ try{ __bo.rowEl.outerHTML=bgRowHtml(item); }catch(e){} if(typeof bgCalc==='function') bgCalc(); toast('Đã cập nhật dòng bốc tách — giá bán '+dmFmt(item.dg)); boClose(); }
+  else { var c=document.getElementById('bg-items'); if(!c){ toast('Mở form Lập báo giá trước','⚠️'); return; } c.insertAdjacentHTML('beforeend', bgRowHtml(item)); if(typeof bgCalc==='function') bgCalc(); boPushVt(); toast('Đã thêm "'+item.ten+'" (bốc tách) — '+dmFmt(item.dg)); boClose(); }
+}
+/* Định tuyến "Sửa cấu hình" theo loại cfg (ghi đè bản ở module Định mức) */
+function dmCfgEditRow(el){
+  var row=el.closest('.bg-row'); if(!row) return;
+  var cfg=null; try{ cfg=JSON.parse(row.getAttribute('data-cfg')); }catch(e){}
+  if(!cfg) return toast('Dòng này không có cấu hình','⚠️');
+  if(cfg.kind==='bom') boTachOpen(cfg, row); else dmCfgOpen(cfg, row);
 }
 
 </script>
