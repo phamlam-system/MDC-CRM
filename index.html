@@ -5509,7 +5509,8 @@ function bgRowHtml(it){
   it=it||{};
   var cell='padding:7px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px';
   var btAttr=''; if(it.bt){ try{ btAttr=' data-bt="'+esc2(typeof it.bt==='string'?it.bt:JSON.stringify(it.bt))+'"'; }catch(e){} }
-  return '<div class="bg-row"'+btAttr+' style="border:1px solid #ECE6DB;border-radius:9px;padding:8px 8px 6px;margin:8px 0;background:#fff">'
+  var cfgAttr=''; if(it.cfg){ try{ cfgAttr=' data-cfg="'+esc2(JSON.stringify(it.cfg))+'"'; }catch(e){} }
+  return '<div class="bg-row"'+btAttr+cfgAttr+' style="border:1px solid #ECE6DB;border-radius:9px;padding:8px 8px 6px;margin:8px 0;background:#fff">'
     + '<div style="display:grid;grid-template-columns:1fr 62px 60px 104px 108px 28px;gap:6px;align-items:center">'
     + '<input class="bg-i-ten" value="'+esc2(it.ten||'')+'" placeholder="Tên hạng mục" style="'+cell+';font-weight:600">'
     + '<input class="bg-i-dvt" value="'+esc2(it.dvt||'')+'" list="bg-dvt-list" placeholder="ĐVT" style="'+cell+'">'
@@ -5520,6 +5521,7 @@ function bgRowHtml(it){
     + '</div>'
     + '<textarea class="bg-i-mt" rows="2" placeholder="Mô tả chi tiết để khách nắm rõ &amp; yên tâm: vật tư · thương hiệu · quy cách · bao gồm / không bao gồm · bảo hành… (mỗi ý một dòng)" '
     + 'style="width:100%;margin-top:6px;padding:7px 9px;border:1px dashed #D8D2C6;border-radius:6px;font-size:11.5px;font-family:inherit;color:#5A5045;box-sizing:border-box;resize:vertical;background:#FCFAF5">'+esc2(it.mt||'')+'</textarea>'
+    + (it.cfg?'<div style="margin-top:5px;font-size:11px;color:#8A6D3B">🧮 Có cấu hình vật liệu · <a style="cursor:pointer;text-decoration:underline" onclick="dmCfgEditRow(this)">Sửa cấu hình</a></div>':'')
     + '</div>';
 }
 function bgAddRow(){ var c=document.getElementById('bg-items'); if(!c) return; c.insertAdjacentHTML('beforeend', bgRowHtml({dvt:'m²'})); bgCalc(); }
@@ -5535,6 +5537,7 @@ function bgCollect(){
     var mt=((r.querySelector('.bg-i-mt')||{}).value||r.getAttribute('data-mt')||'').trim();
     var o={ten:ten,dvt:dvt,sl:sl,dg:dg,tt:Math.round(sl*dg),mt:mt};
     var btRaw=r.getAttribute('data-bt'); if(btRaw){ try{ o.bt=JSON.parse(btRaw); }catch(e){} }
+    var cfgRaw=r.getAttribute('data-cfg'); if(cfgRaw){ try{ o.cfg=JSON.parse(cfgRaw); }catch(e){} }
     out.push(o);
   });
   return out;
@@ -6698,17 +6701,33 @@ function bgmTaoNhanh(){
 var DM_SEED={"markup":{"nm":0.17,"tktc":0.4,"vat":0.1},"rates":{"tuNhanCong":420000,"tuVatTuPhu":95000,"opKetHop":120000,"opNhanCong":350000},"types":[{"t":"Tủ bếp","f":"tu","tier":"tu_bep"},{"t":"Tủ áo","f":"tu","tier":"tu_ao"},{"t":"Tủ đầu giường","f":"tu","tier":"tu_ao"},{"t":"Tủ rượu","f":"tu","tier":"tu_ao"},{"t":"Vách TV","f":"tu","tier":"tu_ao"},{"t":"Bàn làm việc","f":"tu","tier":"tu_ao"},{"t":"Kệ trang trí","f":"tu","tier":"tu_ao"},{"t":"Tủ giày","f":"tu","tier":"tu_ao"},{"t":"Ốp tường lam gỗ","f":"op","tier":"op"},{"t":"Ốp tường đá/gạch","f":"op","tier":"op"},{"t":"Ốp đầu giường","f":"op","tier":"op"},{"t":"Trần trang trí","f":"op","tier":"op"}],"tierNames":["Tiết kiệm","Phổ thông cao cấp","Cao cấp","Luxury"],"tierXW":{"tu_bep":[1681000,3483900,4333100,5396000],"tu_ao":[1613250,3128000,3593000,5059000],"op":[1072000,1316000,3241000,4710000]},"mat":{"TU_Khung":[{"n":"MDF chống ẩm 9mm – lõi xanh An Cường","d":"m²","g":214000,"gr":"A. VÁN MDF CHỐNG ẨM (LÕI XANH / ĐỎ)"},{"n":"MDF chống ẩm 12mm – lõi xanh An Cường","d":"m²","g":271500,"gr":"A. VÁN MDF CHỐNG ẨM (LÕI XANH / ĐỎ)"},{"n":"MDF chống ẩm 17mm – lõi xanh An Cường","d":"m²","g":339500,"gr":"A. VÁN MDF CHỐNG ẨM (LÕI XANH / ĐỎ)"},{"n":"MDF chống ẩm 18mm – lõi đỏ chống cháy","d":"m²","g":371000,"gr":"A. VÁN MDF CHỐNG ẨM (LÕI XANH / ĐỎ)"},{"n":"MDF chống ẩm 25mm – lõi xanh","d":"m²","g":481000,"gr":"A. VÁN MDF CHỐNG ẨM (LÕI XANH / ĐỎ)"},{"n":"Plywood 12mm – bạch dương phủ keo Melamine","d":"m²","g":303000,"gr":"B. VÁN PLYWOOD (VÁN DÁN)"},{"n":"Plywood 17mm – bạch dương phủ Melamine","d":"m²","g":402500,"gr":"B. VÁN PLYWOOD (VÁN DÁN)"},{"n":"Plywood 17mm chống ẩm – loại Marine","d":"m²","g":512500,"gr":"B. VÁN PLYWOOD (VÁN DÁN)"},{"n":"Plywood 25mm – kết cấu chịu lực","d":"m²","g":654000,"gr":"B. VÁN PLYWOOD (VÁN DÁN)"},{"n":"Gỗ Sồi (Oak) – đã sấy, bào, ghép thanh","d":"m²","g":2078000,"gr":"C. GỖ TỰ NHIÊN (KẾT CẤU / KHUNG)"},{"n":"Gỗ Óc chó (Walnut Mỹ FAS) – thanh ghép","d":"m²","g":3556000,"gr":"C. GỖ TỰ NHIÊN (KẾT CẤU / KHUNG)"},{"n":"Gỗ Tần bì (Ash) – thanh ghép","d":"m²","g":1646000,"gr":"C. GỖ TỰ NHIÊN (KẾT CẤU / KHUNG)"},{"n":"Gỗ Thông Mỹ – thanh ghép","d":"m²","g":1128400,"gr":"C. GỖ TỰ NHIÊN (KẾT CẤU / KHUNG)"},{"n":"Gỗ Cao su tự nhiên – thanh ghép","d":"m²","g":762000,"gr":"C. GỖ TỰ NHIÊN (KẾT CẤU / KHUNG)"},{"n":"Đá Marble tự nhiên (Carrara, Calacatta)","d":"m²","g":4200000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"},{"n":"Đá Quartz công nghiệp (Caesarstone)","d":"m²","g":2980000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"},{"n":"Đá Granite tự nhiên (đen, xám)","d":"m²","g":2260000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"},{"n":"Khung kim loại sơn tĩnh điện","d":"m²","g":269000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"},{"n":"Khung thép sơn đen mờ","d":"m²","g":331000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"},{"n":"Kính cường lực 8mm (kệ trưng bày)","d":"m²","g":788000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"},{"n":"Kính cường lực 10mm (mặt bàn, vách)","d":"m²","g":1038000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"},{"n":"Kính phản chiếu bạc (mirror panel)","d":"m²","g":678000,"gr":"D. VẬT LIỆU ĐẶC BIỆT (ĐÁ / KIM LOẠI / KÍNH)"}],"TU_Thung":[{"n":"Thùng MDF 17mm + cạnh PVC 1mm – tiêu chuẩn","d":"m²","g":595000,"gr":"A. THÙNG TỦ BẾP"},{"n":"Thùng MDF 18mm chống cháy + cạnh PVC 2mm","d":"m²","g":680000,"gr":"A. THÙNG TỦ BẾP"},{"n":"Thùng Plywood 17mm + cạnh PVC 2mm","d":"m²","g":750000,"gr":"A. THÙNG TỦ BẾP"},{"n":"Thùng Plywood Marine 17mm + cạnh PVC 2mm","d":"m²","g":860000,"gr":"A. THÙNG TỦ BẾP"},{"n":"Thùng MDF 17mm + cạnh PVC 1mm","d":"m²","g":550000,"gr":"B. THÙNG TỦ ÁO"},{"n":"Thùng MDF 17mm + cạnh PVC 2mm (hoàn thiện đẹp)","d":"m²","g":580000,"gr":"B. THÙNG TỦ ÁO"},{"n":"Thùng Plywood 17mm + cạnh PVC 2mm","d":"m²","g":730000,"gr":"B. THÙNG TỦ ÁO"},{"n":"Thùng gỗ tự nhiên (Sồi / Tần bì) lộ vân","d":"m²","g":2130000,"gr":"B. THÙNG TỦ ÁO"},{"n":"Thùng MDF 17mm + cạnh PVC 2mm","d":"m²","g":570000,"gr":"C. THÙNG TỦ ĐẦU GIƯỜNG / PHÒNG NGỦ"},{"n":"Thùng Plywood 17mm + cạnh PVC 2mm","d":"m²","g":730000,"gr":"C. THÙNG TỦ ĐẦU GIƯỜNG / PHÒNG NGỦ"},{"n":"Thùng gỗ tự nhiên Walnut","d":"m²","g":3180000,"gr":"D. THÙNG TỦ RƯỢU / TỦ TRƯNG BÀY"},{"n":"Thùng gỗ tự nhiên Sồi","d":"m²","g":2130000,"gr":"D. THÙNG TỦ RƯỢU / TỦ TRƯNG BÀY"},{"n":"Thùng MDF cao cấp + Veneer dán","d":"m²","g":1010000,"gr":"D. THÙNG TỦ RƯỢU / TỦ TRƯNG BÀY"},{"n":"Ngăn kéo MDF – size 60×50cm (chưa kèm ray)","d":"cái","g":530000,"gr":"E. NGĂN KÉO (DRAWER) – TÍNH RIÊNG TỪNG NGĂN"},{"n":"Ngăn kéo MDF – size 80×50cm (chưa kèm ray)","d":"cái","g":660000,"gr":"E. NGĂN KÉO (DRAWER) – TÍNH RIÊNG TỪNG NGĂN"},{"n":"Ngăn kéo gỗ tự nhiên Tần bì – size 60×50cm","d":"cái","g":1130000,"gr":"E. NGĂN KÉO (DRAWER) – TÍNH RIÊNG TỪNG NGĂN"},{"n":"Hộp đựng dao/dụng cụ (insert) – tùy chỉnh","d":"cái","g":330000,"gr":"E. NGĂN KÉO (DRAWER) – TÍNH RIÊNG TỪNG NGĂN"}],"TU_Canh":[{"n":"Cánh phẳng MDF 18mm – tiêu chuẩn","d":"m²","g":530000,"gr":"A. CÁNH PHẲNG (FLAT PANEL)"},{"n":"Cánh phẳng MDF 25mm – cánh dày sang trọng","d":"m²","g":720000,"gr":"A. CÁNH PHẲNG (FLAT PANEL)"},{"n":"Cánh phẳng Plywood 18mm","d":"m²","g":690000,"gr":"A. CÁNH PHẲNG (FLAT PANEL)"},{"n":"Cánh phẳng MDF 18mm chống cháy","d":"m²","g":660000,"gr":"A. CÁNH PHẲNG (FLAT PANEL)"},{"n":"Cánh khung gỗ tự nhiên + panel MDF (Shaker)","d":"m²","g":1040000,"gr":"B. CÁNH KHUNG (FRAME PANEL)"},{"n":"Cánh khung gỗ Sồi + panel MDF (Profile)","d":"m²","g":1330000,"gr":"B. CÁNH KHUNG (FRAME PANEL)"},{"n":"Cánh khung Walnut + panel MDF","d":"m²","g":2330000,"gr":"B. CÁNH KHUNG (FRAME PANEL)"},{"n":"Cánh khung nhôm + panel kính cường lực","d":"m²","g":1230000,"gr":"C. CÁNH CÓ KHUNG NHÔM"},{"n":"Cánh khung nhôm anodized + panel đặc","d":"m²","g":1330000,"gr":"C. CÁNH CÓ KHUNG NHÔM"},{"n":"Cánh khung nhôm + panel gương bạc","d":"m²","g":1470000,"gr":"C. CÁNH CÓ KHUNG NHÔM"},{"n":"Cánh trượt MDF 18mm + ray trượt cơ bản","d":"m²","g":830000,"gr":"D. CÁNH TRƯỢT (SLIDING DOOR)"},{"n":"Cánh trượt gương + khung nhôm – ray Hettich","d":"m²","g":1700000,"gr":"D. CÁNH TRƯỢT (SLIDING DOOR)"},{"n":"Cánh trượt Veneer + khung nhôm – ray Hafele","d":"m²","g":2200000,"gr":"D. CÁNH TRƯỢT (SLIDING DOOR)"},{"n":"Cánh nâng MDF 18mm + bộ phụ kiện Aventos","d":"m²","g":890000,"gr":"E. CÁNH NÂNG (LIFT-UP / FLAP)"},{"n":"Cánh nâng Acrylic + bộ phụ kiện Aventos","d":"m²","g":1330000,"gr":"E. CÁNH NÂNG (LIFT-UP / FLAP)"},{"n":"Khung nhôm nội thất – hệ 25mm, dày 1.0mm (sơn trắng/đen)","d":"m²","g":150200,"gr":"① CẤU KIỆN KHUNG NHÔM ĐỊNH HÌNH"},{"n":"Khung nhôm nội thất – hệ 35mm, dày 1.2mm (sơn tĩnh điện)","d":"m²","g":340000,"gr":"① CẤU KIỆN KHUNG NHÔM ĐỊNH HÌNH"},{"n":"Khung nhôm hệ 40mm, dày 1.4mm (anodized bạc/đen mờ)","d":"m²","g":500000,"gr":"① CẤU KIỆN KHUNG NHÔM ĐỊNH HÌNH"},{"n":"Khung nhôm hệ 55mm, dày 1.8mm (anodized – Xingfa/PMA)","d":"m²","g":670000,"gr":"① CẤU KIỆN KHUNG NHÔM ĐỊNH HÌNH"},{"n":"Khung nhôm hệ 55mm mạ PVD vàng đồng / đen tuyền","d":"m²","g":1150000,"gr":"① CẤU KIỆN KHUNG NHÔM ĐỊNH HÌNH"},{"n":"Khung nhôm giả gỗ (film phủ vân gỗ ngoài nhôm)","d":"m²","g":20242025,"gr":"① CẤU KIỆN KHUNG NHÔM ĐỊNH HÌNH"},{"n":"Kính cường lực trắng (clear) 5mm – cắt theo kích thước","d":"m²","g":380000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực mờ (frosted) 5mm","d":"m²","g":430000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực màu (bronze/grey/green) 5mm","d":"m²","g":480000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực trắng (clear) 8mm – cánh tủ bếp, áo","d":"m²","g":20450550,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực mờ (frosted/sandblast) 8mm","d":"m²","g":560000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực sơn màu (lacquered) 8mm – back-painted","d":"m²","g":750000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính gương bạc (mirror) 8mm","d":"m²","g":650000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực trắng (clear) 10mm – vách ngăn, cánh nặng","d":"m²","g":257801050,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực mờ (frosted) 10mm","d":"m²","g":900000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực màu (grey/bronze) 10mm","d":"m²","g":1050000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính cường lực low-iron (extra clear) 10mm – siêu trong","d":"m²","g":1350000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính dán an toàn (laminated) 8.38mm = 4+4+PVB","d":"m²","g":650000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Kính màu sơn bếp (back-painted glass) 5mm – ốp tường bếp","d":"m²","g":550000,"gr":"② CẤU KIỆN KÍNH CƯỜNG LỰC"},{"n":"Cánh nhôm hệ 25 + kính 5mm clear – tủ trưng bày nhẹ","d":"m²","g":850000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 35 + kính 5mm clear – tủ bếp phổ thông","d":"m²","g":970000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 40 anodized + kính 8mm clear – tủ bếp/áo","d":"m²","g":1320000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 40 anodized + kính 8mm frosted – tủ áo phòng ngủ","d":"m²","g":1380000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 40 anodized + kính 8mm back-painted (sơn màu)","d":"m²","g":1600000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 55 anodized + kính 8mm clear – tủ bếp cao cấp","d":"m²","g":1550000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 55 anodized + kính 10mm clear – vách/tủ lớn","d":"m²","g":1890000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 55 anodized + kính 10mm frosted – phòng tắm","d":"m²","g":1990000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm mạ PVD vàng + kính 10mm low-iron – luxury","d":"m²","g":3050000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"},{"n":"Cánh nhôm hệ 40 + kính gương 8mm – tủ áo gương trượt","d":"m²","g":1670000,"gr":"③ GIÁ TỔNG HỢP CÁNH LẮP RÁP HOÀN CHỈNH"}],"TU_LopPhu_Canh":[{"n":"Acrylic AnCường – màu trơn cơ bản (bếp/áo)","d":"m²","g":1122400,"gr":"A. ACRYLIC – CÁNH TỦ (bóng gương cao cấp)"},{"n":"Acrylic AnCường – màu metallic/đặc biệt","d":"m²","g":1306000,"gr":"A. ACRYLIC – CÁNH TỦ (bóng gương cao cấp)"},{"n":"Acrylic Senosan (Áo) – cao cấp","d":"m²","g":1886000,"gr":"A. ACRYLIC – CÁNH TỦ (bóng gương cao cấp)"},{"n":"Acrylic Lumar (Đức) – high-end","d":"m²","g":2348000,"gr":"A. ACRYLIC – CÁNH TỦ (bóng gương cao cấp)"},{"n":"Acrylic vân gỗ – giả gỗ bóng gương","d":"m²","g":1434000,"gr":"A. ACRYLIC – CÁNH TỦ (bóng gương cao cấp)"},{"n":"Laminate AnCường HPL – màu trơn (bếp/áo)","d":"m²","g":599000,"gr":"B. LAMINATE – CÁNH TỦ (mờ/vân gỗ, bền màu)"},{"n":"Laminate AnCường HPL – vân gỗ chuẩn","d":"m²","g":704000,"gr":"B. LAMINATE – CÁNH TỦ (mờ/vân gỗ, bền màu)"},{"n":"Laminate Formica (Mỹ) – vân gỗ cao cấp","d":"m²","g":1039000,"gr":"B. LAMINATE – CÁNH TỦ (mờ/vân gỗ, bền màu)"},{"n":"Laminate Wilsonart (Mỹ) – đỉnh dòng","d":"m²","g":1237500,"gr":"B. LAMINATE – CÁNH TỦ (mờ/vân gỗ, bền màu)"},{"n":"Laminate vân đá / vân bê tông","d":"m²","g":934000,"gr":"B. LAMINATE – CÁNH TỦ (mờ/vân gỗ, bền màu)"},{"n":"Veneer Sồi (Oak) – dán + sơn PU","d":"m²","g":1355000,"gr":"C. VENEER – CÁNH TỦ (gỗ tự nhiên mỏng dán)"},{"n":"Veneer Tần bì (Ash) – dán + sơn PU","d":"m²","g":1465000,"gr":"C. VENEER – CÁNH TỦ (gỗ tự nhiên mỏng dán)"},{"n":"Veneer Óc chó (Walnut) – dán + sơn PU","d":"m²","g":2515000,"gr":"C. VENEER – CÁNH TỦ (gỗ tự nhiên mỏng dán)"},{"n":"Veneer Sồi xông khói (Smoked Oak)","d":"m²","g":2075000,"gr":"C. VENEER – CÁNH TỦ (gỗ tự nhiên mỏng dán)"},{"n":"Veneer ép keo + lá đồng/vàng (art piece)","d":"m²","g":3816000,"gr":"C. VENEER – CÁNH TỦ (gỗ tự nhiên mỏng dán)"},{"n":"Sơn PU bóng/mờ – 1 màu trơn (trắng/đen/xám)","d":"m²","g":578000,"gr":"D. SƠN PU – CÁNH TỦ (đặc biệt và gỗ tự nhiên)"},{"n":"Sơn PU 2K – chống xước, chống ẩm cao","d":"m²","g":768000,"gr":"D. SƠN PU – CÁNH TỦ (đặc biệt và gỗ tự nhiên)"},{"n":"Sơn PU đặc biệt – màu pha tùy ý (RAL/Pantone)","d":"m²","g":888400,"gr":"D. SƠN PU – CÁNH TỦ (đặc biệt và gỗ tự nhiên)"},{"n":"Sơn PU phủ vân gỗ giả (faux finish)","d":"m²","g":1075600,"gr":"D. SƠN PU – CÁNH TỦ (đặc biệt và gỗ tự nhiên)"},{"n":"Kính cường lực 8mm – không phủ (clear)","d":"m²","g":818000,"gr":"E. CÁNH KÍNH / ĐẶC BIỆT"},{"n":"Kính gương bạc – phủ mặt cánh","d":"m²","g":708000,"gr":"E. CÁNH KÍNH / ĐẶC BIỆT"},{"n":"Kính màu / kính sang trọng (tinted/frosted)","d":"m²","g":1078000,"gr":"E. CÁNH KÍNH / ĐẶC BIỆT"}],"TU_LopPhu_KhungThung":[{"n":"Acrylic AnCường (Hàn Quốc) – màu trơn cơ bản","d":"m²","g":1092400,"gr":"A. ACRYLIC (HIGH-GLOSS) – bóng gương, hiện đại"},{"n":"Acrylic AnCường – màu metallic/màu đặc biệt","d":"m²","g":1276000,"gr":"A. ACRYLIC (HIGH-GLOSS) – bóng gương, hiện đại"},{"n":"Acrylic Senosan (Áo) – cao cấp","d":"m²","g":1846000,"gr":"A. ACRYLIC (HIGH-GLOSS) – bóng gương, hiện đại"},{"n":"Laminate AnCường HPL – màu trơn","d":"m²","g":579000,"gr":"B. LAMINATE – mờ/vân gỗ, bền màu"},{"n":"Laminate AnCường HPL – vân gỗ chuẩn","d":"m²","g":684000,"gr":"B. LAMINATE – mờ/vân gỗ, bền màu"},{"n":"Laminate Formica (Mỹ) – vân gỗ cao cấp","d":"m²","g":1019000,"gr":"B. LAMINATE – mờ/vân gỗ, bền màu"},{"n":"Laminate vân đá / vân bê tông","d":"m²","g":914000,"gr":"B. LAMINATE – mờ/vân gỗ, bền màu"},{"n":"Veneer Sồi (Oak) – dán + sơn PU bóng/mờ","d":"m²","g":1315000,"gr":"C. VENEER – gỗ tự nhiên mỏng dán"},{"n":"Veneer Tần bì (Ash) – dán + sơn PU","d":"m²","g":1425000,"gr":"C. VENEER – gỗ tự nhiên mỏng dán"},{"n":"Veneer Óc chó (Walnut) – dán + sơn PU","d":"m²","g":2455000,"gr":"C. VENEER – gỗ tự nhiên mỏng dán"},{"n":"Veneer Sồi xông khói (Smoked Oak)","d":"m²","g":2015000,"gr":"C. VENEER – gỗ tự nhiên mỏng dán"},{"n":"Sơn PU bóng/mờ – 1 màu trơn","d":"m²","g":548000,"gr":"D. SƠN PU – hoàn thiện nhiều lớp"},{"n":"Sơn PU 2K – chống xước, chống ẩm cao","d":"m²","g":728000,"gr":"D. SƠN PU – hoàn thiện nhiều lớp"},{"n":"Sơn PU đặc biệt – màu pha trộn tùy ý","d":"m²","g":838400,"gr":"D. SƠN PU – hoàn thiện nhiều lớp"},{"n":"Melamine dán bổ sung mặt sau (back panel)","d":"m²","g":206000,"gr":"E. MELAMINE – tiết kiệm, khu vực không thấy"},{"n":"Melamine dán cạnh PVC 1mm","d":"m","g":41250,"gr":"E. MELAMINE – tiết kiệm, khu vực không thấy"},{"n":"Melamine dán cạnh PVC 2mm","d":"m","g":62000,"gr":"E. MELAMINE – tiết kiệm, khu vực không thấy"}],"TU_PhuKien":[{"n":"Bản lề thường (VN, TQ) – tiêu chuẩn","d":"cái","g":50000,"gr":"A. BẢN LỀ (HINGES)"},{"n":"Bản lề Hettich (Đức) – giảm chấn","d":"cái","g":113000,"gr":"A. BẢN LỀ (HINGES)"},{"n":"Bản lề Blum (Áo) – giảm chấn Blumotion","d":"cái","g":165000,"gr":"A. BẢN LỀ (HINGES)"},{"n":"Bản lề Blum CLIP top BLUMOTION cao cấp","d":"cái","g":245000,"gr":"A. BẢN LỀ (HINGES)"},{"n":"Bản lề Hafele (Đức) – giảm chấn","d":"cái","g":130000,"gr":"A. BẢN LỀ (HINGES)"},{"n":"Bản lề Grass (Áo) – Vistas Motion","d":"cái","g":205000,"gr":"A. BẢN LỀ (HINGES)"},{"n":"Ray trượt bi 3 tầng (VN) – 35-45cm","d":"bộ","g":120000,"gr":"B. RAY TRƯỢT NGĂN KÉO (DRAWER SLIDES)"},{"n":"Ray trượt giảm chấn Hettich Quadro V6+","d":"bộ","g":10030,"gr":"B. RAY TRƯỢT NGĂN KÉO (DRAWER SLIDES)"},{"n":"Ray trượt giảm chấn Blum TANDEM","d":"bộ","g":620000,"gr":"B. RAY TRƯỢT NGĂN KÉO (DRAWER SLIDES)"},{"n":"Ray trượt Blum TANDEMBOX (thân ray + đáy)","d":"bộ","g":1510000,"gr":"B. RAY TRƯỢT NGĂN KÉO (DRAWER SLIDES)"},{"n":"Ray trượt LEGRABOX Blum – dây thép pha lê","d":"bộ","g":2280000,"gr":"B. RAY TRƯỢT NGĂN KÉO (DRAWER SLIDES)"},{"n":"Ray trượt LeMans (góc tủ) – kéo ra hoàn toàn","d":"bộ","g":4700000,"gr":"B. RAY TRƯỢT NGĂN KÉO (DRAWER SLIDES)"},{"n":"Tay nắm âm (inline) – inox 304 – tiêu chuẩn","d":"cái","g":100000,"gr":"C. TAY NẮM (HANDLES / PULLS)"},{"n":"Tay nắm âm Hafele – hợp kim mạ","d":"cái","g":200000,"gr":"C. TAY NẮM (HANDLES / PULLS)"},{"n":"Tay nắm thanh dài inox (10-30cm)","d":"cái","g":170000,"gr":"C. TAY NẮM (HANDLES / PULLS)"},{"n":"Tay nắm da, gỗ tự nhiên (thủ công)","d":"cái","g":410000,"gr":"C. TAY NẮM (HANDLES / PULLS)"},{"n":"Push-to-open – không tay nắm – bộ phụ kiện","d":"bộ","g":255000,"gr":"C. TAY NẮM (HANDLES / PULLS)"},{"n":"Đèn LED nội thất cảm ứng mở cánh","d":"m","g":360000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Kệ điều chỉnh (adjustable shelf) – chốt + kệ","d":"cái","g":80000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Giá treo quần (pant rack) Hafele","d":"cái","g":615000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Giá để giày kéo (shoe rack pull-out)","d":"bộ","g":895000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Khóa nam châm + chốt (cánh kính)","d":"bộ","g":140000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Soft-close giảm chấn bổ sung","d":"cái","g":100000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Thanh treo áo Aluma + Bracket","d":"m","g":205000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Hệ thống thùng rác âm tủ","d":"bộ","g":930000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Carousel góc bếp (mâm xoay)","d":"bộ","g":1970000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Phụ kiện chia ngăn kéo (organizers)","d":"bộ","g":410000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Khoá vân tay (smart lock)","d":"cái","g":3150000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Đèn LED dây gắn kệ (warm white)","d":"m","g":230000,"gr":"D. PHỤ KIỆN ĐẶC BIỆT (SPECIALTY HARDWARE)"},{"n":"Da/simili bọc đầu giường (PU cao cấp)","d":"m²","g":1200000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Mút xốp bọc đầu giường (8cm)","d":"m²","g":360000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Chân bàn kim loại (4 chân, mạ chrome)","d":"bộ","g":660000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Chân bàn gỗ tự nhiên Sồi (4 chân)","d":"bộ","g":950000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Khay rượu kéo (wine drawer) Hettich","d":"bộ","g":2000000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Giá đỡ ly rượu (treo, kim loại)","d":"bộ","g":440000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Hệ thống làm lạnh tủ rượu (Wine cooler)","d":"bộ","g":9300000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Giá đỡ giày xoay (rotating shoe rack)","d":"bộ","g":1600000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Bàn đạp/ghế kéo (footstep pull-out)","d":"bộ","g":780000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Phụ kiện cài cáp/dây điện (cable management)","d":"bộ","g":330000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Đèn LED dây gắn kệ (warm white)","d":"m","g":230000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"},{"n":"Bộ ke góc + bulong liên kết","d":"bộ","g":115000,"gr":"E. PHỤ KIỆN SẢN PHẨM MỞ RỘNG (Giường / Bàn / Tủ rượu)"}],"OP_Xuong":[{"n":"Xương gỗ thông 30×50mm – xương phụ","d":"m","g":31800,"gr":"A. XƯƠNG GỖ (WOOD FURRING)"},{"n":"Xương gỗ thông 50×50mm – xương chính","d":"m","g":45800,"gr":"A. XƯƠNG GỖ (WOOD FURRING)"},{"n":"Xương gỗ cao su 30×50mm – chống cong vênh","d":"m","g":52800,"gr":"A. XƯƠNG GỖ (WOOD FURRING)"},{"n":"Xương gỗ Tần bì 50×70mm – ốp cao cấp","d":"m","g":111800,"gr":"A. XƯƠNG GỖ (WOOD FURRING)"},{"n":"Xương MDF 18mm – tấm xương phẳng","d":"m²","g":349500,"gr":"A. XƯƠNG GỖ (WOOD FURRING)"},{"n":"Xương Plywood 17mm – xương chịu lực","d":"m²","g":417500,"gr":"A. XƯƠNG GỖ (WOOD FURRING)"},{"n":"Xương CD60 (thép mạ kẽm Ø60mm)","d":"m","g":38760,"gr":"B. XƯƠNG KIM LOẠI – THÉP"},{"n":"Xương UD27 (rãnh tường, thép mạ kẽm)","d":"m","g":31440,"gr":"B. XƯƠNG KIM LOẠI – THÉP"},{"n":"Xương thép hộp vuông 25×25mm","d":"m","g":56750,"gr":"B. XƯƠNG KIM LOẠI – THÉP"},{"n":"Xương thép hộp 40×40mm – chịu lực","d":"m","g":82750,"gr":"B. XƯƠNG KIM LOẠI – THÉP"},{"n":"Xương thép hộp 40×60mm – chịu lực cao","d":"m","g":108750,"gr":"B. XƯƠNG KIM LOẠI – THÉP"},{"n":"Ty ren + treo xương (hanger + wire)","d":"bộ","g":42500,"gr":"B. XƯƠNG KIM LOẠI – THÉP"},{"n":"Profile nhôm T-bar 35mm (trần khoáng)","d":"m","g":67250,"gr":"C. XƯƠNG NHÔM (ALUMINIUM FURRING)"},{"n":"Profile nhôm âm tường – rãnh dọc","d":"m","g":114250,"gr":"C. XƯƠNG NHÔM (ALUMINIUM FURRING)"},{"n":"Khung nhôm anodized 20×40mm – ốp tường","d":"m","g":129750,"gr":"C. XƯƠNG NHÔM (ALUMINIUM FURRING)"},{"n":"Khung nhôm hộp 40×40mm","d":"m","g":166250,"gr":"C. XƯƠNG NHÔM (ALUMINIUM FURRING)"},{"n":"Bộ kẹp nhôm cho tấm ốp không khoan","d":"bộ","g":88250,"gr":"C. XƯƠNG NHÔM (ALUMINIUM FURRING)"},{"n":"Xương WPC (Wood Plastic Composite)","d":"m","g":79400,"gr":"D. XƯƠNG COMPOSITE / NHỰA CỨNG"},{"n":"Xương uPVC cứng 50×30mm","d":"m","g":63360,"gr":"D. XƯƠNG COMPOSITE / NHỰA CỨNG"},{"n":"Xương Ficem (xi măng sợi) 10mm","d":"m²","g":239400,"gr":"D. XƯƠNG COMPOSITE / NHỰA CỨNG"}],"OP_KhungBaoQuanh":[{"n":"Nẹp nhôm chữ L (góc ngoài) – 2.4m","d":"m","g":55800,"gr":"A. NẸP / KHUNG NHÔM (ALUMINIUM TRIM)"},{"n":"Nẹp nhôm chữ T (chia mảng) – 2.4m","d":"m","g":61200,"gr":"A. NẸP / KHUNG NHÔM (ALUMINIUM TRIM)"},{"n":"Nẹp nhôm chữ U (viền cạnh) – 2.4m","d":"m","g":59040,"gr":"A. NẸP / KHUNG NHÔM (ALUMINIUM TRIM)"},{"n":"Nẹp nhôm shadow gap (rãnh âm)","d":"m","g":106000,"gr":"A. NẸP / KHUNG NHÔM (ALUMINIUM TRIM)"},{"n":"Nẹp nhôm anodized vàng/đen – cao cấp","d":"m","g":157600,"gr":"A. NẸP / KHUNG NHÔM (ALUMINIUM TRIM)"},{"n":"Khung nhôm hệ pin (kẹp tấm không khoan)","d":"m","g":234800,"gr":"A. NẸP / KHUNG NHÔM (ALUMINIUM TRIM)"},{"n":"Nẹp inox 304 mờ 10mm – viền tấm","d":"m","g":93250,"gr":"B. NẸP THÉP KHÔNG GỈ (INOX TRIM)"},{"n":"Nẹp inox 304 bóng 10mm – trang trí","d":"m","g":103750,"gr":"B. NẸP THÉP KHÔNG GỈ (INOX TRIM)"},{"n":"Nẹp inox 316 (biển) – ngoài trời","d":"m","g":156000,"gr":"B. NẸP THÉP KHÔNG GỈ (INOX TRIM)"},{"n":"Nẹp inox màu (mạ PVD vàng, đen)","d":"m","g":229250,"gr":"B. NẸP THÉP KHÔNG GỈ (INOX TRIM)"},{"n":"Khung gỗ Sồi bào mịn – viền tấm","d":"m","g":139500,"gr":"C. KHUNG GỖ BAO QUANH"},{"n":"Khung gỗ Walnut – viền tấm cao cấp","d":"m","g":248500,"gr":"C. KHUNG GỖ BAO QUANH"},{"n":"Khung gỗ MDF + sơn PU – viền sơn","d":"m","g":78600,"gr":"C. KHUNG GỖ BAO QUANH"},{"n":"Khung gỗ Tần bì bào mịn","d":"m","g":120800,"gr":"C. KHUNG GỖ BAO QUANH"},{"n":"Nẹp nhựa ABS – viền tiết kiệm","d":"m","g":31800,"gr":"D. NẸP NHỰA / SILICON / ĐẶC BIỆT"},{"n":"Nẹp PVC uPVC cứng – chịu ẩm","d":"m","g":36200,"gr":"D. NẸP NHỰA / SILICON / ĐẶC BIỆT"},{"n":"Khe giãn nở silicon (expansion joint)","d":"m","g":51750,"gr":"D. NẸP NHỰA / SILICON / ĐẶC BIỆT"},{"n":"Gioăng cao su EPDM – kín nước","d":"m","g":62250,"gr":"D. NẸP NHỰA / SILICON / ĐẶC BIỆT"},{"n":"Profile nhôm ẩn đèn LED (recessed)","d":"m","g":239250,"gr":"E. KHUNG BAO QUANH ĐẶC BIỆT (ĐÈN / TRẦN)"},{"n":"Hộp đèn giật cấp trần (drywall coving)","d":"m","g":147600,"gr":"E. KHUNG BAO QUANH ĐẶC BIỆT (ĐÈN / TRẦN)"},{"n":"Khung line trang trí (decorative moulding)","d":"m","g":100200,"gr":"E. KHUNG BAO QUANH ĐẶC BIỆT (ĐÈN / TRẦN)"},{"n":"Phào chỉ thạch cao (CNC đúc sẵn)","d":"m","g":131800,"gr":"E. KHUNG BAO QUANH ĐẶC BIỆT (ĐÈN / TRẦN)"}],"OP_TamOp":[{"n":"Tấm ốp Sồi (Oak) – lam dọc 15×90mm","d":"m²","g":1365000,"gr":"A. TẤM ỐP GỖ TỰ NHIÊN"},{"n":"Tấm ốp Sồi – tấm phẳng ghép thanh","d":"m²","g":1865000,"gr":"A. TẤM ỐP GỖ TỰ NHIÊN"},{"n":"Tấm ốp Walnut – lam dọc 15×90mm","d":"m²","g":2840000,"gr":"A. TẤM ỐP GỖ TỰ NHIÊN"},{"n":"Tấm ốp Walnut – tấm phẳng ghép thanh","d":"m²","g":3560000,"gr":"A. TẤM ỐP GỖ TỰ NHIÊN"},{"n":"Tấm ốp Tần bì (Ash) – lam dọc","d":"m²","g":1505000,"gr":"A. TẤM ỐP GỖ TỰ NHIÊN"},{"n":"Tấm ốp Thông mật độ thấp – lam thô","d":"m²","g":1041600,"gr":"A. TẤM ỐP GỖ TỰ NHIÊN"},{"n":"Tấm HDF 8mm phủ Melamine vân gỗ","d":"m²","g":474000,"gr":"B. TẤM ỐP GỖ CÔNG NGHIỆP"},{"n":"Tấm MDF 9mm phủ Veneer + sơn PU","d":"m²","g":982000,"gr":"B. TẤM ỐP GỖ CÔNG NGHIỆP"},{"n":"Tấm WPC Wall Panel (giả gỗ chống ẩm)","d":"m²","g":641000,"gr":"B. TẤM ỐP GỖ CÔNG NGHIỆP"},{"n":"Tấm gỗ nhựa rỗng (hollow WPC)","d":"m²","g":579000,"gr":"B. TẤM ỐP GỖ CÔNG NGHIỆP"},{"n":"Tấm lam gỗ CNC (slat panel)","d":"m²","g":906400,"gr":"B. TẤM ỐP GỖ CÔNG NGHIỆP"},{"n":"Đá Marble tự nhiên dạng tấm 10mm","d":"m²","g":4400000,"gr":"C. TẤM ỐP ĐÁ TRANG TRÍ"},{"n":"Đá Marble tự nhiên dạng lát 600×600mm","d":"m²","g":3460000,"gr":"C. TẤM ỐP ĐÁ TRANG TRÍ"},{"n":"Đá Granite tự nhiên lát 600×600mm","d":"m²","g":2330000,"gr":"C. TẤM ỐP ĐÁ TRANG TRÍ"},{"n":"Đá Quartz nhân tạo tấm mỏng (4-6mm)","d":"m²","g":2796000,"gr":"C. TẤM ỐP ĐÁ TRANG TRÍ"},{"n":"Đá nhân tạo (compact stone) 12mm","d":"m²","g":2378000,"gr":"C. TẤM ỐP ĐÁ TRANG TRÍ"},{"n":"Tấm ACM (nhôm composit) 4mm – ngoài/trong","d":"m²","g":784000,"gr":"D. TẤM ỐP KHOÁNG / COMPOSIT"},{"n":"Tấm Calcium Silicate (Xi măng sợi)","d":"m²","g":344400,"gr":"D. TẤM ỐP KHOÁNG / COMPOSIT"},{"n":"Tấm Cement Board 10mm (làm nền ốp)","d":"m²","g":226000,"gr":"D. TẤM ỐP KHOÁNG / COMPOSIT"},{"n":"Tấm Gypsum Board 12mm (thạch cao)","d":"m²","g":209250,"gr":"D. TẤM ỐP KHOÁNG / COMPOSIT"},{"n":"Tấm Fiber Cement – bề mặt vân xi măng","d":"m²","g":482400,"gr":"D. TẤM ỐP KHOÁNG / COMPOSIT"},{"n":"Gạch thẻ nung màu trơn (60×240mm)","d":"m²","g":698000,"gr":"E. TẤM ỐP GẠCH / ĐÁ ỐP LÁT"},{"n":"Gạch Metro subway tile (75×150mm)","d":"m²","g":632000,"gr":"E. TẤM ỐP GẠCH / ĐÁ ỐP LÁT"},{"n":"Gạch Terrazzo đúc sẵn 400×400mm","d":"m²","g":958000,"gr":"E. TẤM ỐP GẠCH / ĐÁ ỐP LÁT"},{"n":"Đá mosaic thủy tinh 300×300mm","d":"m²","g":1332000,"gr":"E. TẤM ỐP GẠCH / ĐÁ ỐP LÁT"},{"n":"Tấm nhung ốp tường (acoustic panel)","d":"m²","g":962500,"gr":"F. TẤM ỐP ĐẶC BIỆT"},{"n":"Tấm da PU ốp tường (padded panel)","d":"m²","g":1268000,"gr":"F. TẤM ỐP ĐẶC BIỆT"},{"n":"Tấm gương bạc dán tường","d":"m²","g":748000,"gr":"F. TẤM ỐP ĐẶC BIỆT"},{"n":"Tấm LED backlit (chiếu sáng ẩn)","d":"m²","g":1762500,"gr":"F. TẤM ỐP ĐẶC BIỆT"},{"n":"Tấm 3D CNC (xốp PU đúc khuôn)","d":"m²","g":649000,"gr":"F. TẤM ỐP ĐẶC BIỆT"}],"OP_LopPhu":[{"n":"Sơn Dulux / Jotun – 2 lớp nền + 1 lớp phủ","d":"m²","g":105250,"gr":"A. SƠN TƯỜNG NỘI THẤT"},{"n":"Sơn cao cấp Dulux Weathershield (mịn)","d":"m²","g":138250,"gr":"A. SƠN TƯỜNG NỘI THẤT"},{"n":"Sơn chống ẩm chuyên dụng (nhà tắm)","d":"m²","g":169000,"gr":"A. SƠN TƯỜNG NỘI THẤT"},{"n":"Sơn epoxy sàn/tường (2 thành phần)","d":"m²","g":374400,"gr":"A. SƠN TƯỜNG NỘI THẤT"},{"n":"Sơn giả đá / hiệu ứng đặc biệt","d":"m²","g":658000,"gr":"A. SƠN TƯỜNG NỘI THẤT"},{"n":"Sơn PU lót (primer) cho gỗ/MDF","d":"m²","g":173500,"gr":"B. SƠN PU CHO TẤM ỐP GỖ"},{"n":"Sơn PU bóng/mờ cho tấm ốp gỗ","d":"m²","g":548000,"gr":"B. SƠN PU CHO TẤM ỐP GỖ"},{"n":"Sơn PU 2K chống xước cao cấp","d":"m²","g":728000,"gr":"B. SƠN PU CHO TẤM ỐP GỖ"},{"n":"Dầu thấm gỗ (hardwax oil) – tự nhiên","d":"m²","g":658000,"gr":"B. SƠN PU CHO TẤM ỐP GỖ"},{"n":"Nano phủ bảo vệ đá marble (sealer)","d":"m²","g":277500,"gr":"C. SỬ LÝ BỀ MẶT ĐÁ / GẠCH"},{"n":"Phủ bảo vệ đá Granite (sealer)","d":"m²","g":226000,"gr":"C. SỬ LÝ BỀ MẶT ĐÁ / GẠCH"},{"n":"Chà ron khe gạch (epoxy grout)","d":"m","g":61500,"gr":"C. SỬ LÝ BỀ MẶT ĐÁ / GẠCH"},{"n":"Chà ron thường (cement grout)","d":"m","g":43800,"gr":"C. SỬ LÝ BỀ MẶT ĐÁ / GẠCH"},{"n":"Sơn tĩnh điện nhôm/thép (powder coat)","d":"m²","g":474000,"gr":"D. XỬ LÝ BỀ MẶT KIM LOẠI / NHÔM"},{"n":"Anodize nhôm (xi hóa) – 10-20 micron","d":"m²","g":649000,"gr":"D. XỬ LÝ BỀ MẶT KIM LOẠI / NHÔM"},{"n":"Mạ PVD (vàng, đen, bạc) – kim loại","d":"m²","g":1342500,"gr":"D. XỬ LÝ BỀ MẶT KIM LOẠI / NHÔM"},{"n":"Phủ chống cháy cho gỗ/MDF","d":"m²","g":252000,"gr":"E. XỬ LÝ ĐẶC BIỆT"},{"n":"Phủ kháng khuẩn (antibacterial coat)","d":"m²","g":344400,"gr":"E. XỬ LÝ ĐẶC BIỆT"},{"n":"Phủ chống UV (UV resistant coat)","d":"m²","g":417600,"gr":"E. XỬ LÝ ĐẶC BIỆT"},{"n":"Phủ self-cleaning (nano TiO2)","d":"m²","g":679000,"gr":"E. XỬ LÝ ĐẶC BIỆT"}]}};
 
 /* ═══════════════════════════════════════════════════════════════
-   ★ P1 — ĐỊNH MỨC & CÔNG CỤ CẤU HÌNH BÁO GIÁ THEO VẬT LIỆU
-   Nguồn: MDC_DinhMuc_SanPham_TongHop_2026. Công thức:
-   Giá xuất xưởng/m² = Σ (SL/m² × đơn giá cấu thành)
-   Giá bán/m² = Giá XW × (1 + NM% + TK&TC%)   (mặc định ×1.57)
+   ★ P1+ — ĐỊNH MỨC & CẤU HÌNH BÁO GIÁ (đồng bộ Sheet · CRUD · tier-map · lưu cấu hình)
+   Giá bán/m² = Σ(SL/m²×đơn giá) × (1 + NM% + TK&TC%)  (mặc định ×1.57)
    ═══════════════════════════════════════════════════════════════ */
 var DM_KEY='mdc_crm_dm';
 function dmClone(o){ return JSON.parse(JSON.stringify(o)); }
 function dmAll(){ try{ var a=JSON.parse(localStorage.getItem(DM_KEY)||'null'); if(a&&a.mat&&a.markup) return a; }catch(e){} var s=dmClone(DM_SEED); dmSave(s); return s; }
 function dmSave(a){ try{ localStorage.setItem(DM_KEY, JSON.stringify(a)); }catch(e){} }
-function dmResetSeed(){ if(!confirm('Nạp lại toàn bộ định mức gốc? Giá đã chỉnh sẽ mất.')) return; dmSave(dmClone(DM_SEED)); toast('Đã nạp lại định mức gốc'); if(currentPage==='dinhmuc') renderDinhMuc(); }
+function dmResetSeed(){ if(!confirm('Nạp lại toàn bộ định mức GỐC (demo)? Giá đã chỉnh trên máy này sẽ mất (không ảnh hưởng bản trên Sheet).')) return; dmSave(dmClone(DM_SEED)); toast('Đã nạp lại định mức gốc'); if(currentPage==='dinhmuc') renderDinhMuc(); }
 function dmFmt(n){ return (Math.round(+n||0)).toLocaleString('vi-VN'); }
+
+/* ── Đồng bộ Google Sheet (dùng chung mọi máy) — qua kho pmkv key 'crm_dm' ── */
+function dmCloudSave(){
+  if(typeof apiPost!=='function' || !(typeof getApiUrl==='function'&&getApiUrl())){ toast('Chưa kết nối Google Sheets','⚠️'); return; }
+  toast('Đang lưu định mức lên Sheet…');
+  apiPost({app:'pm',action:'savePMKV',data:{key:'crm_dm',value:JSON.stringify(dmAll())}})
+    .then(function(){ toast('✅ Đã lưu định mức lên Sheet — mọi máy sẽ dùng chung'); })
+    .catch(function(e){ toast('Lỗi lưu lên Sheet: '+e.message,'❌'); });
+}
+function dmCloudLoad(silent){
+  if(typeof apiFetch!=='function' || !(typeof getApiUrl==='function'&&getApiUrl())) return Promise.resolve(false);
+  return apiFetch({app:'pm',action:'getPMKV',key:'crm_dm'}).then(function(r){
+    if(r&&r.value&&r.value.mat&&r.value.markup){ dmSave(r.value); if(!silent) toast('✅ Đã tải định mức từ Sheet'); return true; }
+    if(!silent) toast('Trên Sheet chưa có định mức. Hãy bấm "Lưu lên Sheet" từ máy có bảng giá chuẩn.','⚠️');
+    return false;
+  }).catch(function(e){ if(!silent) toast('Lỗi tải từ Sheet: '+e.message,'❌'); return false; });
+}
+function dmEnsureCloud(){ if(window.__dmCloudTried) return; window.__dmCloudTried=true; dmCloudLoad(true).then(function(ok){ if(ok&&currentPage==='dinhmuc') renderDinhMuc(); }); }
 
 /* Slot cấu thành theo họ sản phẩm */
 var DM_SLOTS={
@@ -6733,12 +6752,29 @@ var DM_SLOTS={
     {k:'nhancong',label:'Nhân công thi công ốp', rate:'opNhanCong', dvt:'m²', sl:1}
   ]
 };
+/* Map TIER → từ khóa vật liệu từng slot (tự chọn sẵn khi bấm tier) */
+var DM_TIER_MAP={
+  tu:{
+    khung:['MDF chống ẩm 12mm','MDF chống ẩm 17mm','MDF chống ẩm 17mm','MDF chống ẩm 17mm'],
+    thung:['MDF 17mm + cạnh PVC 1','MDF 17mm + cạnh PVC 2','Plywood 17mm','Plywood Marine'],
+    canh:['MDF 18mm','MDF 18mm','MDF 18mm','MDF 25mm'],
+    lpCanh:['Laminate AnCường HPL vân gỗ','Acrylic AnCường – màu trơn','Acrylic Senosan','Veneer Óc chó'],
+    lpThung:['Laminate AnCường HPL vân gỗ','Laminate AnCường HPL vân gỗ','Laminate AnCường HPL vân gỗ','Laminate AnCường HPL vân gỗ'],
+    banle:['thường','Blum CLIP top BLUMOTION','Blum CLIP top BLUMOTION','Blum CLIP top BLUMOTION'],
+    ray:['bi 3 tầng','Blum TANDEM','Blum TANDEM','Blum']
+  },
+  op:{
+    xuong:['thép','gỗ thông','gỗ thông','nhôm'],
+    tam:['gỗ công nghiệp','gỗ tự nhiên','đá','đá'],
+    lopPhu:['Sơn tường','Sơn PU','Sơn PU','Nano']
+  }
+};
 function dmTypeInfo(type){ var t=(dmAll().types||DM_SEED.types).filter(function(x){return x.t===type;})[0]; return t||{t:type,f:'tu',tier:'tu_ao'}; }
 function dmSlotOpts(s){ if(s.rate) return null; var arr=(dmAll().mat[s.sheet]||[]).slice(); if(s.filter) arr=arr.filter(function(m){return (m.gr||'').toUpperCase().indexOf(s.filter.toUpperCase())>-1;}); return arr; }
 function dmSlotGia(s){ var D=dmAll(); if(s.rate) return +((D.rates||DM_SEED.rates)[s.rate])||0; var o=dmSlotOpts(s); var m=o[s.matIdx]; return m?(+m.g||0):0; }
 function dmSlotName(s){ if(s.rate) return s.label; var o=dmSlotOpts(s); var m=o[s.matIdx]; return m?m.n:''; }
 
-/* ─────────── CÔNG CỤ CẤU HÌNH (overlay trên form báo giá) ─────────── */
+/* ─────────── CÔNG CỤ CẤU HÌNH ─────────── */
 var __dmCfg=null;
 function dmCfgInit(){
   var info=dmTypeInfo(__dmCfg.type); var fam=info.f; __dmCfg.family=fam;
@@ -6752,113 +6788,107 @@ function dmCfgInit(){
 function dmCfgVals(){
   var D=dmAll(); var xw=0;
   (__dmCfg.slots||[]).forEach(function(s){ xw+=(+s.sl||0)*dmSlotGia(s); });
-  var mk=D.markup||DM_SEED.markup;
-  var ban=xw*(1+(+mk.nm||0)+(+mk.tktc||0));
-  return {xw:Math.round(xw), ban:Math.round(ban), tt:Math.round(ban*(+__dmCfg.dienTich||0)), nm:mk.nm, tktc:mk.tktc};
+  var mk=D.markup||DM_SEED.markup; var ban=xw*(1+(+mk.nm||0)+(+mk.tktc||0));
+  return {xw:Math.round(xw), ban:Math.round(ban), tt:Math.round(ban*(+__dmCfg.dienTich||0))};
 }
-function dmCfgOpen(){
+function dmCfgOpen(existing, rowEl){
+  dmEnsureCloud();
   var types=dmAll().types||DM_SEED.types;
-  __dmCfg={type:types[0].t, dienTich:1}; dmCfgInit();
+  __dmCfg={type:(existing&&existing.type)||types[0].t, dienTich:(existing&&existing.dienTich)||1, rowEl:rowEl||null};
+  dmCfgInit();
+  if(existing&&existing.slots){ existing.slots.forEach(function(es){ var s=(__dmCfg.slots||[]).filter(function(x){return x.k===es.k;})[0]; if(s){ if(es.matIdx!=null)s.matIdx=es.matIdx; if(es.sl!=null)s.sl=es.sl; } }); }
   var old=document.getElementById('dm-cfg'); if(old) old.remove();
   var el=document.createElement('div'); el.id='dm-cfg';
   el.style.cssText='position:fixed;inset:0;background:rgba(20,14,10,.55);z-index:10050;display:flex;align-items:center;justify-content:center;padding:14px';
   el.onclick=function(e){ if(e.target===el) dmCfgClose(); };
   el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:840px;width:100%;max-height:93vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
-    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">🧮 Cấu hình sản phẩm theo vật liệu</b><button onclick="dmCfgClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">🧮 Cấu hình sản phẩm theo vật liệu'+(rowEl?' — sửa dòng':'')+'</b><button onclick="dmCfgClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
     +'<div id="dm-cfg-body" style="padding:14px 18px;overflow:auto"></div></div>';
   document.body.appendChild(el); dmCfgRender();
 }
 function dmCfgClose(){ var e=document.getElementById('dm-cfg'); if(e) e.remove(); __dmCfg=null; }
 function dmCfgRender(){
   var box=document.getElementById('dm-cfg-body'); if(!box||!__dmCfg) return;
-  var types=dmAll().types||DM_SEED.types;
-  var info=dmTypeInfo(__dmCfg.type);
+  var types=dmAll().types||DM_SEED.types, info=dmTypeInfo(__dmCfg.type);
   var cell='padding:6px 7px;border:1px solid #DED8CE;border-radius:6px;font-size:12px';
   var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
     +'<div><label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase">Sản phẩm</label>'
     +'<select onchange="dmSetType(this.value)" style="width:100%;'+cell+';margin-top:4px">'+types.map(function(t){return '<option'+(t.t===__dmCfg.type?' selected':'')+'>'+esc2(t.t)+'</option>';}).join('')+'</select></div>'
     +'<div><label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase">Diện tích mặt hoàn thiện (m²)</label>'
     +'<input type="number" value="'+(__dmCfg.dienTich||1)+'" oninput="__dmCfg.dienTich=+this.value||0;dmCfgTotals()" style="width:100%;'+cell+';margin-top:4px;text-align:right"></div></div>';
-  // tier quick
   var tk=info.tier, xw=(dmAll().tierXW||DM_SEED.tierXW)[tk]||[], names=dmAll().tierNames||DM_SEED.tierNames, mk=dmAll().markup||DM_SEED.markup, mul=(1+(+mk.nm||0)+(+mk.tktc||0));
   if(xw.length){
-    h+='<div style="background:#FBF8F1;border:1px solid #EDE7DB;border-radius:9px;padding:10px 12px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#8A6D3B;margin-bottom:6px">CHỌN NHANH THEO TIER — giá bán/m² (chưa VAT)</div><div style="display:flex;gap:6px;flex-wrap:wrap">'
-      +xw.map(function(v,i){ return '<button type="button" onclick="dmTierAdd('+i+')" style="flex:1;min-width:120px;border:1px solid #DED8CE;background:#fff;border-radius:8px;padding:8px;cursor:pointer;text-align:left"><div style="font-size:11px;color:#9A8F82">'+esc2(names[i])+'</div><div style="font-weight:800;color:#0F5132">'+dmFmt(v*mul)+'</div></button>'; }).join('')
-      +'</div><div style="font-size:10.5px;color:#9A8F82;margin-top:5px">Bấm một tier để thêm ngay 1 dòng báo giá theo cấu hình chuẩn, hoặc cấu hình chi tiết bên dưới.</div></div>';
+    h+='<div style="background:#FBF8F1;border:1px solid #EDE7DB;border-radius:9px;padding:10px 12px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#8A6D3B;margin-bottom:6px">CHỌN NHANH THEO TIER — bấm để TỰ ĐIỀN vật liệu từng cấu thành</div><div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +xw.map(function(v,i){ return '<button type="button" onclick="dmTierApply('+i+')" style="flex:1;min-width:118px;border:1px solid #DED8CE;background:#fff;border-radius:8px;padding:8px;cursor:pointer;text-align:left"><div style="font-size:11px;color:#9A8F82">'+esc2(names[i])+'</div><div style="font-weight:800;color:#0F5132">≈ '+dmFmt(v*mul)+'</div></button>'; }).join('')
+      +'</div></div>';
   }
-  // slot table
   h+='<div style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;margin-bottom:5px">Cấu hình chi tiết vật liệu</div>'
     +'<div style="overflow-x:auto"><div style="min-width:640px">'
     +'<div style="display:grid;grid-template-columns:150px 1fr 66px 96px 96px;gap:6px;font-size:10px;font-weight:700;color:#9A8F82;text-transform:uppercase;padding:0 2px 4px"><div>Cấu thành</div><div>Vật liệu</div><div style="text-align:right">SL/m²</div><div style="text-align:right">Đơn giá</div><div style="text-align:right">TT/m²</div></div>';
   __dmCfg.slots.forEach(function(s,i){
-    var gia=dmSlotGia(s), tt=(+s.sl||0)*gia, sel='';
-    if(s.rate){ sel='<div style="'+cell+';background:#F7F4EE;color:#9A8F82">'+esc2(s.label)+' · sửa ở Định mức › Markup</div>'; }
-    else{
-      var opts=dmSlotOpts(s), lastGr='';
-      var o='<select onchange="dmSetMat('+i+',this.value)" style="width:100%;'+cell+'">';
+    var gia=dmSlotGia(s), tt=(+s.sl||0)*gia, selHtml;
+    if(s.rate){ selHtml='<div style="'+cell+';background:#F7F4EE;color:#9A8F82">'+esc2(s.label)+' · sửa ở Định mức › Markup</div>'; }
+    else{ var opts=dmSlotOpts(s), lastGr=''; var o='<select onchange="dmSetMat('+i+',this.value)" style="width:100%;'+cell+'">';
       opts.forEach(function(m,mi){ if(m.gr!==lastGr){ if(lastGr) o+='</optgroup>'; o+='<optgroup label="'+esc2(m.gr)+'">'; lastGr=m.gr; } o+='<option value="'+mi+'"'+(mi===s.matIdx?' selected':'')+'>'+esc2(m.n)+' — '+dmFmt(m.g)+'</option>'; });
-      if(lastGr) o+='</optgroup>'; o+='</select>'; sel=o;
-    }
+      if(lastGr) o+='</optgroup>'; o+='</select>'; selHtml=o; }
     h+='<div style="display:grid;grid-template-columns:150px 1fr 66px 96px 96px;gap:6px;align-items:center;margin:4px 0">'
-      +'<div style="font-size:11.5px;font-weight:600;color:#3A2E22">'+esc2(s.label)+'</div>'
-      +'<div>'+sel+'</div>'
+      +'<div style="font-size:11.5px;font-weight:600;color:#3A2E22">'+esc2(s.label)+'</div><div>'+selHtml+'</div>'
       +'<input type="number" step="0.05" value="'+s.sl+'" oninput="dmSetSL('+i+',this.value)" style="'+cell+';text-align:right">'
       +'<div style="text-align:right;font-size:12px;color:#6F6355" id="dm-dg-'+i+'">'+dmFmt(gia)+'</div>'
       +'<div style="text-align:right;font-size:12px;font-weight:600" id="dm-tt-'+i+'">'+dmFmt(tt)+'</div></div>';
   });
   h+='</div></div>';
-  // totals
   h+='<div style="background:var(--goldbg,#FBF4E6);border:1px solid var(--gold,#EBD9B8);border-radius:10px;padding:12px 14px;margin-top:12px">'
     +'<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span>Giá xuất xưởng / m²</span><b id="dm-xw">0</b></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:12px;color:#8A6D3B;margin-bottom:5px"><span>+ Nhà máy '+Math.round((mk.nm||0)*100)+'% & TK-TC '+Math.round((mk.tktc||0)*100)+'%</span><span id="dm-mk">0</span></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;border-top:1px solid var(--gold,#EBD9B8);padding-top:7px"><span>GIÁ BÁN / m² (chưa VAT)</span><span id="dm-ban" style="color:#0F5132">0</span></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-top:6px"><span>× '+(__dmCfg.dienTich||1)+' m² = Thành tiền</span><span id="dm-tttong" style="color:#B23A2E">0</span></div></div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-outline" onclick="dmCfgClose()">Đóng</button>'
-    +'<button class="btn btn-primary" onclick="dmCfgAdd()">＋ Thêm vào báo giá</button></div>';
+    +'<button class="btn btn-primary" onclick="dmCfgAdd()">'+(__dmCfg.rowEl?'✓ Cập nhật dòng':'＋ Thêm vào báo giá')+'</button></div>';
   box.innerHTML=h; dmCfgTotals();
 }
-function dmSetType(v){ __dmCfg.type=v; __dmCfg.dienTich=+((document.querySelector('#dm-cfg-body input[type=number]')||{}).value)||1; dmCfgInit(); dmCfgRender(); }
-function dmSetMat(i,v){ __dmCfg.slots[i].matIdx=+v; var s=__dmCfg.slots[i], gia=dmSlotGia(s); var dg=document.getElementById('dm-dg-'+i); if(dg) dg.textContent=dmFmt(gia); dmCfgTotals(); }
+function dmSetType(v){ __dmCfg.type=v; dmCfgInit(); dmCfgRender(); }
+function dmSetMat(i,v){ __dmCfg.slots[i].matIdx=+v; var dg=document.getElementById('dm-dg-'+i); if(dg) dg.textContent=dmFmt(dmSlotGia(__dmCfg.slots[i])); dmCfgTotals(); }
 function dmSetSL(i,v){ __dmCfg.slots[i].sl=+v||0; dmCfgTotals(); }
 function dmCfgTotals(){
   if(!__dmCfg) return;
   __dmCfg.slots.forEach(function(s,i){ var e=document.getElementById('dm-tt-'+i); if(e) e.textContent=dmFmt((+s.sl||0)*dmSlotGia(s)); });
-  var v=dmCfgVals();
-  var set=function(id,val){ var e=document.getElementById(id); if(e) e.textContent=dmFmt(val); };
+  var v=dmCfgVals(), set=function(id,val){ var e=document.getElementById(id); if(e) e.textContent=dmFmt(val); };
   set('dm-xw',v.xw); set('dm-mk',v.ban-v.xw); set('dm-ban',v.ban); set('dm-tttong',v.tt);
+}
+function dmTierApply(i){
+  var fam=__dmCfg.family, map=DM_TIER_MAP[fam]||{};
+  __dmCfg.slots.forEach(function(s){ if(s.rate) return; var arrk=map[s.k]; var kw=arrk&&arrk[i]; if(!kw) return;
+    var opts=dmSlotOpts(s), kwl=kw.toLowerCase();
+    for(var j=0;j<opts.length;j++){ if((opts[j].n||'').toLowerCase().indexOf(kwl)>-1){ s.matIdx=j; break; } } });
+  dmCfgRender();
+  var names=dmAll().tierNames||DM_SEED.tierNames; toast('Đã áp cấu hình tier '+names[i]+' — chỉnh thêm nếu cần');
 }
 function dmCfgMt(){
   var s={}; __dmCfg.slots.forEach(function(x){ s[x.k]=dmSlotName(x); });
   if(__dmCfg.family==='op') return 'Xương: '+s.xuong+'; Khung bao: '+s.khungBao+'; Tấm ốp: '+s.tam+'; Lớp phủ: '+s.lopPhu;
   return 'Cốt khung: '+s.khung+'; Thùng: '+s.thung+'; Cánh: '+s.canh+' phủ '+s.lpCanh+'; Phụ kiện: bản lề '+s.banle+', ray '+s.ray+', tay nắm '+s.taynam;
 }
-function dmInsertRow(item){
-  var c=document.getElementById('bg-items'); if(!c){ toast('Hãy mở form Lập báo giá trước','⚠️'); return false; }
-  c.insertAdjacentHTML('beforeend', bgRowHtml(item)); if(typeof bgCalc==='function') bgCalc(); return true;
-}
-function dmPushVt(){
-  var c=document.getElementById('bg-vt'); if(!c) return;
-  __dmCfg.slots.forEach(function(s){ if(s.rate) return; var nm=dmSlotName(s); if(!nm) return; c.insertAdjacentHTML('beforeend', bgVtRowHtml({hangmuc:s.label, chungloai:nm, thuonghieu:'', xuatxu:'', ghichu:''})); });
-  if(typeof bgVtOpen==='function') bgVtOpen();
-}
-function dmCfgAdd(){
+function dmCfgItem(){
   var v=dmCfgVals();
-  var item={ten:__dmCfg.type, dvt:'m²', sl:(+__dmCfg.dienTich||1), dg:v.ban, tt:v.tt, mt:dmCfgMt()};
-  if(dmInsertRow(item)){ dmPushVt(); toast('Đã thêm "'+__dmCfg.type+'" vào báo giá — giá bán '+dmFmt(v.ban)+'/m²'); dmCfgClose(); }
+  var cfg={type:__dmCfg.type, dienTich:__dmCfg.dienTich, slots:__dmCfg.slots.map(function(s){return {k:s.k,matIdx:s.matIdx,sl:s.sl};})};
+  return {ten:__dmCfg.type, dvt:'m²', sl:(+__dmCfg.dienTich||1), dg:v.ban, tt:v.tt, mt:dmCfgMt(), cfg:cfg};
 }
-function dmTierAdd(i){
-  var info=dmTypeInfo(__dmCfg.type), tk=info.tier, xw=(dmAll().tierXW||DM_SEED.tierXW)[tk]||[], names=dmAll().tierNames||DM_SEED.tierNames;
-  var mk=dmAll().markup||DM_SEED.markup, ban=Math.round((xw[i]||0)*(1+(+mk.nm||0)+(+mk.tktc||0)));
-  var dt=+__dmCfg.dienTich||1;
-  var item={ten:__dmCfg.type+' – '+names[i], dvt:'m²', sl:dt, dg:ban, tt:Math.round(ban*dt), mt:'Cấu hình chuẩn tier '+names[i]+' (theo bộ định mức MDC)'};
-  if(dmInsertRow(item)){ toast('Đã thêm dòng theo tier '+names[i]+' — '+dmFmt(ban)+'/m²'); dmCfgClose(); }
+function dmInsertRow(item){ var c=document.getElementById('bg-items'); if(!c){ toast('Hãy mở form Lập báo giá trước','⚠️'); return false; } c.insertAdjacentHTML('beforeend', bgRowHtml(item)); if(typeof bgCalc==='function') bgCalc(); return true; }
+function dmPushVt(){ var c=document.getElementById('bg-vt'); if(!c) return; __dmCfg.slots.forEach(function(s){ if(s.rate) return; var nm=dmSlotName(s); if(!nm) return; c.insertAdjacentHTML('beforeend', bgVtRowHtml({hangmuc:s.label,chungloai:nm,thuonghieu:'',xuatxu:'',ghichu:''})); }); if(typeof bgVtOpen==='function') bgVtOpen(); }
+function dmCfgAdd(){
+  var item=dmCfgItem();
+  if(__dmCfg.rowEl){ try{ __dmCfg.rowEl.outerHTML=bgRowHtml(item); }catch(e){} if(typeof bgCalc==='function') bgCalc(); toast('Đã cập nhật dòng — giá bán '+dmFmt(item.dg)+'/m²'); dmCfgClose(); }
+  else if(dmInsertRow(item)){ dmPushVt(); toast('Đã thêm "'+item.ten+'" — giá bán '+dmFmt(item.dg)+'/m²'); dmCfgClose(); }
 }
+function dmCfgEditRow(el){ var row=el.closest('.bg-row'); if(!row) return; var cfg=null; try{ cfg=JSON.parse(row.getAttribute('data-cfg')); }catch(e){} if(!cfg) return toast('Dòng này không có cấu hình','⚠️'); dmCfgOpen(cfg, row); }
 
-/* ─────────── TRANG QUẢN LÝ: ĐỊNH MỨC & ĐƠN GIÁ ─────────── */
+/* ─────────── TRANG QUẢN LÝ: ĐỊNH MỨC & ĐƠN GIÁ (CRUD + đồng bộ Sheet) ─────────── */
 var _dmTab='TU_Canh';
 var DM_TABS=[['TU_Khung','Khung tủ'],['TU_Thung','Thùng tủ'],['TU_Canh','Cánh tủ'],['TU_LopPhu_Canh','Lớp phủ cánh'],['TU_LopPhu_KhungThung','Lớp phủ thùng'],['TU_PhuKien','Phụ kiện'],['OP_Xuong','Ốp: Xương'],['OP_KhungBaoQuanh','Ốp: Khung bao'],['OP_TamOp','Ốp: Tấm ốp'],['OP_LopPhu','Ốp: Lớp phủ'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']];
 function dmSetTab(t){ _dmTab=t; renderDinhMuc(); }
 function renderDinhMuc(){
+  dmEnsureCloud();
   currentPage='dinhmuc';
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.toggle('active', n.getAttribute('data-page')==='dinhmuc'); });
   var _pt=document.getElementById('page-title'); if(_pt) _pt.textContent='Định mức & Đơn giá';
@@ -6866,56 +6896,77 @@ function renderDinhMuc(){
   var tabBtn=function(id,txt){ var on=_dmTab===id; return '<button onclick="dmSetTab(\''+id+'\')" style="padding:7px 12px;border:none;border-bottom:3px solid '+(on?'#B08D57':'transparent')+';background:none;cursor:pointer;font-size:12.5px;font-weight:'+(on?'800':'600')+';color:'+(on?'#8A6D3B':'#9A8F82')+';white-space:nowrap">'+txt+'</button>'; };
   var head='<div class="table-wrap" style="padding:0;overflow:hidden">'
     +'<div style="padding:14px 16px 0;border-bottom:1px solid #eee">'
-    +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center"><div><div style="font-size:16px;font-weight:800;color:#3A2E22">Định mức &amp; Đơn giá vật liệu</div>'
-    +'<div style="font-size:12px;color:#9A8F82;margin:2px 0 8px">Bộ định mức MDC 2026 — dùng cho công cụ cấu hình báo giá. Sửa đơn giá tại đây, áp dụng ngay khi cấu hình.</div></div>'
-    +(admin?'<button class="btn btn-outline btn-sm" onclick="dmResetSeed()" title="Nạp lại định mức gốc">↻ Nạp lại mẫu</button>':'')+'</div>'
+    +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:flex-start"><div><div style="font-size:16px;font-weight:800;color:#3A2E22">Định mức &amp; Đơn giá vật liệu</div>'
+    +'<div style="font-size:12px;color:#9A8F82;margin:2px 0 8px">Số liệu ban đầu là BẢNG DEMO — hãy cập nhật đúng giá của MDC rồi bấm <b>Lưu lên Sheet</b> để mọi máy dùng chung.</div></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+    +'<button class="btn btn-primary btn-sm" onclick="dmCloudSave()" title="Lưu bảng giá lên Google Sheet (dùng chung mọi máy)">☁ Lưu lên Sheet</button>'
+    +'<button class="btn btn-outline btn-sm" onclick="dmCloudLoad(false).then(function(){renderDinhMuc();})" title="Tải bảng giá mới nhất từ Sheet">⬇ Tải từ Sheet</button>'
+    +(admin?'<button class="btn btn-outline btn-sm" onclick="dmResetSeed()" title="Nạp lại định mức gốc (demo)">↻ Mẫu gốc</button>':'')+'</div></div>'
     +'<div style="display:flex;gap:2px;overflow-x:auto">'+DM_TABS.map(function(t){return tabBtn(t[0],t[1]);}).join('')+'</div></div>';
-  var body='';
-  if(_dmTab==='__set'){ body=dmSettingsHtml(); }
-  else if(_dmTab==='__tier'){ body=dmTierHtml(); }
-  else { body=dmMatTableHtml(_dmTab); }
+  var body;
+  if(_dmTab==='__set') body=dmSettingsHtml();
+  else if(_dmTab==='__tier') body=dmTierHtml();
+  else body=dmMatTableHtml(_dmTab);
   document.getElementById('page-content').innerHTML=head+'<div style="padding:8px 4px">'+body+'</div></div>';
 }
 function dmMatTableHtml(sheet){
   var D=dmAll(); var rows=D.mat[sheet]||[]; var lastGr='';
-  var h='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
-    +'<thead><tr style="background:#FBF8F1;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:#9A8F82"><th style="text-align:left;padding:9px 14px">Tên vật liệu</th><th style="text-align:left;padding:9px;width:64px">ĐVT</th><th style="text-align:right;padding:9px 14px;width:150px">Đơn giá định mức (₫)</th></tr></thead><tbody>';
+  var h='<div style="padding:8px 14px"><button class="btn btn-outline btn-sm" onclick="dmMatForm(\''+sheet+'\',null)">＋ Thêm vật liệu</button></div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+    +'<thead><tr style="background:#FBF8F1;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:#9A8F82"><th style="text-align:left;padding:9px 14px">Tên vật liệu</th><th style="text-align:left;padding:9px;width:60px">ĐVT</th><th style="text-align:right;padding:9px;width:140px">Đơn giá (₫)</th><th style="width:74px"></th></tr></thead><tbody>';
   rows.forEach(function(m,i){
-    if(m.gr!==lastGr){ lastGr=m.gr; h+='<tr><td colspan="3" style="background:#F3EEE3;padding:7px 14px;font-weight:700;font-size:11.5px;color:#6F5A3B">'+esc2(m.gr)+'</td></tr>'; }
+    if(m.gr!==lastGr){ lastGr=m.gr; h+='<tr><td colspan="4" style="background:#F3EEE3;padding:7px 14px;font-weight:700;font-size:11.5px;color:#6F5A3B">'+esc2(m.gr||'—')+'</td></tr>'; }
     h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:8px 14px">'+esc2(m.n)+'</td><td style="padding:8px;color:#9A8F82">'+esc2(m.d)+'</td>'
-      +'<td style="padding:6px 14px;text-align:right"><input type="number" value="'+m.g+'" onchange="dmEditGia(\''+sheet+'\','+i+',this.value)" style="width:130px;padding:6px 8px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;text-align:right"></td></tr>';
+      +'<td style="padding:6px 8px;text-align:right"><input type="number" value="'+m.g+'" onchange="dmEditGia(\''+sheet+'\','+i+',this.value)" style="width:120px;padding:6px 8px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;text-align:right"></td>'
+      +'<td style="padding:6px 10px;text-align:right;white-space:nowrap"><button onclick="dmMatForm(\''+sheet+'\','+i+')" title="Sửa" style="border:none;background:none;cursor:pointer;font-size:14px">✎</button> <button onclick="dmMatDelete(\''+sheet+'\','+i+')" title="Xóa" style="border:none;background:none;cursor:pointer;color:#B23A2E;font-size:14px">✕</button></td></tr>';
   });
   h+='</tbody></table></div>';
   return h;
 }
 function dmEditGia(sheet,i,val){ var D=dmAll(); if(D.mat[sheet]&&D.mat[sheet][i]){ D.mat[sheet][i].g=Math.round(+val||0); dmSave(D); } }
+function dmMatForm(sheet,idx){
+  var D=dmAll(); var m=(idx!=null&&idx!=='null')?D.mat[sheet][idx]:{n:'',d:'m²',g:0,gr:''};
+  var groups=[]; (D.mat[sheet]||[]).forEach(function(x){ if(groups.indexOf(x.gr)<0) groups.push(x.gr); });
+  var inp='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:4px;font-size:13px', lab='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase';
+  var h='<div style="margin-bottom:10px"><label style="'+lab+'">Tên vật liệu</label><input id="dmf-n" value="'+esc2(m.n)+'" style="'+inp+'"></div>'
+    +'<div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="'+lab+'">Nhóm</label><input id="dmf-gr" list="dmf-grs" value="'+esc2(m.gr)+'" style="'+inp+'"><datalist id="dmf-grs">'+groups.map(function(g){return '<option value="'+esc2(g)+'">';}).join('')+'</datalist></div>'
+    +'<div><label style="'+lab+'">ĐVT</label><input id="dmf-d" value="'+esc2(m.d)+'" style="'+inp+'"></div></div>'
+    +'<div style="margin-bottom:14px"><label style="'+lab+'">Đơn giá định mức (₫)</label><input id="dmf-g" type="number" value="'+(m.g||0)+'" style="'+inp+';text-align:right"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="dongModal2()">Hủy</button><button class="btn btn-primary" onclick="dmMatSave(\''+sheet+'\','+(idx==null?'null':idx)+')">Lưu</button></div>';
+  modal2((idx!=null&&idx!=='null')?'Sửa vật liệu':'Thêm vật liệu', h);
+}
+function dmMatSave(sheet,idx){
+  var D=dmAll(), rec={n:(document.getElementById('dmf-n').value||'').trim(), d:(document.getElementById('dmf-d').value||'m²').trim(), g:Math.round(+document.getElementById('dmf-g').value||0), gr:(document.getElementById('dmf-gr').value||'').trim()};
+  if(!rec.n) return toast('Nhập tên vật liệu','⚠️');
+  if(idx==null||idx==='null') D.mat[sheet].push(rec); else D.mat[sheet][idx]=rec;
+  dmSave(D); if(typeof dongModal2==='function') dongModal2(); renderDinhMuc(); toast('Đã lưu vật liệu (nhớ ☁ Lưu lên Sheet)');
+}
+function dmMatDelete(sheet,idx){ if(!confirm('Xóa vật liệu này khỏi định mức?')) return; var D=dmAll(); D.mat[sheet].splice(idx,1); dmSave(D); renderDinhMuc(); toast('Đã xóa (nhớ ☁ Lưu lên Sheet)'); }
 function dmSettingsHtml(){
   var D=dmAll(), mk=D.markup, r=D.rates;
-  var row=function(label,val,fn,suf){ return '<div style="display:flex;align-items:center;gap:10px;margin:8px 0"><div style="flex:1;font-size:13px">'+label+'</div><input type="number" value="'+val+'" onchange="'+fn+'" style="width:130px;padding:8px;border:1px solid #DED8CE;border-radius:7px;text-align:right">'+(suf?'<span style="color:#9A8F82;width:26px">'+suf+'</span>':'<span style="width:26px"></span>')+'</div>'; };
+  var row=function(label,val,fn,suf){ return '<div style="display:flex;align-items:center;gap:10px;margin:8px 0"><div style="flex:1;font-size:13px">'+label+'</div><input type="number" value="'+val+'" onchange="'+fn+'" style="width:130px;padding:8px;border:1px solid #DED8CE;border-radius:7px;text-align:right"><span style="color:#9A8F82;width:22px">'+(suf||'')+'</span></div>'; };
   return '<div style="max-width:520px;padding:6px 14px">'
     +'<div style="font-weight:700;color:#3A2E22;margin:6px 0">Công thức build-up giá bán</div>'
-    +row('Phí Nhà máy (NM) — % trên giá xuất xưởng', Math.round(mk.nm*100), "dmEditMk('nm',this.value)",'%')
-    +row('Phí Thiết kế &amp; Thi công (TK&amp;TC) — %', Math.round(mk.tktc*100), "dmEditMk('tktc',this.value)",'%')
+    +row('Phí Nhà máy (NM) — %', Math.round(mk.nm*100), "dmEditMk('nm',this.value)",'%')
+    +row('Phí Thiết kế &amp; Thi công — %', Math.round(mk.tktc*100), "dmEditMk('tktc',this.value)",'%')
     +row('Thuế VAT — %', Math.round(mk.vat*100), "dmEditMk('vat',this.value)",'%')
-    +'<div style="font-size:12px;color:#8A6D3B;background:#FBF4E6;border:1px solid #EBD9B8;border-radius:7px;padding:8px 10px;margin:6px 0">Giá bán/m² = Giá xuất xưởng × (1 + NM% + TK&amp;TC%) = ×'+(1+mk.nm+mk.tktc).toFixed(2)+' hiện tại.</div>'
+    +'<div style="font-size:12px;color:#8A6D3B;background:#FBF4E6;border:1px solid #EBD9B8;border-radius:7px;padding:8px 10px;margin:6px 0">Giá bán/m² = Giá xuất xưởng × '+(1+mk.nm+mk.tktc).toFixed(2)+' (hiện tại).</div>'
     +'<div style="font-weight:700;color:#3A2E22;margin:14px 0 6px">Đơn giá nhân công &amp; vật tư phụ (₫/m²)</div>'
     +row('Tủ — Nhân công gia công + lắp', r.tuNhanCong, "dmEditRate('tuNhanCong',this.value)",'')
-    +row('Tủ — Vật tư phụ (keo, ốc, bả…)', r.tuVatTuPhu, "dmEditRate('tuVatTuPhu',this.value)",'')
+    +row('Tủ — Vật tư phụ', r.tuVatTuPhu, "dmEditRate('tuVatTuPhu',this.value)",'')
     +row('Ốp — Vật liệu kết hợp', r.opKetHop, "dmEditRate('opKetHop',this.value)",'')
     +row('Ốp — Nhân công thi công', r.opNhanCong, "dmEditRate('opNhanCong',this.value)",'')
-    +'</div>';
+    +'<div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="dmCloudSave()">☁ Lưu lên Sheet</button></div></div>';
 }
 function dmEditMk(k,v){ var D=dmAll(); D.markup[k]=(+v||0)/100; dmSave(D); if(currentPage==='dinhmuc') renderDinhMuc(); }
 function dmEditRate(k,v){ var D=dmAll(); D.rates[k]=Math.round(+v||0); dmSave(D); }
 function dmTierHtml(){
   var D=dmAll(), names=D.tierNames||DM_SEED.tierNames, mk=D.markup, mul=(1+mk.nm+mk.tktc);
   var fam=[['tu_bep','Tủ bếp'],['tu_ao','Tủ áo / tủ khác'],['op','Ốp tường']];
-  var h='<div style="padding:6px 14px"><div style="font-size:12px;color:#9A8F82;margin-bottom:10px">Giá tham khảo/m² theo 4 phân khúc — dùng cho nút "Chọn nhanh theo tier" khi cấu hình. Giá bán = giá xuất xưởng × '+mul.toFixed(2)+'.</div>';
+  var h='<div style="padding:6px 14px"><div style="font-size:12px;color:#9A8F82;margin-bottom:10px">Giá bán/m² theo 4 phân khúc = giá xuất xưởng × '+mul.toFixed(2)+'. Dùng cho nút "Chọn nhanh theo tier" khi cấu hình.</div>';
   h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#FBF8F1;font-size:10px;text-transform:uppercase;color:#9A8F82"><th style="text-align:left;padding:9px 14px">Sản phẩm</th>'+names.map(function(n){return '<th style="text-align:right;padding:9px">'+esc2(n)+'</th>';}).join('')+'</tr></thead><tbody>';
-  fam.forEach(function(f){
-    var xw=(D.tierXW||DM_SEED.tierXW)[f[0]]||[];
-    h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:9px 14px;font-weight:600">'+esc2(f[1])+'</td>'+xw.map(function(v){return '<td style="text-align:right;padding:9px;font-weight:700;color:#0F5132">'+dmFmt(v*mul)+'</td>';}).join('')+'</tr>';
-  });
+  fam.forEach(function(f){ var xw=(D.tierXW||DM_SEED.tierXW)[f[0]]||[]; h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:9px 14px;font-weight:600">'+esc2(f[1])+'</td>'+xw.map(function(v){return '<td style="text-align:right;padding:9px;font-weight:700;color:#0F5132">'+dmFmt(v*mul)+'</td>';}).join('')+'</tr>'; });
   h+='</tbody></table></div></div>';
   return h;
 }
