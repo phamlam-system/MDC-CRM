@@ -5696,7 +5696,7 @@ function htFormBaoGia(ma){
     + '<div style="background:var(--goldbg);border:1px solid var(--gold);border-radius:9px;padding:11px 13px;margin-bottom:12px">'
     + '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span>Tạm tính</span><b id="bg-tam">0</b></div>'
     + '<div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span>Chiết khấu (%)</span><input id="bg-ck" type="number" value="'+esc2(x?(x['Chiết khấu %']||0):0)+'" oninput="bgCalc()" style="width:80px;padding:5px 7px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;text-align:right"></div>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span>Thuế VAT (%)</span><input id="bg-vat" type="number" value="'+esc2(x?(x['VAT %']||0):0)+'" oninput="bgCalc()" style="width:80px;padding:5px 7px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;text-align:right"></div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span>Thuế VAT (%)</span><input id="bg-vat" type="number" value="'+esc2(x?(x['VAT %']!=null&&x['VAT %']!==''?x['VAT %']:0):vatMacDinh())+'" oninput="bgCalc()" style="width:80px;padding:5px 7px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;text-align:right"></div>'
     + '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:1px solid var(--gold);padding-top:8px;margin-top:2px"><span>TỔNG CỘNG</span><span id="bg-tong" style="color:var(--charcoal)">0</span></div>'
     + '<div id="bg-duyet" style="margin-top:6px;text-align:right"></div><input type="hidden" id="bg-gt"></div>'
     + '<details style="border:1px solid #E7E3DA;border-radius:9px;margin-bottom:12px;background:#FCFAF5"'+((ext.ct&&ext.ct.length)?' open':'')+'>'
@@ -6034,8 +6034,8 @@ function bgPrint(ma){
   }
   var hieuLuc=''; if(x['Ngày lập']&&x['Hiệu lực (ngày)']){ var d=new Date(x['Ngày lập']); d.setDate(d.getDate()+(+x['Hiệu lực (ngày)']||0)); if(!isNaN(d)) hieuLuc=d.toLocaleDateString('vi-VN'); }
   var S='';
-  S+='<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Báo giá '+esc2(x['Mã BG'])+'</title><style>';
-  S+='*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1E2329;padding:26px 30px;font-size:13px;line-height:1.5}';
+  S+='<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>BaoGia_'+esc2(x['Mã BG'])+'_v'+esc2(x['Phiên bản']||1)+'</title><style>';
+  S+='*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Times New Roman",Times,serif;color:#1E2329;padding:26px 30px;font-size:13px;line-height:1.5}';
   S+='.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #B08D57;padding-bottom:14px}';
   S+='.logo{width:56px;height:56px;border:2px solid #B08D57;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#B08D57;font-size:16px;vertical-align:middle;margin-right:12px}';
   S+='.co b{font-size:18px;color:#8A6D3B;letter-spacing:.5px}.co .x{font-size:11.5px;color:#5A6470}';
@@ -6055,9 +6055,9 @@ function bgPrint(ma){
   S+='.ft{margin-top:20px;text-align:center;color:#9AA3AD;font-size:10.5px;border-top:1px solid #E7E3DA;padding-top:10px}';
   S+='.bar{position:fixed;bottom:16px;right:16px;z-index:9}.bar button{background:#8A6D3B;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}';
   if(bgDetail){ S+='table.dt{font-size:10.5px}table.dt th{padding:5px 4px;font-size:9.5px}table.dt td{padding:4px 5px;vertical-align:top}table.dt td.sz{font-size:10px;color:#4A4640}table.dt td.cl{font-size:9.8px;color:#4A4640;line-height:1.4}table.dt td.gc{font-size:9.8px;color:#5A6470}table.dt tr.numr td{background:#F3EFE6;color:#9AA3AD;font-size:9px;padding:2px}table.dt td.cl .mt,table.dt td.cl .mt-list{margin-top:0}';
-    S+='@page{size:A4 landscape;margin:10mm 9mm}@media print{body{padding:0}.noprint{display:none}table.dt{font-size:10px}}</style></head><body>';
+    S+='@page{size:A4 landscape;margin:12mm 10mm 14mm}@page{@bottom-center{content:"Trang " counter(page) " / " counter(pages);font-size:9px;color:#9AA3AD;font-family:Arial,sans-serif}}@media print{body{padding:0}.noprint{display:none}table.dt{font-size:10px}}</style></head><body>';
   } else {
-    S+='@page{size:A4 portrait;margin:14mm 12mm}@media print{body{padding:0}.noprint{display:none}}</style></head><body>';
+    S+='@page{size:A4 portrait;margin:16mm 14mm 16mm}@page{@bottom-center{content:"Trang " counter(page) " / " counter(pages);font-size:9px;color:#9AA3AD;font-family:Arial,sans-serif}}@media print{body{padding:0}.noprint{display:none}}</style></head><body>';
   }
   S+='<div class="bar noprint"><button onclick="window.print()">🖨 In / Lưu PDF</button></div>';
   S+='<div class="hd"><div class="co"><div><span class="logo">MDC</span><b>MỘC ĐÔNG CHÂU</b></div><div class="x" style="margin-top:6px">Thiết kế · Sản xuất · Thi công nội thất</div><div class="x">Hotline / Zalo: ………  ·  Email: ………</div></div>';
@@ -7617,9 +7617,10 @@ function vlCloudLoad(){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='f
 /* ---------- Bên B: Hồ sơ Công ty ---------- */
 var HDB_KEY='mdc_crm_company';
 var HD_COMPANY_DEF={ten:'CÔNG TY TNHH NỘI THẤT MỘC ĐÔNG CHÂU',daiDien:'',chucVu:'Giám đốc',
-  diaChi:'TP. Huế',mst:'',dienThoai:'',email:'',taiKhoan:'',nganHang:''};
+  diaChi:'TP. Huế',mst:'',dienThoai:'',email:'',taiKhoan:'',nganHang:'',vatMacDinh:8};
 function hdCompany(){ try{ var c=JSON.parse(localStorage.getItem(HDB_KEY)||'null'); if(c&&c.ten) return c; }catch(e){} return JSON.parse(JSON.stringify(HD_COMPANY_DEF)); }
 function hdCompanySave(c){ try{ localStorage.setItem(HDB_KEY,JSON.stringify(c)); }catch(e){} }
+function vatMacDinh(){ try{ var c=hdCompany(); var v=(c&&c.vatMacDinh!=null&&c.vatMacDinh!=='')?+c.vatMacDinh:8; return isNaN(v)?8:v; }catch(e){ return 8; } }
 function hdCompanyThieu(){ var c=hdCompany(); var m=[]; if(!c.mst)m.push('MST'); if(!c.diaChi)m.push('địa chỉ'); if(!c.taiKhoan)m.push('tài khoản ngân hàng'); return m; }
 function hdCompanyForm(){
   var c=hdCompany(); var inp='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:4px;font-size:13px', lab='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase';
@@ -7635,6 +7636,7 @@ function hdCompanyForm(){
     + f('email','Email','')
     + f('taiKhoan','Số tài khoản','')
     + f('nganHang','Ngân hàng','')
+    + f('vatMacDinh','VAT mặc định (%)','8')
     +'</div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">'
     +'<button class="btn btn-outline" onclick="dongModal2()">Hủy</button>'
@@ -7642,7 +7644,7 @@ function hdCompanyForm(){
   modal2('🏢 Thông tin Công ty (Bên B)', h);
 }
 function hdCompanySaveForm(){
-  var c={}; ['ten','mst','daiDien','chucVu','diaChi','dienThoai','email','taiKhoan','nganHang'].forEach(function(k){ c[k]=((document.getElementById('hdc-'+k)||{}).value||'').trim(); });
+  var c={}; ['ten','mst','daiDien','chucVu','diaChi','dienThoai','email','taiKhoan','nganHang','vatMacDinh'].forEach(function(k){ c[k]=((document.getElementById('hdc-'+k)||{}).value||'').trim(); });
   hdCompanySave(c);
   if(typeof getApiUrl==='function'&&getApiUrl()&&typeof apiPost==='function'){ apiPost({action:'savePMKV',data:{key:'crm_company',value:JSON.stringify(c)}}).catch(function(){}); }
   if(typeof dongModal2==='function') dongModal2();
@@ -7701,7 +7703,7 @@ function hdNewDoc(l){
     benB:c,
     congTrinh:{ten:(l&&l.name?('Công trình '+l.name):''),diaChi:(l&&(l.address||l.diachi))||'',dienTich:(l&&l.area)||'',phamVi:t.phamVi},
     items:[], vatLieu:[],
-    taiChinh:{ck:0,vat:8,tamTinh:0,tong:0},
+    taiChinh:{ck:0,vat:vatMacDinh(),tamTinh:0,tong:0},
     dot:[{ten:'Đợt 1 — tạm ứng sau ký',pct:30,tien:0,moc:'Ngay sau khi ký hợp đồng'},
          {ten:'Đợt 2 — theo tiến độ',pct:40,tien:0,moc:'Đạt 50% khối lượng'},
          {ten:'Đợt 3 — trước bàn giao',pct:25,tien:0,moc:'Trước bàn giao'},
@@ -7758,7 +7760,7 @@ function hdSyncBG(){
   __hd.items=items.map(function(i){ return {ten:i.ten||'',dvt:i.dvt||'',sl:+i.sl||0,dg:+i.dg||0,tt:+i.tt||(Math.round((+i.sl||0)*(+i.dg||0))),mt:i.mt||''}; });
   __hd.maBG=bg['Mã BG']||'';
   __hd.taiChinh.ck=+bg['Chiết khấu %']||0;
-  __hd.taiChinh.vat=(bg['VAT %']!=null&&bg['VAT %']!=='')?+bg['VAT %']:8;
+  __hd.taiChinh.vat=(bg['VAT %']!=null&&bg['VAT %']!=='')?+bg['VAT %']:vatMacDinh();
   // vật liệu chỉ định từ phụ lục vật tư của BG (nếu có)
   try{ var ext=(typeof bgExtLoad==='function')?bgExtLoad(bg['Mã BG']):null;
     if(ext&&ext.vt&&ext.vt.length){ __hd.vatLieu=ext.vt.map(function(v){return {ten:v.chungloai||v.hangmuc||'',thuongHieu:[v.thuonghieu,v.xuatxu].filter(Boolean).join(' / '),quyCach:v.ghichu||''};}); }
