@@ -7520,6 +7520,7 @@ function vlTableHtml(){
   var h='<div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     +(admin?'<button class="btn btn-primary btn-sm" onclick="vlForm(null)">＋ Thêm vật liệu</button>':'')
     +(admin?'<button class="btn btn-outline btn-sm" onclick="vlAddSection()">＋ Thêm mục</button>':'')
+    +(admin?'<button class="btn btn-outline btn-sm" onclick="vlImport()" title="Nhập danh mục vật liệu từ CSV hoặc dán từ Excel">⬆ Nhập CSV/Excel</button>':'')
     +'<button class="btn btn-outline btn-sm" onclick="vlCloudSave()" title="Lưu danh mục lên Sheet">☁ Lưu</button>'
     +'<button class="btn btn-outline btn-sm" onclick="vlCloudLoad()" title="Tải danh mục từ Sheet">⬇ Tải</button>'
     +(admin?'<button class="btn btn-outline btn-sm" onclick="vlResetSeed()">↻ Mẫu gốc</button>':'')
@@ -7598,6 +7599,80 @@ function vlSaveForm(idx){
 }
 function vlDelete(idx){ if(!confirm('Xóa dòng vật liệu này?')) return; var a=vlAll(); a.splice(idx,1); vlSave(a); vlRefresh(); toast('Đã xóa'); }
 function vlAddSection(){ var name=prompt('Tên mục (ví dụ: VII. VÁN NHỰA PICOMAT):',''); if(!name||!name.trim()) return; var a=vlAll(); a.push({sec:name.trim()}); vlSave(a); renderDinhMuc(); }
+/* ★ v9.17 — TRÌNH NHẬP DANH MỤC VẬT LIỆU (CSV / dán từ Excel · không cần SheetJS) */
+function vlImpNorm(s){ return String(s==null?'':s).trim(); }
+function vlImpSplitLine(line){
+  if(line.indexOf('\t')>-1) return line.split('\t').map(vlImpNorm);
+  var out=[],cur='',q=false;
+  for(var i=0;i<line.length;i++){ var c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true; else if(c===','){ out.push(cur); cur=''; } else cur+=c; }
+  }
+  out.push(cur); return out.map(vlImpNorm);
+}
+function vlImpParse(text){
+  var lines=String(text||'').split(/\r?\n/).filter(function(l){return l.trim()!=='';});
+  var rows=lines.map(vlImpSplitLine);
+  var map={nhom:0,ten:1,dvt:2,gia:3,brand:4,day:5,gc:6};
+  if(rows.length){
+    var h=rows[0].map(function(x){return String(x).toLowerCase();});
+    var find=function(subs){ for(var i=0;i<h.length;i++){ for(var j=0;j<subs.length;j++){ if(h[i].indexOf(subs[j])>-1) return i; } } return -1; };
+    var mTen=find(['tên','ten']), mGia=find(['đơn giá','don gia','giá','gia']);
+    if(mTen>-1||mGia>-1){
+      map={ nhom:find(['nhóm','nhom']), ten:mTen, dvt:find(['đvt','dvt','đơn vị']),
+        gia:mGia, brand:find(['thương','thuong','hãng','hang']),
+        day:find(['quy cách','quy cach','quycach','dày','day']), gc:find(['ghi chú','ghi chu']) };
+      rows=rows.slice(1);
+    }
+  }
+  var g=function(r,k){ var i=map[k]; return (i!=null&&i>=0&&i<r.length)?vlImpNorm(r[i]):''; };
+  var items=[];
+  rows.forEach(function(r){
+    if(/dòng ví dụ|vi du|example/i.test(r.join(' '))) return;
+    var ten=g(r,'ten'); if(!ten) return;
+    var gia=Math.round(+String(g(r,'gia')).replace(/[^\d]/g,'')||0);
+    items.push({ nhom:g(r,'nhom'), ten:ten, dvt:g(r,'dvt'), gia:gia, brand:g(r,'brand'), day:g(r,'day'), gc:g(r,'gc') });
+  });
+  window.__vlImp=items;
+  var pv=document.getElementById('vlImpPv'); if(!pv) return;
+  if(!items.length){ pv.innerHTML='<div class="muted">Chưa nhận được dòng hợp lệ (cần ít nhất cột Tên &amp; Đơn giá).</div>'; return; }
+  var body=items.slice(0,8).map(function(x){ return '<tr><td>'+esc2(x.nhom)+'</td><td>'+esc2(x.ten)+'</td><td>'+esc2(x.dvt)+'</td><td style="text-align:right">'+(x.gia?x.gia.toLocaleString('vi-VN'):'')+'</td><td>'+esc2(x.brand)+'</td></tr>'; }).join('');
+  pv.innerHTML='<div style="font-weight:700;margin-bottom:6px">Xem trước: '+items.length+' vật liệu'+(items.length>8?' (hiện 8 dòng đầu)':'')+'</div>'
+    +'<div style="max-height:210px;overflow:auto;border:1px solid #E7E3DA;border-radius:8px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:#F3EFE6"><th style="text-align:left;padding:5px 7px">Nhóm</th><th style="text-align:left;padding:5px 7px">Tên</th><th style="text-align:left;padding:5px 7px">ĐVT</th><th style="text-align:right;padding:5px 7px">Đơn giá</th><th style="text-align:left;padding:5px 7px">Thương hiệu</th></tr>'+body+'</table></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn btn-outline" onclick="dongModal2()">Hủy</button>'
+    +'<button class="btn btn-primary" onclick="vlImpConfirm()">Nhập '+items.length+' vật liệu</button></div>';
+}
+function vlImpFile(input){
+  var f=input.files&&input.files[0]; if(!f) return;
+  var rd=new FileReader();
+  rd.onload=function(){ var t=document.getElementById('vlImpTxt'); if(t){ t.value=rd.result; } vlImpParse(rd.result); };
+  rd.readAsText(f,'utf-8');
+}
+function vlImpConfirm(){
+  var items=window.__vlImp||[]; if(!items.length) return toast('Chưa có dữ liệu để nhập','⚠️');
+  var a=vlAll(), curSec=null, n=0;
+  items.forEach(function(x){
+    if(x.nhom && x.nhom!==curSec){ a.push({sec:x.nhom}); curSec=x.nhom; }
+    var rec={ brand:x.brand||'', code:'', ten:x.ten, dvt:x.dvt||'', day:x.day||'', haohut:0,
+      giaTam:(/tấm|tam/i.test(x.dvt||'')?x.gia:0), giaDM:x.gia||0, gc:x.gc||'', stt:'' };
+    if(typeof vlRecalc==='function') vlRecalc(rec);
+    a.push(rec); n++;
+  });
+  vlSave(a);
+  if(typeof dongModal2==='function') dongModal2();
+  if(typeof renderDinhMuc==='function') renderDinhMuc();
+  toast('✅ Đã nhập '+n+' vật liệu (nhớ ☁ Lưu để đồng bộ lên Sheet)');
+}
+function vlImport(){
+  var admin=(typeof isAdmin==='function')?isAdmin():true; if(!admin) return toast('Chỉ quản trị được nhập','⚠️');
+  window.__vlImp=null;
+  var body='<div class="muted" style="margin-bottom:8px;line-height:1.5">Dán bảng từ Excel (bôi đen các dòng rồi Ctrl+C, dán vào ô dưới) hoặc chọn file <b>.csv</b>. Cột theo template: <b>Nhóm · Tên vật liệu · ĐVT · Đơn giá · Thương hiệu · Quy cách · Ghi chú</b>. Dòng tiêu đề &amp; dòng ví dụ tự bỏ qua.</div>'
+    +'<label class="btn btn-ghost btn-sm" style="cursor:pointer">📂 Chọn file CSV<input type="file" accept=".csv,text/csv" style="display:none" onchange="vlImpFile(this)"></label>'
+    +'<textarea id="vlImpTxt" placeholder="…hoặc dán ở đây (mỗi dòng một vật liệu; cột cách nhau bằng Tab hoặc dấu phẩy)…" oninput="vlImpParse(this.value)" style="width:100%;height:120px;margin-top:8px;padding:8px;border:1px solid #DED8CE;border-radius:7px;font-size:12.5px;font-family:monospace"></textarea>'
+    +'<div id="vlImpPv" style="margin-top:10px"></div>'
+    +'<div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn btn-outline btn-sm" onclick="dongModal2()">Đóng</button></div>';
+  modal2('⬆ Nhập Danh mục vật liệu', body);
+}
 function vlCloudSave(){ if(typeof apiPost!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
   apiPost({app:'pm',action:'savePMKV',data:{key:'crm_vl',value:JSON.stringify(vlAll())}}).then(function(){ toast('✅ Đã lưu Danh mục vật liệu lên Sheet'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
 function vlCloudLoad(){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
