@@ -6993,11 +6993,20 @@ function dmTierPrice(i){ if(!__dmCfg) return 0; var fam=__dmCfg.family, map=DM_T
     xw+=(+s.sl||0)*gia; });
   return Math.round(xw*mul); }
 
+/* ★ v9.27 — Định mức sản phẩm: DM_SLOTS + override SL/m² người dùng lưu trong dmAll().slotSL */
+function dmSlotsAll(){ var D=dmAll(); var ov=(D&&D.slotSL)||{}; var out={};
+  for(var fam in DM_SLOTS){ if(!DM_SLOTS.hasOwnProperty(fam)) continue;
+    out[fam]=DM_SLOTS[fam].map(function(s){ var o=dmClone(s);
+      if(ov[fam]&&ov[fam][s.k]!=null) o.sl=ov[fam][s.k]; return o; }); }
+  return out; }
+function dmEditSlotSL(fam,k,v){ var D=dmAll(); D.slotSL=D.slotSL||{}; D.slotSL[fam]=D.slotSL[fam]||{}; D.slotSL[fam][k]=+v||0; dmSave(D); if(currentPage==='dinhmuc') renderDinhMuc(); }
+function dmResetSlotSL(){ var D=dmAll(); D.slotSL={}; dmSave(D); if(currentPage==='dinhmuc') renderDinhMuc(); toast('Đã đặt lại SL/m² về mặc định','↩️'); }
+
 /* ─────────── CÔNG CỤ CẤU HÌNH ─────────── */
 var __dmCfg=null;
 function dmCfgInit(){
   var info=dmTypeInfo(__dmCfg.type); var fam=info.f; __dmCfg.family=fam;
-  __dmCfg.slots=DM_SLOTS[fam].map(function(s){
+  __dmCfg.slots=(dmSlotsAll()[fam]||[]).map(function(s){
     var o=dmClone(s);
     if(!s.rate){ var opts=dmSlotOpts(s)||[]; o.matIdx=dmDefIdx(opts,s.defKw); }
     return o;
@@ -7102,8 +7111,9 @@ function dmCfgAdd(){
 function dmCfgEditRow(el){ var row=el.closest('.bg-row'); if(!row) return; var cfg=null; try{ cfg=JSON.parse(row.getAttribute('data-cfg')); }catch(e){} if(!cfg) return toast('Dòng này không có cấu hình','⚠️'); dmCfgOpen(cfg, row); }
 
 /* ─────────── TRANG QUẢN LÝ: ĐỊNH MỨC & ĐƠN GIÁ (CRUD + đồng bộ Sheet) ─────────── */
-var _dmTab='TU_Canh';
-var DM_TABS=[['__vl','📋 Danh mục vật liệu'],['TU_Khung','Khung tủ'],['TU_Thung','Thùng tủ'],['TU_Canh','Cánh tủ'],['TU_LopPhu_Canh','Lớp phủ cánh'],['TU_LopPhu_KhungThung','Lớp phủ thùng'],['TU_PhuKien','Phụ kiện'],['OP_Xuong','Ốp: Xương'],['OP_KhungBaoQuanh','Ốp: Khung bao'],['OP_TamOp','Ốp: Tấm ốp'],['OP_LopPhu','Ốp: Lớp phủ'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']];
+var _dmTab='__vl';
+/* ★ v9.27 — Dọn gọn: bỏ 6 tab ván (Khung/Thùng/Cánh/Lớp phủ cánh/Lớp phủ thùng/Phụ kiện) vì chỉ soi lại Danh mục vật liệu; thêm 🧩 Định mức sản phẩm (công thức cấu thành). Giữ 4 tab Ốp (kho riêng) + Markup + Tier. */
+var DM_TABS=[['__vl','📋 Danh mục vật liệu'],['__dm','🧩 Định mức sản phẩm'],['OP_Xuong','Ốp: Xương'],['OP_KhungBaoQuanh','Ốp: Khung bao'],['OP_TamOp','Ốp: Tấm ốp'],['OP_LopPhu','Ốp: Lớp phủ'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']];
 function dmSetTab(t){ _dmTab=t; renderDinhMuc(); }
 function renderDinhMuc(){
   dmEnsureCloud();
@@ -7123,6 +7133,7 @@ function renderDinhMuc(){
     +'<div style="display:flex;gap:2px;overflow-x:auto">'+DM_TABS.map(function(t){return tabBtn(t[0],t[1]);}).join('')+'</div></div>';
   var body;
   if(_dmTab==='__vl') body=vlTableHtml();
+  else if(_dmTab==='__dm') body=dmRecipeHtml();
   else if(_dmTab==='__set') body=dmSettingsHtml();
   else if(_dmTab==='__tier') body=dmTierHtml();
   else body=dmMatTableHtml(_dmTab);
@@ -7196,12 +7207,66 @@ function dmSettingsHtml(){
 }
 function dmEditMk(k,v){ var D=dmAll(); D.markup[k]=(+v||0)/100; dmSave(D); if(currentPage==='dinhmuc') renderDinhMuc(); }
 function dmEditRate(k,v){ var D=dmAll(); D.rates[k]=(k==='haoHut')?(+v||0):Math.round(+v||0); dmSave(D); }
+/* ★ v9.27 — Tab 🧩 ĐỊNH MỨC SẢN PHẨM: xem & sửa công thức cấu thành (DM_SLOTS) cho từng họ. */
+function dmSlotSrc(s){
+  if(s.rate) return 'Định mức › Markup & Nhân công';
+  var sh=s.sheet||'';
+  if(/^TU_LopPhu/.test(sh)) return 'Ván phủ sẵn (Danh mục › Lớp phủ)';
+  if(/^TU_(Khung|Thung|Canh)/.test(sh)) return 'Ván cốt (Danh mục › Ván)';
+  if(sh==='TU_PhuKien') return 'Phụ kiện (Danh mục › Phụ kiện)';
+  var opm={OP_Xuong:'Ốp: Xương',OP_KhungBaoQuanh:'Ốp: Khung bao',OP_TamOp:'Ốp: Tấm ốp',OP_LopPhu:'Ốp: Lớp phủ'};
+  return opm[sh]||sh;
+}
+function dmRecipeHtml(){
+  var all=dmSlotsAll(), mk=dmAll().markup||DM_SEED.markup, mul=(1+(+mk.nm||0)+(+mk.tktc||0));
+  var famLb={tu:'🚪 Tủ (áo · bếp · trang trí)',op:'🧱 Ốp tường / trần'};
+  var h='<div style="padding:6px 14px">'
+    +'<div style="font-size:12.5px;color:#2F6B47;background:#EAF3EE;border:1px solid #BFE0CC;border-radius:9px;padding:10px 12px;line-height:1.55;margin-bottom:12px">🧩 <b>Định mức sản phẩm</b> = công thức mỗi họ gồm những cấu thành nào và <b>định mức SL/m²</b> ra sao. Sửa <b>SL/m²</b> tại đây sẽ áp dụng cho <b>Cấu hình theo vật liệu</b> &amp; nút <b>Chọn nhanh theo tier</b>. Giá từng vật liệu vẫn lấy ở <b>Danh mục vật liệu</b>; giá bán = giá xuất xưởng × '+mul.toFixed(2)+'.</div>'
+    +'<div style="margin-bottom:10px"><button class="btn btn-outline btn-sm" onclick="dmResetSlotSL()" title="Đưa toàn bộ SL/m² về mặc định gốc">↩️ Đặt lại SL/m² mặc định</button> <button class="btn btn-primary btn-sm" onclick="dmCloudSave()">☁ Lưu lên Sheet</button></div>';
+  ['tu','op'].forEach(function(fam){
+    var slots=all[fam]||[]; if(!slots.length) return;
+    h+='<div style="font-weight:800;color:#3A2E22;margin:14px 0 6px;font-size:14px">'+esc2(famLb[fam]||fam)+'</div>';
+    h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<thead><tr style="background:#FBF8F1;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:#9A8F82">'
+      +'<th style="text-align:left;padding:9px 14px">Cấu thành</th>'
+      +'<th style="text-align:left;padding:9px">Nguồn giá</th>'
+      +'<th style="text-align:left;padding:9px;width:150px">Vật liệu mặc định</th>'
+      +'<th style="text-align:right;padding:9px;width:60px">ĐVT</th>'
+      +'<th style="text-align:right;padding:9px;width:120px">Định mức SL/m²</th></tr></thead><tbody>';
+    slots.forEach(function(s){
+      var def='—';
+      if(s.rate) def='<span style="color:#9A8F82">theo đơn giá NC/vật tư</span>';
+      else{ var opts=dmSlotOpts(s)||[]; var idx=dmDefIdx(opts,s.defKw); var m=opts[idx];
+        def=m?esc2(m.n):('<span style="color:#B26A2E">'+esc2(s.defKw||s.filter||'—')+'</span>'); }
+      h+='<tr style="border-top:1px solid #F1EBE0">'
+        +'<td style="padding:8px 14px;font-weight:600">'+esc2(s.label)+'</td>'
+        +'<td style="padding:8px;color:#6F6355;font-size:11.5px">'+esc2(dmSlotSrc(s))+'</td>'
+        +'<td style="padding:8px;font-size:11.5px;color:#4A4034">'+def+'</td>'
+        +'<td style="padding:8px;text-align:right;color:#9A8F82">'+esc2(s.dvt||'')+'</td>'
+        +'<td style="padding:6px 8px;text-align:right"><input type="number" step="0.05" value="'+(+s.sl||0)+'" onchange="dmEditSlotSL(\''+fam+'\',\''+s.k+'\',this.value)" style="width:96px;padding:6px 8px;border:1px solid #DED8CE;border-radius:6px;font-size:12.5px;text-align:right"></td></tr>';
+    });
+    h+='</tbody></table></div>';
+  });
+  h+='</div>';
+  return h;
+}
+/* ★ v9.27 — Bảng Tier TÍNH ĐỘNG: giá xuất xưởng mỗi tier = Σ(SL/m² × giá vật liệu khớp DM_TIER_MAP) cho từng họ. */
+function dmTierBan(fam,i){
+  var slots=(dmSlotsAll()[fam]||[]), map=DM_TIER_MAP[fam]||{};
+  var mk=dmAll().markup||DM_SEED.markup, mul=(1+(+mk.nm||0)+(+mk.tktc||0)), xw=0;
+  slots.forEach(function(s){ var gia;
+    if(s.rate){ gia=dmSlotGia(s); }
+    else{ var opts=dmSlotOpts(s)||[], idx=dmDefIdx(opts,s.defKw), arrk=map[s.k], kw=arrk&&arrk[i];
+      if(kw){ var j=dmMatchIdx(opts,kw); if(j>=0) idx=j; } var m=opts[idx]; gia=m?(+m.g||0):0; }
+    xw+=(+s.sl||0)*gia; });
+  return xw*mul;
+}
 function dmTierHtml(){
   var D=dmAll(), names=D.tierNames||DM_SEED.tierNames, mk=D.markup, mul=(1+mk.nm+mk.tktc);
-  var fam=[['tu_bep','Tủ bếp'],['tu_ao','Tủ áo / tủ khác'],['op','Ốp tường']];
-  var h='<div style="padding:6px 14px"><div style="font-size:12px;color:#9A8F82;margin-bottom:10px">Giá bán/m² theo 4 phân khúc = giá xuất xưởng × '+mul.toFixed(2)+'. Dùng cho nút "Chọn nhanh theo tier" khi cấu hình.</div>';
-  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#FBF8F1;font-size:10px;text-transform:uppercase;color:#9A8F82"><th style="text-align:left;padding:9px 14px">Sản phẩm</th>'+names.map(function(n){return '<th style="text-align:right;padding:9px">'+esc2(n)+'</th>';}).join('')+'</tr></thead><tbody>';
-  fam.forEach(function(f){ var xw=(D.tierXW||DM_SEED.tierXW)[f[0]]||[]; h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:9px 14px;font-weight:600">'+esc2(f[1])+'</td>'+xw.map(function(v){return '<td style="text-align:right;padding:9px;font-weight:700;color:#0F5132">'+dmFmt(v*mul)+'</td>';}).join('')+'</tr>'; });
+  var fams=[['tu','🚪 Tủ (theo cấu thành họ Tủ)'],['op','🧱 Ốp tường (theo cấu thành họ Ốp)']];
+  var h='<div style="padding:6px 14px"><div style="font-size:12px;color:#9A8F82;margin-bottom:10px">Giá bán/m² từng phân khúc <b>tính động</b> = Σ(định mức SL/m² × giá vật liệu khớp tier) × '+mul.toFixed(2)+'. Sửa <b>SL/m²</b> ở tab 🧩 Định mức sản phẩm, sửa <b>giá</b> ở 📋 Danh mục vật liệu — bảng này tự đổi theo. Dùng cho nút "Chọn nhanh theo tier" khi cấu hình.</div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#FBF8F1;font-size:10px;text-transform:uppercase;color:#9A8F82"><th style="text-align:left;padding:9px 14px">Họ sản phẩm</th>'+names.map(function(n){return '<th style="text-align:right;padding:9px">'+esc2(n)+'</th>';}).join('')+'</tr></thead><tbody>';
+  fams.forEach(function(f){ h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:9px 14px;font-weight:600">'+esc2(f[1])+'</td>'+names.map(function(n,i){return '<td style="text-align:right;padding:9px;font-weight:700;color:#0F5132">'+dmFmt(dmTierBan(f[0],i))+'</td>';}).join('')+'</tr>'; });
   h+='</tbody></table></div></div>';
   return h;
 }
