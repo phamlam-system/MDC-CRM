@@ -5562,20 +5562,23 @@ function bgRowHtml(it){
       +'</div></div>';
   }
   var indent=cap==='con'?';margin-left:16px':'';
+  /* ★ v9.26 — ĐVT dropdown (m²/md/cái/bộ); KL tự nhảy: m²=Dài×Cao, md=Dài */
+  var dvtCur=it.dvt||'m²'; var DVT_D=['m²','md','cái','bộ']; if(dvtCur && DVT_D.indexOf(dvtCur)<0) DVT_D.unshift(dvtCur);
+  var dvtSel='<select class="bg-i-dvt" onchange="bgKLAuto(this.closest(\'.bg-row\'))" title="m²=Dài×Cao · md=Dài · cái/bộ=nhập tay" style="'+cell+'">'+DVT_D.map(function(d){return '<option'+(d===dvtCur?' selected':'')+'>'+d+'</option>';}).join('')+'</select>';
   return '<div class="bg-row" data-cap="'+cap+'"'+btAttr+cfgAttr+' style="border:1px solid #ECE6DB;border-radius:9px;padding:8px;margin:8px 0'+indent+';background:#fff">'
     +'<div style="display:grid;grid-template-columns:92px 50px 1fr 64px 26px;gap:6px;align-items:center">'
     +capSel
     +'<input class="bg-i-stt" value="'+esc2(it.stt||'')+'" placeholder="STT" style="'+cell+';text-align:center">'
     +'<input class="bg-i-ten" value="'+esc2(it.ten||'')+'" placeholder="Chi tiết đơn hàng" style="'+cell+';font-weight:600">'
-    +'<input class="bg-i-dvt" value="'+esc2(it.dvt||'')+'" list="bg-dvt-list" placeholder="ĐVT" style="'+cell+'">'
+    +dvtSel
     +'<button type="button" onclick="bgDelRow(this)" title="Xóa" style="border:none;background:none;color:#B23A2E;cursor:pointer;font-size:15px">✕</button>'
     +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.1fr 32px;gap:6px;margin-top:6px">'
-    +'<input class="bg-i-dai" type="number" step="0.01" value="'+(it.dai!=null&&it.dai!==''?esc2(it.dai):'')+'" oninput="bgCalc()" placeholder="Dài (m)" style="'+cell+';text-align:right">'
-    +'<input class="bg-i-rong" type="number" step="0.01" value="'+(it.rong!=null&&it.rong!==''?esc2(it.rong):'')+'" oninput="bgCalc()" placeholder="Rộng/Sâu" style="'+cell+';text-align:right">'
-    +'<input class="bg-i-cao" type="number" step="0.01" value="'+(it.cao!=null&&it.cao!==''?esc2(it.cao):'')+'" oninput="bgCalc()" placeholder="Cao (m)" style="'+cell+';text-align:right">'
+    +'<input class="bg-i-dai" type="number" step="0.01" value="'+(it.dai!=null&&it.dai!==''?esc2(it.dai):'')+'" oninput="bgKLAuto(this.closest(\'.bg-row\'))" placeholder="Dài (m)" style="'+cell+';text-align:right">'
+    +'<input class="bg-i-rong" type="number" step="0.01" value="'+(it.rong!=null&&it.rong!==''?esc2(it.rong):'')+'" oninput="bgKLAuto(this.closest(\'.bg-row\'))" placeholder="Rộng/Sâu" style="'+cell+';text-align:right">'
+    +'<input class="bg-i-cao" type="number" step="0.01" value="'+(it.cao!=null&&it.cao!==''?esc2(it.cao):'')+'" oninput="bgKLAuto(this.closest(\'.bg-row\'))" placeholder="Cao (m)" style="'+cell+';text-align:right">'
     +'<input class="bg-i-kl" type="number" step="0.001" value="'+(it.kl!=null&&it.kl!==''&&it.kl!==0?esc2(it.kl):'')+'" oninput="bgCalc()" placeholder="Khối lượng" style="'+cell+';text-align:right;background:#FCFAF5">'
-    +'<button type="button" onclick="bgAutoKL(this)" title="Tự tính khối lượng từ kích thước" style="border:1px solid #DED8CE;background:#F5F1E8;border-radius:6px;cursor:pointer;font-size:13px">≈</button>'
+    +'<button type="button" onclick="bgKLAuto(this.closest(\'.bg-row\'))" title="Tự tính khối lượng từ kích thước (m²=Dài×Cao, md=Dài)" style="border:1px solid #DED8CE;background:#F5F1E8;border-radius:6px;cursor:pointer;font-size:13px">≈</button>'
     +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1.3fr 1.4fr;gap:6px;margin-top:6px">'
     +'<input class="bg-i-sl" type="number" value="'+(it.sl!=null&&it.sl!==''&&it.sl!==0?esc2(it.sl):'')+'" oninput="bgCalc()" placeholder="Số lượng" style="'+cell+';text-align:right">'
@@ -5601,6 +5604,20 @@ function bgAutoKL(btn){ var r=btn.closest('.bg-row'); if(!r) return;
   else kl=dai*(cao||rong||0);
   kl=Math.round(kl*1000)/1000;
   var e=r.querySelector('.bg-i-kl'); if(e&&kl){ e.value=kl; } bgCalc();
+}
+/* ★ v9.26 — KL tự nhảy theo ĐVT: m²=Dài×Cao · md=Dài · cái/bộ=giữ nguyên (nhập tay) */
+function bgKLAuto(r){ if(!r) return;
+  var dvt=((r.querySelector('.bg-i-dvt')||{}).value||'').toLowerCase();
+  var dai=+((r.querySelector('.bg-i-dai')||{}).value)||0;
+  var rong=+((r.querySelector('.bg-i-rong')||{}).value)||0;
+  var cao=+((r.querySelector('.bg-i-cao')||{}).value)||0;
+  var e=r.querySelector('.bg-i-kl');
+  if(e){
+    if(/m²|m2/.test(dvt)){ var v=dai*(cao>0?cao:(rong>0?rong:0)); if(v>0) e.value=Math.round(v*1000)/1000; }
+    else if(/md|dài|mét/.test(dvt)){ var v2=(dai>0?dai:(cao>0?cao:rong)); if(v2>0) e.value=Math.round(v2*1000)/1000; }
+    /* cái/bộ: không tự tính — giữ KL người dùng nhập */
+  }
+  if(typeof bgCalc==='function') bgCalc();
 }
 function bgCapChange(sel){ var r=sel.closest('.bg-row'); if(!r) return; var it=bgRowData(r); it.cap=sel.value; r.outerHTML=bgRowHtml(it); bgCalc(); }
 function bgRowData(r){
@@ -7270,7 +7287,7 @@ function boSvgOp(W,H,sp){
 var _BO_HAO=0.05; /* ★ v9.24 hao hụt cắt ván: áp cho vật liệu m²/md, KHÔNG áp cho phụ kiện cái/bộ */
 function boLine(ct,dtl,qty,dvt,gia,vl){ if(/m²|md/.test(dvt)) qty=qty*(1+(+_BO_HAO||0)); qty=Math.round(qty*1000)/1000; return {ct:ct,dtl:dtl,qty:qty,dvt:dvt,gia:Math.round(gia),tt:Math.round(qty*Math.round(gia)),vl:vl||''}; }
 var BO_TPL={
-  tuAo:{ label:'Tủ áo / tủ đứng',
+  tuAo:{ label:'Tủ áo / tủ đứng', matFn:function(p){return (p.W*p.H)/1e6;},
     params:[{k:'H',label:'Cao (mm)',def:2400},{k:'W',label:'Rộng (mm)',def:2000},{k:'D',label:'Sâu (mm)',def:600},
       {k:'nDoc',label:'Vách dọc',def:2,int:1},{k:'nDot',label:'Đợt gỗ',def:5,int:1},{k:'nDotKinh',label:'Đợt kính',def:0,int:1},
       {k:'nCanh',label:'Số cánh',def:4,int:1},{k:'nKeo',label:'Ngăn kéo',def:3,int:1},{k:'nTreo',label:'Thanh treo',def:2,int:1}],
@@ -7295,7 +7312,7 @@ var BO_TPL={
       if(nTreo>0)L.push(boLine('Thanh treo',nTreo+' thanh',nTreo*(W/Math.max(nDoc+1,1)),'md',r.treo,'Thanh treo inox'));
       L.push(boLine('Nhân công GC+lắp','theo m² ván',aThung+aDot+aHau+aCanh+aKeo,'m²',r.nc,'Công xưởng'));
       return L; } },
-  tuBepDuoi:{ label:'Tủ bếp dưới',
+  tuBepDuoi:{ label:'Tủ bếp dưới', matFn:function(p){return (p.L*p.H)/1e6;}, matUnit:'md', matFnMd:function(p){return p.L/1000;},
     params:[{k:'L',label:'Dài (mm)',def:3000},{k:'H',label:'Cao (mm)',def:810},{k:'D',label:'Sâu (mm)',def:600},
       {k:'nKhoang',label:'Số khoang',def:4,int:1},{k:'nDot',label:'Đợt trong',def:2,int:1},
       {k:'nCanh',label:'Số cánh',def:4,int:1},{k:'nKeo',label:'Ngăn kéo',def:3,int:1},{k:'matDa',label:'Mặt đá (1=có)',def:1,int:1}],
@@ -7319,7 +7336,7 @@ var BO_TPL={
       L.push(boLine('Tay nắm',nCanh+'+'+nKeo,nCanh+nKeo,'cái',g('taynam'),nm('taynam')));
       L.push(boLine('Nhân công GC+lắp','theo m² ván',aThung+aDot+aHau+aCanh+aKeo,'m²',r.nc,'Công xưởng'));
       return L; } },
-  tuBepTren:{ label:'Tủ bếp trên',
+  tuBepTren:{ label:'Tủ bếp trên', matFn:function(p){return (p.L*p.H)/1e6;},
     params:[{k:'L',label:'Dài (mm)',def:2400},{k:'H',label:'Cao (mm)',def:700},{k:'D',label:'Sâu (mm)',def:350},
       {k:'nDoc',label:'Vách dọc',def:2,int:1},{k:'nDot',label:'Đợt trong',def:2,int:1},{k:'nCanh',label:'Số cánh',def:4,int:1}],
     mats:['thung','canh','banle','taynam'],
@@ -7338,7 +7355,7 @@ var BO_TPL={
       L.push(boLine('Tay nắm',nCanh+' cánh',nCanh,'cái',g('taynam'),nm('taynam')));
       L.push(boLine('Nhân công GC+lắp','theo m² ván',aThung+aDot+aHau+aCanh,'m²',r.nc,'Công xưởng'));
       return L; } },
-  opTuong:{ label:'Ốp tường',
+  opTuong:{ label:'Ốp tường', matFn:function(p){return (p.W*p.H)/1e6;},
     params:[{k:'W',label:'Rộng (mm)',def:4000},{k:'H',label:'Cao (mm)',def:2800},{k:'sp',label:'K.cách xương (mm)',def:400}],
     mats:['xuong','tamop','lpOp','nep'],
     rates:['ketHop','ncOp'],
@@ -7411,16 +7428,23 @@ function boRender(){
   L.forEach(function(l){ h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:6px 10px;font-weight:600;color:#3A2E22">'+esc2(l.ct)+'</td><td style="padding:6px;color:#5A5045;font-size:11px">'+esc2(l.vl||'')+'</td><td style="padding:6px;color:#9A8F82;font-size:11px">'+esc2(l.dtl)+'</td><td style="padding:6px;text-align:right">'+l.qty+'</td><td style="padding:6px;color:#9A8F82">'+esc2(l.dvt)+'</td><td style="padding:6px;text-align:right;color:#6F6355">'+dmFmt(l.gia)+'</td><td style="padding:6px 10px;text-align:right;font-weight:600">'+dmFmt(l.tt)+'</td></tr>'; });
   h+='</tbody></table></div>';
   var v=boVals(), mk=dmAll().markup;
-  h+='<div style="background:var(--goldbg,#FBF4E6);border:1px solid var(--gold,#EBD9B8);border-radius:10px;padding:12px 14px;margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span>Giá xuất xưởng (tổng bốc tách)</span><b>'+dmFmt(v.xw)+'</b></div><div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;border-top:1px solid var(--gold,#EBD9B8);padding-top:7px"><span>GIÁ BÁN (×'+(1+mk.nm+mk.tktc).toFixed(2)+', chưa VAT)</span><span style="color:#0F5132">'+dmFmt(v.ban)+'</span></div></div>'
+  h+='<div style="background:var(--goldbg,#FBF4E6);border:1px solid var(--gold,#EBD9B8);border-radius:10px;padding:12px 14px;margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span>Giá xuất xưởng (tổng bốc tách)</span><b>'+dmFmt(v.xw)+'</b></div><div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;border-top:1px solid var(--gold,#EBD9B8);padding-top:7px"><span>GIÁ BÁN (×'+(1+mk.nm+mk.tktc).toFixed(2)+', chưa VAT)</span><span style="color:#0F5132">'+dmFmt(v.ban)+'</span></div>'
+    +(function(){ var q=boQuyGia(); if(q.dvt==='bộ') return ''; return '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;border-top:1px dashed var(--gold,#EBD9B8);margin-top:7px;padding-top:7px"><span>➜ ĐƠN GIÁ / '+q.dvt+' (×'+q.kl+' '+q.dvt+') — đưa vào báo giá</span><span style="color:#B23A2E">'+dmFmt(q.dg)+'</span></div>'; })()
+    +'</div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-outline" onclick="boClose()">Đóng</button><button class="btn btn-primary" onclick="boAdd()">'+(__bo.rowEl?'✓ Cập nhật dòng':'＋ Thêm vào báo giá')+'</button></div>';
   box.innerHTML=h;
 }
 function boMt(){ var p=__bo.p,T=BO_TPL[__bo.tpl]; var kt=T.params.filter(function(x){return !x.int;}).map(function(x){return p[x.k];}).join('×');
   var mats=T.mats.slice(0,3).map(function(k){return boNameK(k);}).join('; ');
   return __bo.type+' — KT '+kt+'mm. Vật liệu: '+mats; }
-function boItem(){ var v=boVals(),p=__bo.p,T=BO_TPL[__bo.tpl];
+/* ★ v9.25 — quy giá bán ra ĐƠN GIÁ theo ĐVT (m² mặt / md / bộ) để đưa vào báo giá đúng format MDC */
+function boQuyGia(){ var v=boVals(),p=__bo.p,T=BO_TPL[__bo.tpl];
+  if(T.matUnit==='md' && T.matFnMd){ var md=T.matFnMd(p)||0; return md>0?{dvt:'md',kl:Math.round(md*100)/100,dg:Math.round(v.ban/md),tt:v.ban}:{dvt:'bộ',kl:1,dg:v.ban,tt:v.ban}; }
+  if(T.matFn){ var a=T.matFn(p)||0; return a>0?{dvt:'m²',kl:Math.round(a*100)/100,dg:Math.round(v.ban/a),tt:v.ban}:{dvt:'bộ',kl:1,dg:v.ban,tt:v.ban}; }
+  return {dvt:'bộ',kl:1,dg:v.ban,tt:v.ban}; }
+function boItem(){ var v=boVals(),p=__bo.p,T=BO_TPL[__bo.tpl], q=boQuyGia();
   var kt=T.params.filter(function(x){return !x.int;}).map(function(x){return p[x.k];}).join('×');
-  return {ten:__bo.type+' ('+kt+')', dvt:'bộ', sl:1, dg:v.ban, tt:v.ban, mt:boMt(), cfg:{kind:'bom',type:__bo.type,tpl:__bo.tpl,p:p,m:__bo.m,rates:__bo.rates,canhKieu:__bo.canhKieu}}; }
+  return {ten:__bo.type+' ('+kt+' mm)', dvt:q.dvt, kl:q.kl, sl:1, dg:q.dg, tt:q.tt, mt:boMt(), cfg:{kind:'bom',type:__bo.type,tpl:__bo.tpl,p:p,m:__bo.m,rates:__bo.rates,canhKieu:__bo.canhKieu}}; }
 function boPushVt(){ var c=document.getElementById('bg-vt'); if(!c) return; BO_TPL[__bo.tpl].mats.forEach(function(k){ var nm=boNameK(k); if(!nm) return; c.insertAdjacentHTML('beforeend', bgVtRowHtml({hangmuc:BO_MAT_DEF[k].label,chungloai:nm,thuonghieu:'',xuatxu:'',ghichu:''})); }); if(typeof bgVtOpen==='function') bgVtOpen(); }
 function boAdd(){ var item=boItem();
   if(__bo.rowEl){ try{ __bo.rowEl.outerHTML=bgRowHtml(item); }catch(e){} if(typeof bgCalc==='function') bgCalc(); toast('Đã cập nhật dòng bốc tách — '+dmFmt(item.dg)); boClose(); }
