@@ -5562,7 +5562,7 @@ function bgRowHtml(it){
       +'</div></div>';
   }
   var indent=cap==='con'?';margin-left:16px':'';
-  /* ★ v9.29 — ĐVT dropdown (m²/md/cái/bộ); KL tự nhảy: m²=Dài×Cao, md=Dài */
+  /* ★ v9.31 — ĐVT dropdown (m²/md/cái/bộ); KL tự nhảy: m²=Dài×Cao, md=Dài */
   var dvtCur=it.dvt||'m²'; var DVT_D=['m²','md','cái','bộ']; if(dvtCur && DVT_D.indexOf(dvtCur)<0) DVT_D.unshift(dvtCur);
   var dvtSel='<select class="bg-i-dvt" onchange="bgKLAuto(this.closest(\'.bg-row\'))" title="m²=Dài×Cao · md=Dài · cái/bộ=nhập tay" style="'+cell+'">'+DVT_D.map(function(d){return '<option'+(d===dvtCur?' selected':'')+'>'+d+'</option>';}).join('')+'</select>';
   return '<div class="bg-row" data-cap="'+cap+'"'+btAttr+cfgAttr+' style="border:1px solid #ECE6DB;border-radius:9px;padding:8px;margin:8px 0'+indent+';background:#fff">'
@@ -5605,7 +5605,7 @@ function bgAutoKL(btn){ var r=btn.closest('.bg-row'); if(!r) return;
   kl=Math.round(kl*1000)/1000;
   var e=r.querySelector('.bg-i-kl'); if(e&&kl){ e.value=kl; } bgCalc();
 }
-/* ★ v9.29 — KL tự nhảy theo ĐVT: m²=Dài×Cao · md=Dài · cái/bộ=giữ nguyên (nhập tay) */
+/* ★ v9.31 — KL tự nhảy theo ĐVT: m²=Dài×Cao · md=Dài · cái/bộ=giữ nguyên (nhập tay) */
 function bgKLAuto(r){ if(!r) return;
   var dvt=((r.querySelector('.bg-i-dvt')||{}).value||'').toLowerCase();
   var dai=+((r.querySelector('.bg-i-dai')||{}).value)||0;
@@ -6958,6 +6958,21 @@ var DM_TIER_MAP={
     lopPhu:['Sơn tường','Sơn PU','Sơn PU','Nano']
   }
 };
+/* ★ v9.31 — Định mức sản phẩm/m² & Bảng Tier chi tiết (override lưu trong dmAll().slotsOv / .tierMapOv, đồng bộ Sheet) */
+function dmSlots(fam){ var base=DM_SLOTS[fam]||[]; var ov=(dmAll().slotsOv||{})[fam]||{}; return base.map(function(s){ var o=dmClone(s); var v=ov[s.k]; if(v){ if(v.sl!=null) o.sl=+v.sl; if(v.defMat!=null) o.defMat=v.defMat; } return o; }); }
+function dmTierMap(){ var m=dmClone(DM_TIER_MAP); var ov=dmAll().tierMapOv||{}; Object.keys(ov).forEach(function(fam){ m[fam]=m[fam]||{}; Object.keys(ov[fam]||{}).forEach(function(k){ m[fam][k]=ov[fam][k]; }); }); return m; }
+function dmSlotDefIdx(s){ var opts=dmSlotOpts(s)||[]; if(s.defMat){ var j=dmMatchIdx(opts,s.defMat); if(j>=0) return j; } return dmDefIdx(opts,s.defKw); }
+function dmTierCalc(fam,i){ var slots=dmSlots(fam), map=dmTierMap()[fam]||{}, D=dmAll(), mk=D.markup||DM_SEED.markup, mul=1+(+mk.nm||0)+(+mk.tktc||0), xw=0; slots.forEach(function(s){ var gia; if(s.rate){ gia=+((D.rates||DM_SEED.rates)[s.rate])||0; } else { var opts=dmSlotOpts(s)||[]; var idx=dmSlotDefIdx(s); var arr=map[s.k]; var kw=arr&&arr[i]; if(kw){ var j=dmMatchIdx(opts,kw); if(j>=0) idx=j; } var m=opts[idx]; gia=m?(+m.g||0):0; } xw+=(+s.sl||0)*gia; }); return Math.round(xw*mul); }
+function dmNormCalc(fam){ var slots=dmSlots(fam), D=dmAll(), mk=D.markup||DM_SEED.markup, mul=1+(+mk.nm||0)+(+mk.tktc||0), xw=0; slots.forEach(function(s){ var gia; if(s.rate){ gia=+((D.rates||DM_SEED.rates)[s.rate])||0; } else { var opts=dmSlotOpts(s)||[]; var m=opts[dmSlotDefIdx(s)]; gia=m?(+m.g||0):0; } xw+=(+s.sl||0)*gia; }); return {xw:Math.round(xw), ban:Math.round(xw*mul)}; }
+var _dmFamNorm='tu', _dmFamTier='tu';
+function dmNormFam(f){ _dmFamNorm=f; renderDinhMuc(); }
+function dmTierFam(f){ _dmFamTier=f; renderDinhMuc(); }
+function dmOvEnsure(){ var D=dmAll(); if(!D.slotsOv) D.slotsOv={}; if(!D.tierMapOv) D.tierMapOv={}; return D; }
+function dmNormSl(fam,k,val){ var D=dmOvEnsure(); D.slotsOv[fam]=D.slotsOv[fam]||{}; D.slotsOv[fam][k]=D.slotsOv[fam][k]||{}; D.slotsOv[fam][k].sl=(+val||0); dmSave(D); renderDinhMuc(); }
+function dmNormMat(fam,k,val){ var D=dmOvEnsure(); D.slotsOv[fam]=D.slotsOv[fam]||{}; D.slotsOv[fam][k]=D.slotsOv[fam][k]||{}; D.slotsOv[fam][k].defMat=val; dmSave(D); renderDinhMuc(); }
+function dmTierOv(fam,k,i,val){ var D=dmOvEnsure(); D.tierMapOv[fam]=D.tierMapOv[fam]||{}; if(!D.tierMapOv[fam][k]){ var base=(DM_TIER_MAP[fam]&&DM_TIER_MAP[fam][k])?DM_TIER_MAP[fam][k].slice():['','','','']; D.tierMapOv[fam][k]=base; } D.tierMapOv[fam][k][i]=val; dmSave(D); renderDinhMuc(); }
+function dmNormReset(){ if(!confirm('Xóa mọi tùy chỉnh định mức & Tier trên máy này? (Không ảnh hưởng bản trên Sheet cho tới khi bấm Lưu lên Sheet)')) return; var D=dmAll(); D.slotsOv={}; D.tierMapOv={}; dmSave(D); renderDinhMuc(); toast('Đã khôi phục định mức & Tier gốc'); }
+
 function dmTypeInfo(type){ var t=(dmAll().types||DM_SEED.types).filter(function(x){return x.t===type;})[0]; return t||{t:type,f:'tu',tier:'tu_ao'}; }
 /* ===== NGUỒN GIÁ CHUNG: Ván thô lấy từ Danh mục vật liệu (v9.10) ===== */
 var VL_BOARD_SHEETS={TU_Khung:1,TU_Thung:1,TU_Canh:1};
@@ -6985,7 +7000,7 @@ function dmMatchIdx(opts,kw){ if(!kw||!opts) return -1; var kwl=(''+kw).toLowerC
 /* Chọn mặc định 1 slot: ưu tiên defKw (vd mặt trong = laminate trơn), rồi tới ★, rồi phần tử đầu */
 function dmDefIdx(opts,defKw){ opts=opts||[]; if(defKw){ var d=dmMatchIdx(opts,defKw); if(d>=0) return d; } for(var i=0;i<opts.length;i++){ if((opts[i].n||'').indexOf('★')>-1) return i; } return 0; }
 /* ★ v9.20 — Giá Tier TÍNH ĐỘNG đúng bằng kết quả khi bấm (không dùng số cứng tierXW) */
-function dmTierPrice(i){ if(!__dmCfg) return 0; var fam=__dmCfg.family, map=DM_TIER_MAP[fam]||{};
+function dmTierPrice(i){ if(!__dmCfg) return 0; var fam=__dmCfg.family, map=dmTierMap()[fam]||{};
   var mk=dmAll().markup||DM_SEED.markup, mul=1+(+mk.nm||0)+(+mk.tktc||0), xw=0;
   (__dmCfg.slots||[]).forEach(function(s){ var gia;
     if(s.rate){ gia=dmSlotGia(s); }
@@ -6997,9 +7012,9 @@ function dmTierPrice(i){ if(!__dmCfg) return 0; var fam=__dmCfg.family, map=DM_T
 var __dmCfg=null;
 function dmCfgInit(){
   var info=dmTypeInfo(__dmCfg.type); var fam=info.f; __dmCfg.family=fam;
-  __dmCfg.slots=DM_SLOTS[fam].map(function(s){
+  __dmCfg.slots=dmSlots(fam).map(function(s){
     var o=dmClone(s);
-    if(!s.rate){ var opts=dmSlotOpts(s)||[]; o.matIdx=dmDefIdx(opts,s.defKw); }
+    if(!s.rate){ o.matIdx=dmSlotDefIdx(s); }
     return o;
   });
   if(__dmCfg.dienTich==null) __dmCfg.dienTich=1;
@@ -7076,7 +7091,7 @@ function dmCfgTotals(){
   set('dm-xw',v.xw); set('dm-mk',v.ban-v.xw); set('dm-ban',v.ban); set('dm-tttong',v.tt);
 }
 function dmTierApply(i){
-  var fam=__dmCfg.family, map=DM_TIER_MAP[fam]||{};
+  var fam=__dmCfg.family, map=dmTierMap()[fam]||{};
   __dmCfg.slots.forEach(function(s){ if(s.rate) return; var arrk=map[s.k]; var kw=arrk&&arrk[i]; if(!kw) return;
     var opts=dmSlotOpts(s)||[]; var j=dmMatchIdx(opts,kw); if(j>=0) s.matIdx=j; });
   dmCfgRender();
@@ -7102,8 +7117,8 @@ function dmCfgAdd(){
 function dmCfgEditRow(el){ var row=el.closest('.bg-row'); if(!row) return; var cfg=null; try{ cfg=JSON.parse(row.getAttribute('data-cfg')); }catch(e){} if(!cfg) return toast('Dòng này không có cấu hình','⚠️'); dmCfgOpen(cfg, row); }
 
 /* ─────────── TRANG QUẢN LÝ: ĐỊNH MỨC & ĐƠN GIÁ (CRUD + đồng bộ Sheet) ─────────── */
-var _dmTab='TU_Canh';
-var DM_TABS=[['__vl','📋 Danh mục vật liệu'],['TU_Khung','Khung tủ'],['TU_Thung','Thùng tủ'],['TU_Canh','Cánh tủ'],['TU_LopPhu_Canh','Lớp phủ cánh'],['TU_LopPhu_KhungThung','Lớp phủ thùng'],['TU_PhuKien','Phụ kiện'],['OP_Xuong','Ốp: Xương'],['OP_KhungBaoQuanh','Ốp: Khung bao'],['OP_TamOp','Ốp: Tấm ốp'],['OP_LopPhu','Ốp: Lớp phủ'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']];
+var _dmTab='__vl';
+var DM_TABS=[['__vl','📋 Danh mục vật liệu'],['__dm','✿ Định mức sản phẩm/m²'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']]; /* v9.31: gỡ các tab con Khung tủ→Ốp (đã gộp hết vào Danh mục vật liệu; engine vẫn đọc qua VL_NHOM_SHEETS/dmSheetOpts) */
 function dmSetTab(t){ _dmTab=t; renderDinhMuc(); }
 function renderDinhMuc(){
   dmEnsureCloud();
@@ -7123,6 +7138,7 @@ function renderDinhMuc(){
     +'<div style="display:flex;gap:2px;overflow-x:auto">'+DM_TABS.map(function(t){return tabBtn(t[0],t[1]);}).join('')+'</div></div>';
   var body;
   if(_dmTab==='__vl') body=vlTableHtml();
+  else if(_dmTab==='__dm') body=dmNormHtml();
   else if(_dmTab==='__set') body=dmSettingsHtml();
   else if(_dmTab==='__tier') body=dmTierHtml();
   else body=dmMatTableHtml(_dmTab);
@@ -7196,15 +7212,55 @@ function dmSettingsHtml(){
 }
 function dmEditMk(k,v){ var D=dmAll(); D.markup[k]=(+v||0)/100; dmSave(D); if(currentPage==='dinhmuc') renderDinhMuc(); }
 function dmEditRate(k,v){ var D=dmAll(); D.rates[k]=(k==='haoHut')?(+v||0):Math.round(+v||0); dmSave(D); }
-function dmTierHtml(){
-  var D=dmAll(), names=D.tierNames||DM_SEED.tierNames, mk=D.markup, mul=(1+mk.nm+mk.tktc);
-  var fam=[['tu_bep','Tủ bếp'],['tu_ao','Tủ áo / tủ khác'],['op','Ốp tường']];
-  var h='<div style="padding:6px 14px"><div style="font-size:12px;color:#9A8F82;margin-bottom:10px">Giá bán/m² theo 4 phân khúc = giá xuất xưởng × '+mul.toFixed(2)+'. Dùng cho nút "Chọn nhanh theo tier" khi cấu hình.</div>';
-  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#FBF8F1;font-size:10px;text-transform:uppercase;color:#9A8F82"><th style="text-align:left;padding:9px 14px">Sản phẩm</th>'+names.map(function(n){return '<th style="text-align:right;padding:9px">'+esc2(n)+'</th>';}).join('')+'</tr></thead><tbody>';
-  fam.forEach(function(f){ var xw=(D.tierXW||DM_SEED.tierXW)[f[0]]||[]; h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:9px 14px;font-weight:600">'+esc2(f[1])+'</td>'+xw.map(function(v){return '<td style="text-align:right;padding:9px;font-weight:700;color:#0F5132">'+dmFmt(v*mul)+'</td>';}).join('')+'</tr>'; });
-  h+='</tbody></table></div></div>';
+function dmFamBtns(cur,fn){ return [['tu','Tủ (bếp/áo/kệ…)'],['op','Ốp tường / trần']].map(function(f){ var on=cur===f[0]; return '<button onclick="'+fn+'(\''+f[0]+'\')" style="padding:6px 12px;border:1px solid '+(on?'#B08D57':'#DED8CE')+';border-radius:20px;background:'+(on?'#B08D57':'#fff')+';color:'+(on?'#fff':'#6F5A3B')+';font-size:12px;font-weight:700;cursor:pointer;margin-right:6px">'+f[1]+'</button>'; }).join(''); }
+function dmMatSelHtml(s,selIdx,onchg){ var opts=dmSlotOpts(s)||[],lastGr='',sel='<select onchange="'+onchg+'" style="width:100%;padding:6px;border:1px solid #DED8CE;border-radius:6px;font-size:11.5px">'; opts.forEach(function(m,mi){ if(m.gr!==lastGr){ if(lastGr) sel+='</optgroup>'; sel+='<optgroup label="'+esc2(m.gr)+'">'; lastGr=m.gr; } sel+='<option value="'+esc2(m.n)+'"'+(mi===selIdx?' selected':'')+'>'+esc2(m.n)+' — '+dmFmt(m.g)+'</option>'; }); if(lastGr) sel+='</optgroup>'; sel+='</select>'; return sel; }
+function dmNormHtml(){
+  var fam=_dmFamNorm, slots=dmSlots(fam), D=dmAll(), mul=(1+D.markup.nm+D.markup.tktc);
+  var h='<div style="padding:8px 14px">'
+    +'<div style="font-size:12px;color:#9A8F82;margin-bottom:10px">Định mức tiêu hao vật liệu cho <b>1 m² sản phẩm</b>. Sửa cột <b>Định mức/m²</b> &amp; chọn <b>Vật liệu</b> (lấy từ Danh mục vật liệu) → tự tính chi phí/m². Giá bán/m² = giá xuất xưởng × '+mul.toFixed(2)+'.</div>'
+    +'<div style="margin-bottom:10px">'+dmFamBtns(fam,'dmNormFam')+'<button onclick="dmNormReset()" style="float:right;padding:6px 10px;border:1px solid #E0D6C8;border-radius:7px;background:#fff;color:#9A5B4A;font-size:11.5px;cursor:pointer">↻ Xóa tùy chỉnh</button></div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="background:#FBF8F1;font-size:9.5px;text-transform:uppercase;color:#9A8F82">'
+    +'<th style="text-align:left;padding:8px 12px">Cấu thành</th><th style="padding:8px;width:60px">ĐVT</th><th style="padding:8px;width:110px">Định mức/m²</th><th style="text-align:left;padding:8px;min-width:250px">Vật liệu (từ Danh mục)</th><th style="text-align:right;padding:8px;width:110px">Đơn giá</th><th style="text-align:right;padding:8px 12px;width:120px">Thành tiền/m²</th></tr></thead><tbody>';
+  slots.forEach(function(s){
+    var gia, matCell;
+    if(s.rate){ gia=+((D.rates||DM_SEED.rates)[s.rate])||0; matCell='<span style="color:#9A8F82;font-size:11.5px">(đơn giá cố định — chỉnh ở tab ⚙ Markup &amp; Nhân công)</span>'; }
+    else{ var opts=dmSlotOpts(s)||[], idx=dmSlotDefIdx(s); gia=(opts[idx]&&+opts[idx].g)||0; matCell=dmMatSelHtml(s,idx,'dmNormMat(\''+fam+'\',\''+s.k+'\',this.value)'); }
+    var tt=(+s.sl||0)*gia;
+    h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:8px 12px;font-weight:600;color:#3A2E22">'+esc2(s.label)+'</td>'
+      +'<td style="padding:8px;text-align:center;color:#9A8F82">'+esc2(s.dvt||'m²')+'</td>'
+      +'<td style="padding:6px 8px"><input type="number" step="0.05" value="'+(+s.sl||0)+'" onchange="dmNormSl(\''+fam+'\',\''+s.k+'\',this.value)" style="width:100%;padding:6px;border:1px solid #DED8CE;border-radius:6px;text-align:right"></td>'
+      +'<td style="padding:6px 8px">'+matCell+'</td>'
+      +'<td style="padding:8px;text-align:right;color:#6F6355">'+dmFmt(gia)+'</td>'
+      +'<td style="padding:8px 12px;text-align:right;font-weight:600">'+dmFmt(tt)+'</td></tr>';
+  });
+  var nc=dmNormCalc(fam);
+  h+='</tbody><tfoot><tr style="border-top:2px solid #E0D6C8;background:#FBF8F1"><td colspan="5" style="padding:9px 12px;text-align:right;font-weight:700">Giá XUẤT XƯỞNG / m²</td><td style="padding:9px 12px;text-align:right;font-weight:800">'+dmFmt(nc.xw)+'</td></tr>'
+    +'<tr style="background:#EAF3EE"><td colspan="5" style="padding:9px 12px;text-align:right;font-weight:700;color:#0F5132">Giá BÁN / m² (×'+mul.toFixed(2)+')</td><td style="padding:9px 12px;text-align:right;font-weight:800;color:#0F5132">'+dmFmt(nc.ban)+'</td></tr></tfoot></table></div>'
+    +'<div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="dmCloudSave()">☁ Lưu lên Sheet</button></div></div>';
   return h;
 }
+function dmTierHtml(){
+  var fam=_dmFamTier, slots=dmSlots(fam), D=dmAll(), names=D.tierNames||DM_SEED.tierNames, map=dmTierMap()[fam]||{}, mul=(1+D.markup.nm+D.markup.tktc);
+  var matSlots=slots.filter(function(s){return !s.rate;});
+  var h='<div style="padding:8px 14px">'
+    +'<div style="font-size:12px;color:#9A8F82;margin-bottom:10px">4 phân khúc giá. Chọn <b>vật liệu cho từng bậc × từng cấu thành</b> (từ Danh mục) → giá bán/m² mỗi bậc tự tính. Cấu hình này cũng dùng cho nút "Chọn nhanh theo tier" khi lập báo giá.</div>'
+    +'<div style="margin-bottom:10px">'+dmFamBtns(fam,'dmTierFam')+'</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#FBF8F1;font-size:9.5px;text-transform:uppercase;color:#9A8F82"><th style="text-align:left;padding:8px 12px;min-width:150px">Cấu thành</th>'+names.map(function(n){return '<th style="text-align:left;padding:8px;min-width:175px">'+esc2(n)+'</th>';}).join('')+'</tr></thead><tbody>';
+  matSlots.forEach(function(s){
+    var opts=dmSlotOpts(s)||[], defIdx=dmSlotDefIdx(s);
+    h+='<tr style="border-top:1px solid #F1EBE0"><td style="padding:8px 12px;font-weight:600;color:#3A2E22">'+esc2(s.label)+'<div style="font-size:10px;color:#9A8F82;font-weight:400">định mức '+(+s.sl||0)+' '+esc2(s.dvt||'m²')+'/m²</div></td>';
+    for(var i=0;i<names.length;i++){ var arr=map[s.k], kw=arr&&arr[i], idx=defIdx; if(kw){ var j=dmMatchIdx(opts,kw); if(j>=0) idx=j; }
+      h+='<td style="padding:6px 8px">'+dmMatSelHtml(s,idx,'dmTierOv(\''+fam+'\',\''+s.k+'\','+i+',this.value)')+'</td>'; }
+    h+='</tr>';
+  });
+  slots.filter(function(s){return s.rate;}).forEach(function(s){ var gia=+((D.rates||DM_SEED.rates)[s.rate])||0;
+    h+='<tr style="border-top:1px solid #F1EBE0;background:#FAFAF7"><td style="padding:8px 12px;color:#6F6355">'+esc2(s.label)+' <span style="font-size:10px;color:#9A8F82">('+dmFmt(gia)+'/m² · mọi bậc)</span></td>'+names.map(function(){return '<td style="padding:6px 8px;color:#9A8F82;text-align:center">—</td>';}).join('')+'</tr>'; });
+  h+='</tbody><tfoot><tr style="border-top:2px solid #E0D6C8;background:#EAF3EE"><td style="padding:10px 12px;font-weight:800;color:#0F5132">GIÁ BÁN / m² (×'+mul.toFixed(2)+')</td>'
+    +names.map(function(n,i){return '<td style="padding:10px 8px;font-weight:800;color:#0F5132;font-size:14px">'+dmFmt(dmTierCalc(fam,i))+'</td>';}).join('')+'</tr></tfoot></table></div>'
+    +'<div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="dmCloudSave()">☁ Lưu lên Sheet</button> <button onclick="dmNormReset()" style="padding:7px 10px;border:1px solid #E0D6C8;border-radius:7px;background:#fff;color:#9A5B4A;font-size:11.5px;cursor:pointer">↻ Xóa tùy chỉnh</button></div></div>';
+  return h;
+}
+
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -7234,7 +7290,7 @@ var BO_TYPES=[
   {t:'Giường ngủ',tpl:'giuong'},{t:'Bàn làm việc / bàn ăn',tpl:'ban'},{t:'Tủ rượu / trưng bày',tpl:'tuRuou'},
   {t:'Ốp tường',tpl:'opTuong'},{t:'Vách lam / CNC trang trí',tpl:'opTuong'},{t:'Trần trang trí',tpl:'opTuong'}
 ];
-/* ★ v9.29 — Bốc tách: mỗi ô hiện TOÀN BỘ Danh mục vật liệu (I–XI), gom nhóm theo gr; mặc định vẫn chọn đúng nhóm thành phần */
+/* ★ v9.31 — Bốc tách: mỗi ô hiện TOÀN BỘ Danh mục vật liệu (I–XI), gom nhóm theo gr; mặc định vẫn chọn đúng nhóm thành phần */
 function boFullOpts(){ var a=(typeof vlAll==='function')?vlAll():[]; var out=[],cur=''; a.forEach(function(x){ if(x.sec){ cur=x.sec; return; } var isVan=(!x.nhom && vlIsBoardSec(cur)); var mynhom=x.nhom||(isVan?'van':''); var nm=(x.ten||''); var star=(x.gc&&(''+x.gc).indexOf('★')>-1)?' ★':''; var label=nm+((x.brand&&x.brand!=='Thị trường'&&nm.toLowerCase().indexOf(String(x.brand).toLowerCase())<0)?' · '+x.brand:'')+star; out.push({n:label, g:(+x.giaDM||0), gr:(x.gr||cur), d:(x.dvt||'m²'), code:(x.code||''), nhom:mynhom, note:(x.giaDM==null?((x.giaDMraw||'Liên hệ')+''):'')}); }); return out; }
 function boOptsK(k){ if(!BO_MAT_DEF[k]) return []; return boFullOpts(); }
 function boDefIdxK(k){ var full=boFullOpts(), d=BO_MAT_DEF[k]||{}; var nh=VL_NHOM_SHEETS[d.sheet]; var cand=[]; for(var i=0;i<full.length;i++){ var m=full[i]; if(nh && m.nhom!==nh) continue; if(d.filter && (m.gr||'').toUpperCase().indexOf((''+d.filter).toUpperCase())<0) continue; cand.push(i); } if(!cand.length){ var gi=dmDefIdx(full, d.defKw); return gi<0?0:gi; } if(d.defKw){ var kw=(''+d.defKw).toLowerCase(); for(var c=0;c<cand.length;c++){ if((full[cand[c]].n||'').toLowerCase().indexOf(kw)>-1) return cand[c]; } var toks=kw.split(/[\s–\-\/·]+/).filter(Boolean); for(var c=0;c<cand.length;c++){ var nmv=(full[cand[c]].n||'').toLowerCase(),ok=true; for(var t=0;t<toks.length;t++){ if(nmv.indexOf(toks[t])<0){ok=false;break;} } if(ok) return cand[c]; } } for(var c=0;c<cand.length;c++){ if((full[cand[c]].n||'').indexOf('★')>-1) return cand[c]; } return cand[0]; }
