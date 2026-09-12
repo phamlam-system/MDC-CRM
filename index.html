@@ -5562,7 +5562,7 @@ function bgRowHtml(it){
       +'</div></div>';
   }
   var indent=cap==='con'?';margin-left:16px':'';
-  /* ★ v9.27 — ĐVT dropdown (m²/md/cái/bộ); KL tự nhảy: m²=Dài×Cao, md=Dài */
+  /* ★ v9.29 — ĐVT dropdown (m²/md/cái/bộ); KL tự nhảy: m²=Dài×Cao, md=Dài */
   var dvtCur=it.dvt||'m²'; var DVT_D=['m²','md','cái','bộ']; if(dvtCur && DVT_D.indexOf(dvtCur)<0) DVT_D.unshift(dvtCur);
   var dvtSel='<select class="bg-i-dvt" onchange="bgKLAuto(this.closest(\'.bg-row\'))" title="m²=Dài×Cao · md=Dài · cái/bộ=nhập tay" style="'+cell+'">'+DVT_D.map(function(d){return '<option'+(d===dvtCur?' selected':'')+'>'+d+'</option>';}).join('')+'</select>';
   return '<div class="bg-row" data-cap="'+cap+'"'+btAttr+cfgAttr+' style="border:1px solid #ECE6DB;border-radius:9px;padding:8px;margin:8px 0'+indent+';background:#fff">'
@@ -5605,7 +5605,7 @@ function bgAutoKL(btn){ var r=btn.closest('.bg-row'); if(!r) return;
   kl=Math.round(kl*1000)/1000;
   var e=r.querySelector('.bg-i-kl'); if(e&&kl){ e.value=kl; } bgCalc();
 }
-/* ★ v9.27 — KL tự nhảy theo ĐVT: m²=Dài×Cao · md=Dài · cái/bộ=giữ nguyên (nhập tay) */
+/* ★ v9.29 — KL tự nhảy theo ĐVT: m²=Dài×Cao · md=Dài · cái/bộ=giữ nguyên (nhập tay) */
 function bgKLAuto(r){ if(!r) return;
   var dvt=((r.querySelector('.bg-i-dvt')||{}).value||'').toLowerCase();
   var dai=+((r.querySelector('.bg-i-dai')||{}).value)||0;
@@ -7234,7 +7234,10 @@ var BO_TYPES=[
   {t:'Giường ngủ',tpl:'giuong'},{t:'Bàn làm việc / bàn ăn',tpl:'ban'},{t:'Tủ rượu / trưng bày',tpl:'tuRuou'},
   {t:'Ốp tường',tpl:'opTuong'},{t:'Vách lam / CNC trang trí',tpl:'opTuong'},{t:'Trần trang trí',tpl:'opTuong'}
 ];
-function boOptsK(k){ var d=BO_MAT_DEF[k]; if(!d) return []; var a=dmSheetOpts(d.sheet); if(d.filter) a=a.filter(function(m){return (m.gr||'').toUpperCase().indexOf(d.filter)>-1;}); return a; }
+/* ★ v9.29 — Bốc tách: mỗi ô hiện TOÀN BỘ Danh mục vật liệu (I–XI), gom nhóm theo gr; mặc định vẫn chọn đúng nhóm thành phần */
+function boFullOpts(){ var a=(typeof vlAll==='function')?vlAll():[]; var out=[],cur=''; a.forEach(function(x){ if(x.sec){ cur=x.sec; return; } var isVan=(!x.nhom && vlIsBoardSec(cur)); var mynhom=x.nhom||(isVan?'van':''); var nm=(x.ten||''); var star=(x.gc&&(''+x.gc).indexOf('★')>-1)?' ★':''; var label=nm+((x.brand&&x.brand!=='Thị trường'&&nm.toLowerCase().indexOf(String(x.brand).toLowerCase())<0)?' · '+x.brand:'')+star; out.push({n:label, g:(+x.giaDM||0), gr:(x.gr||cur), d:(x.dvt||'m²'), code:(x.code||''), nhom:mynhom, note:(x.giaDM==null?((x.giaDMraw||'Liên hệ')+''):'')}); }); return out; }
+function boOptsK(k){ if(!BO_MAT_DEF[k]) return []; return boFullOpts(); }
+function boDefIdxK(k){ var full=boFullOpts(), d=BO_MAT_DEF[k]||{}; var nh=VL_NHOM_SHEETS[d.sheet]; var cand=[]; for(var i=0;i<full.length;i++){ var m=full[i]; if(nh && m.nhom!==nh) continue; if(d.filter && (m.gr||'').toUpperCase().indexOf((''+d.filter).toUpperCase())<0) continue; cand.push(i); } if(!cand.length){ var gi=dmDefIdx(full, d.defKw); return gi<0?0:gi; } if(d.defKw){ var kw=(''+d.defKw).toLowerCase(); for(var c=0;c<cand.length;c++){ if((full[cand[c]].n||'').toLowerCase().indexOf(kw)>-1) return cand[c]; } var toks=kw.split(/[\s–\-\/·]+/).filter(Boolean); for(var c=0;c<cand.length;c++){ var nmv=(full[cand[c]].n||'').toLowerCase(),ok=true; for(var t=0;t<toks.length;t++){ if(nmv.indexOf(toks[t])<0){ok=false;break;} } if(ok) return cand[c]; } } for(var c=0;c<cand.length;c++){ if((full[cand[c]].n||'').indexOf('★')>-1) return cand[c]; } return cand[0]; }
 function boSelK(k){ var o=boOptsK(k); return o[__bo.m[k]]||o[0]||{n:'',g:0}; }
 function boGiaK(k){ return +boSelK(k).g||0; }
 function boNameK(k){ return boSelK(k).n||''; }
@@ -7378,7 +7381,7 @@ var __bo=null;
 function boLoadTpl(existing){
   var T=BO_TPL[__bo.tpl];
   var p={}; T.params.forEach(function(pp){ p[pp.k]=pp.def; }); if(existing&&existing.p) Object.assign(p,existing.p);
-  var m={}; T.mats.forEach(function(k){ var o=boOptsK(k); m[k]=dmDefIdx(o,(BO_MAT_DEF[k]||{}).defKw); }); if(existing&&existing.m) Object.assign(m,existing.m);
+  var m={}; T.mats.forEach(function(k){ m[k]=boDefIdxK(k); }); if(existing&&existing.m) Object.assign(m,existing.m); var _fullN=boFullOpts().length; T.mats.forEach(function(k){ if(m[k]==null||m[k]<0||m[k]>=_fullN) m[k]=boDefIdxK(k); });
   var r={}; (T.rates||[]).forEach(function(k){ r[k]=BO_RATE_DEF[k]; }); if((T.rates||[]).indexOf('nc')>-1) r.nc=(dmAll().rates.tuNhanCongVan||150000); if((T.rates||[]).indexOf('kinh')>-1 && typeof vlKinhGia==='function'){ var _kg=vlKinhGia(); if(_kg) r.kinh=_kg; } if(existing&&existing.rates) Object.assign(r,existing.rates);
   __bo.p=p; __bo.m=m; __bo.rates=r;
   __bo.canhKieu=(existing&&existing.canhKieu)||__bo.canhKieu||'phang';
@@ -7666,7 +7669,9 @@ function vlForm(idx){
   var a=vlAll(); var x=(idx!=null)?a[idx]:{brand:'An Cường',code:'',ten:'',dvt:'tấm',day:'',giaTam:0,haohut:0.05,giaDM:0,gc:''};
   var inp='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:4px;font-size:13px', lab='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase';
   var brands=['An Cường','BMH Panel','ACC Panel','Picomat','Thị trường'];
-  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+  var _secs=(typeof vlSecList==='function')?vlSecList():[]; var _curSec=''; if(idx!=null){ for(var _i=0;_i<=idx&&_i<a.length;_i++){ if(a[_i]&&a[_i].sec) _curSec=a[_i].sec; } } if(!_curSec&&_secs.length) _curSec=_secs[0];
+  var h='<div style="margin-bottom:10px"><label style="'+lab+'">Mục / Nhóm <span style="font-weight:400;text-transform:none;color:#9A8F82">— vật liệu sẽ nằm trong mục này &amp; hiện đúng chỗ khi báo giá</span></label><select id="vlf-sec" style="'+inp+'">'+_secs.map(function(s){return '<option value="'+esc2(s)+'"'+(s===_curSec?' selected':'')+'>'+esc2(s)+'</option>';}).join('')+'</select></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
     +'<div><label style="'+lab+'">Thương hiệu</label><input id="vlf-brand" list="vlf-brands" value="'+esc2(x.brand)+'" style="'+inp+'"><datalist id="vlf-brands">'+brands.map(function(b){return '<option value="'+b+'">';}).join('')+'</datalist></div>'
     +'<div><label style="'+lab+'">Code</label><input id="vlf-code" value="'+esc2(x.code)+'" style="'+inp+'"></div></div>'
     +'<div style="margin-bottom:10px"><label style="'+lab+'">Tên sản phẩm</label><input id="vlf-ten" value="'+esc2(x.ten)+'" style="'+inp+'"></div>'
@@ -7689,9 +7694,17 @@ function vlSaveForm(idx){
     giaTam:Math.round(+document.getElementById('vlf-giatam').value||0),giaDM:Math.round(+document.getElementById('vlf-giadm').value||0),
     gc:(document.getElementById('vlf-gc').value||'').trim()};
   if(!rec.ten){ toast('Nhập tên sản phẩm','⚠️'); return; }
+  var _secEl=document.getElementById('vlf-sec'); var _secName=_secEl?(_secEl.value||''):'';
+  var _oldSec=''; if(idx!=null&&idx!=='null'){ for(var _i=0;_i<=idx&&_i<a.length;_i++){ if(a[_i]&&a[_i].sec) _oldSec=a[_i].sec; } }
+  var _secNhom=''; for(var _i=0;_i<a.length;_i++){ if(a[_i]&&a[_i].sec===_secName){ _secNhom=a[_i].nhom||''; break; } }
+  var _isBoard=(typeof vlIsBoardSec==='function')&&vlIsBoardSec(_secName);
+  if(!_isBoard && _secNhom) rec.nhom=_secNhom;
+  if(idx!=null&&idx!=='null' && a[idx] && a[idx].gr && _oldSec===_secName) rec.gr=a[idx].gr;
   vlRecalc(rec);
-  if(idx==null||idx==='null'){ rec.stt=''; a.push(rec); } else { rec.stt=a[idx].stt||''; a[idx]=rec; }
-  vlSave(a); if(typeof dongModal2==='function') dongModal2(); renderDinhMuc(); toast('Đã lưu vật liệu (nhớ ☁ Lưu để đồng bộ)');
+  if(idx!=null&&idx!=='null'){ rec.stt=a[idx].stt||''; a.splice(idx,1); } else { rec.stt=''; }
+  var _sp=-1; for(var _i=0;_i<a.length;_i++){ if(a[_i]&&a[_i].sec===_secName){ _sp=_i; break; } }
+  if(_sp<0){ a.push(rec); } else { var _ins=a.length; for(var _j=_sp+1;_j<a.length;_j++){ if(a[_j]&&a[_j].sec){ _ins=_j; break; } } a.splice(_ins,0,rec); }
+  vlSave(a); if(typeof dongModal2==='function') dongModal2(); renderDinhMuc(); toast('Đã lưu vật liệu vào mục đã chọn (nhớ ☁ Lưu để đồng bộ)');
 }
 function vlDelete(idx){ if(!confirm('Xóa dòng vật liệu này?')) return; var a=vlAll(); a.splice(idx,1); vlSave(a); vlRefresh(); toast('Đã xóa'); }
 function vlAddSection(){ var name=prompt('Tên mục (ví dụ: VII. VÁN NHỰA PICOMAT):',''); if(!name||!name.trim()) return; var a=vlAll(); a.push({sec:name.trim()}); vlSave(a); renderDinhMuc(); }
