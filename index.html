@@ -5562,7 +5562,7 @@ function bgRowHtml(it){
       +'</div></div>';
   }
   var indent=cap==='con'?';margin-left:16px':'';
-  /* ★ v9.35 — ĐVT dropdown (m²/md/cái/bộ); KL tự nhảy: m²=Dài×Cao, md=Dài */
+  /* ★ v9.36 — ĐVT dropdown (m²/md/cái/bộ); KL tự nhảy: m²=Dài×Cao, md=Dài */
   var dvtCur=it.dvt||'m²'; var DVT_D=['m²','md','cái','bộ']; if(dvtCur && DVT_D.indexOf(dvtCur)<0) DVT_D.unshift(dvtCur);
   var dvtSel='<select class="bg-i-dvt" onchange="bgKLAuto(this.closest(\'.bg-row\'))" title="m²=Dài×Cao · md=Dài · cái/bộ=nhập tay" style="'+cell+'">'+DVT_D.map(function(d){return '<option'+(d===dvtCur?' selected':'')+'>'+d+'</option>';}).join('')+'</select>';
   return '<div class="bg-row" data-cap="'+cap+'"'+btAttr+cfgAttr+' style="border:1px solid #ECE6DB;border-radius:9px;padding:8px;margin:8px 0'+indent+';background:#fff">'
@@ -5605,7 +5605,7 @@ function bgAutoKL(btn){ var r=btn.closest('.bg-row'); if(!r) return;
   kl=Math.round(kl*1000)/1000;
   var e=r.querySelector('.bg-i-kl'); if(e&&kl){ e.value=kl; } bgCalc();
 }
-/* ★ v9.35 — KL tự nhảy theo ĐVT: m²=Dài×Cao · md=Dài · cái/bộ=giữ nguyên (nhập tay) */
+/* ★ v9.36 — KL tự nhảy theo ĐVT: m²=Dài×Cao · md=Dài · cái/bộ=giữ nguyên (nhập tay) */
 function bgKLAuto(r){ if(!r) return;
   var dvt=((r.querySelector('.bg-i-dvt')||{}).value||'').toLowerCase();
   var dai=+((r.querySelector('.bg-i-dai')||{}).value)||0;
@@ -6960,7 +6960,7 @@ var DM_TIER_MAP={
     lopPhu:['Sơn tường','Sơn PU','Sơn PU','Nano']
   }
 };
-/* ★ v9.35 — Định mức sản phẩm/m² & Bảng Tier: dropdown hiện TOÀN BỘ Danh mục (boFullOpts); tính giá tra theo tên trên toàn catalog; override lưu dmAll().slotsOv/.tierMapOv, đồng bộ Sheet */
+/* ★ v9.36 — Định mức sản phẩm/m² & Bảng Tier: dropdown hiện TOÀN BỘ Danh mục (boFullOpts); tính giá tra theo tên trên toàn catalog; override lưu dmAll().slotsOv/.tierMapOv, đồng bộ Sheet */
 function dmSlots(fam){ var base=DM_SLOTS[fam]||[]; var ov=(dmAll().slotsOv||{})[fam]||{}; return base.map(function(s){ var o=dmClone(s); var v=ov[s.k]; if(v){ if(v.sl!=null) o.sl=+v.sl; if(v.defMat!=null) o.defMat=v.defMat; } return o; }); }
 function dmTierMap(){ var m=dmClone(DM_TIER_MAP); var ov=dmAll().tierMapOv||{}; Object.keys(ov).forEach(function(fam){ m[fam]=m[fam]||{}; Object.keys(ov[fam]||{}).forEach(function(k){ m[fam][k]=ov[fam][k]; }); }); return m; }
 function dmSlotDefIdx(s){ var opts=dmSlotOpts(s)||[]; if(s.defMat){ var j=dmMatchIdx(opts,s.defMat); if(j>=0) return j; } return dmDefIdx(opts,s.defKw); }
@@ -7121,7 +7121,7 @@ function dmCfgEditRow(el){ var row=el.closest('.bg-row'); if(!row) return; var c
 
 /* ─────────── TRANG QUẢN LÝ: ĐỊNH MỨC & ĐƠN GIÁ (CRUD + đồng bộ Sheet) ─────────── */
 var _dmTab='__vl';
-var DM_TABS=[['__vl','📋 Danh mục vật liệu'],['__dm','✿ Định mức sản phẩm/m²'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']]; /* v9.35: gỡ các tab con Khung tủ→Ốp (đã gộp hết vào Danh mục vật liệu; engine vẫn đọc qua VL_NHOM_SHEETS/dmSheetOpts) */
+var DM_TABS=[['__vl','📋 Danh mục vật liệu'],['__dm','✿ Định mức sản phẩm/m²'],['__set','⚙ Markup & Nhân công'],['__tier','Bảng Tier']]; /* v9.36: gỡ các tab con Khung tủ→Ốp (đã gộp hết vào Danh mục vật liệu; engine vẫn đọc qua VL_NHOM_SHEETS/dmSheetOpts) */
 function dmSetTab(t){ _dmTab=t; renderDinhMuc(); }
 function renderDinhMuc(){
   dmEnsureCloud();
@@ -7288,7 +7288,7 @@ var BO_TYPES=[
   {t:'Giường ngủ',tpl:'giuong'},{t:'Bàn làm việc / bàn ăn',tpl:'ban'},{t:'Tủ rượu / trưng bày',tpl:'tuRuou'},
   {t:'Ốp tường',tpl:'opTuong'},{t:'Vách lam / CNC trang trí',tpl:'opTuong'},{t:'Trần trang trí',tpl:'opTuong'}
 ];
-/* ★ v9.35 — Bốc tách: mỗi ô hiện TOÀN BỘ Danh mục vật liệu (I–XI), gom nhóm theo gr; mặc định vẫn chọn đúng nhóm thành phần */
+/* ★ v9.36 — Bốc tách: mỗi ô hiện TOÀN BỘ Danh mục vật liệu (I–XI), gom nhóm theo gr; mặc định vẫn chọn đúng nhóm thành phần */
 function boFullOpts(){ var a=(typeof vlAll==='function')?vlAll():[]; var out=[],cur=''; a.forEach(function(x){ if(x.sec){ cur=x.sec; return; } var isVan=(!x.nhom && vlIsBoardSec(cur)); var mynhom=x.nhom||(isVan?'van':''); var nm=(x.ten||''); var star=(x.gc&&(''+x.gc).indexOf('★')>-1)?' ★':''; var label=nm+((x.brand&&x.brand!=='Thị trường'&&nm.toLowerCase().indexOf(String(x.brand).toLowerCase())<0)?' · '+x.brand:'')+star; out.push({n:label, g:(+x.giaDM||0), gr:(x.gr||cur), d:(x.dvt||'m²'), code:(x.code||''), nhom:mynhom, note:(x.giaDM==null?((x.giaDMraw||'Liên hệ')+''):'')}); }); return out; }
 function boOptsK(k){ if(!BO_MAT_DEF[k]) return []; return boFullOpts(); }
 function boDefIdxK(k){ var full=boFullOpts(), d=BO_MAT_DEF[k]||{}; var nh=VL_NHOM_SHEETS[d.sheet]; var cand=[]; for(var i=0;i<full.length;i++){ var m=full[i]; if(nh && m.nhom!==nh) continue; if(d.filter && (m.gr||'').toUpperCase().indexOf((''+d.filter).toUpperCase())<0) continue; cand.push(i); } if(!cand.length){ var gi=dmDefIdx(full, d.defKw); return gi<0?0:gi; } if(d.defKw){ var kw=(''+d.defKw).toLowerCase(); for(var c=0;c<cand.length;c++){ if((full[cand[c]].n||'').toLowerCase().indexOf(kw)>-1) return cand[c]; } var toks=kw.split(/[\s–\-\/·]+/).filter(Boolean); for(var c=0;c<cand.length;c++){ var nmv=(full[cand[c]].n||'').toLowerCase(),ok=true; for(var t=0;t<toks.length;t++){ if(nmv.indexOf(toks[t])<0){ok=false;break;} } if(ok) return cand[c]; } } for(var c=0;c<cand.length;c++){ if((full[cand[c]].n||'').indexOf('★')>-1) return cand[c]; } return cand[0]; }
@@ -7837,9 +7837,9 @@ function vlImport(){
   modal2('⬆ Nhập Danh mục vật liệu', body);
 }
 function vlCloudSave(){ if(typeof apiPost!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
-  apiPost({app:'pm',action:'savePMKV',data:{key:'crm_vl',value:JSON.stringify(vlAll())}}).then(function(){ toast('✅ Đã lưu Danh mục vật liệu lên Sheet'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
+  apiPost({app:'pm',action:'saveDanhMuc',data:vlAll()}).then(function(r){ toast('✅ Đã lưu Danh mục lên Sheet'+(r&&r.count?(' ('+r.count+' vật liệu)'):'')); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
 function vlCloudLoad(){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
-  apiFetch({app:'pm',action:'getPMKV',key:'crm_vl'}).then(function(r){ if(r&&Array.isArray(r.value)){ vlSave(r.value); renderDinhMuc(); toast('✅ Đã tải Danh mục vật liệu từ Sheet'); } else toast('Trên Sheet chưa có danh mục vật liệu','⚠️'); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
+  apiFetch({app:'pm',action:'getDanhMuc'}).then(function(r){ if(r&&Array.isArray(r.value)&&r.value.length){ vlSave(r.value); renderDinhMuc(); toast('✅ Đã tải Danh mục từ Sheet ('+r.value.filter(function(x){return !x.sec;}).length+' vật liệu)'); return; } return apiFetch({app:'pm',action:'getPMKV',key:'crm_vl'}).then(function(r2){ if(r2&&Array.isArray(r2.value)){ vlSave(r2.value); renderDinhMuc(); toast('✅ Đã tải Danh mục (bản JSON cũ) từ Sheet'); } else toast('Trên Sheet chưa có Danh mục. Bấm "Lưu lên Sheet" từ máy chuẩn.','⚠️'); }); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
 
 
 /* ===== MODULE HỢP ĐỒNG P3 (v9.12) ===== */
