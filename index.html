@@ -783,7 +783,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
 
 <script>
-/* ★ v9.39 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
+/* ★ v9.40 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
    panel hiện 2 bảng nút Thiết kế + Thi công cho KH ở cả 2 pipeline;
    updateStage ghi đúng trường theo tiền tố id; tự chữa dữ liệu lệch (normalizeStageConsistency). */
 
@@ -1489,7 +1489,7 @@ function getStageObj(stageId){return STAGES_TK.find(s=>s.id===stageId)||STAGES_T
 // KH 1 pipeline: mọi giai đoạn nằm ở l.stage. Đọc bằng leadStage(), ghi bằng setLeadStage().
 function leadStage(l,pipe){
   if(!l) return 'tk_new';
-  if(pipe==='tc') return l.stageTc || (getPipe(l.stage||'tk_new')==='tc' ? l.stage : 'tc_new');
+  if(pipe==='tc') return (l.inBothPipelines && l.stageTc) ? l.stageTc : (getPipe(l.stage||'tk_new')==='tc' ? l.stage : 'tc_new');
   if(pipe==='cs') return getPipe(l.stage||'')==='cs' ? l.stage : 'cs_new';
   return getPipe(l.stage||'tk_new')==='tk' ? (l.stage||'tk_new') : 'tk_new';
 }
@@ -1498,6 +1498,16 @@ function setLeadStage(l,stageId){
   if(l && l.inBothPipelines && String(stageId).startsWith('tc_')) l.stageTc=stageId;
   else if(l) l.stage=stageId;
 }
+// ── KÉO-THẢ giai đoạn trên pipeline (v9.40) ──
+var _dragLeadId=null;
+function onCardDrag(e,id){ _dragLeadId=id; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}}
+function onCardDragEnd(e){ _dragLeadId=null; document.querySelectorAll('.pipeline-col.mdc-drag-over').forEach(c=>{c.classList.remove('mdc-drag-over');c.style.background='';}); }
+function onColDragOver(e){ e.preventDefault(); try{e.dataTransfer.dropEffect='move';}catch(_){}}
+function onColDragEnter(e){ const c=e.currentTarget; c.classList.add('mdc-drag-over'); c.style.background='#fffdf7'; }
+function onColDragLeave(e){ const c=e.currentTarget; if(!c.contains(e.relatedTarget)){ c.classList.remove('mdc-drag-over'); c.style.background=''; } }
+function onColDrop(e,stageId){ e.preventDefault(); const c=e.currentTarget; c.classList.remove('mdc-drag-over'); c.style.background='';
+  const id=_dragLeadId||(e.dataTransfer&&e.dataTransfer.getData('text/plain')); _dragLeadId=null;
+  if(id&&stageId){ const l=leads.find(x=>x.id==id); if(l && leadStage(l,getPipe(stageId))===stageId) return; updateStage(id,stageId); } }
 // Bảng nút cập nhật giai đoạn cho MỘT pipeline (dùng chung trong panel chi tiết)
 function stageSelectorHtml(l,pipe){
   const stages=getStages(pipe);
@@ -1523,6 +1533,8 @@ function normalizeStageConsistency(){
       l.stageTc=l.stage; l.stage='tk_accept'; hit=true;
     }
     if(l.inBothPipelines && !l.stageTc){ l.stageTc='tc_sign_tc'; hit=true; }
+    // KH KHÔNG thuộc 2 pipeline mà còn sót stageTc (dữ liệu cũ) → xóa để board đọc đúng l.stage
+    if(!l.inBothPipelines && l.stageTc!=null && l.stageTc!==''){ delete l.stageTc; hit=true; }
     if(hit){ touch(l); healed.push(l); }
   });
   return healed;
@@ -2112,7 +2124,7 @@ function renderPipelineBoard(pipe){
   //  - board TK: dùng l.stage
   //  - board TC: nếu khách có stageTc (đã chuyển/đang ở TC) thì dùng stageTc
   const effStage=l=>{
-    if(pipe==='tc') return l.stageTc || (getPipelineOfStage(l.stage||'tk_new')==='tc'?l.stage:null);
+    if(pipe==='tc') return (l.inBothPipelines && l.stageTc) ? l.stageTc : (getPipelineOfStage(l.stage||'tk_new')==='tc'?l.stage:null);
     return getPipelineOfStage(l.stage||'tk_new')==='tk' ? l.stage : null;
   };
   // Khách thuộc board này: TK nếu stage là TK; TC nếu stage là TC HOẶC (có 2 pipeline & có stageTc)
@@ -2150,12 +2162,12 @@ function renderPipelineBoard(pipe){
       ${stages.filter(s=>!['tk_lost','tc_lost'].includes(s.id)).map(s=>{
         const cols=pipeLeads.filter(l=>effStage(l)===s.id);
         const isAutoTransfer=s.autoTransfer;
-        return`<div class="pipeline-col${isAutoTransfer?' auto-transfer':''}">
+        return`<div class="pipeline-col${isAutoTransfer?' auto-transfer':''}" ondragenter="onColDragEnter(event)" ondragover="onColDragOver(event)" ondragleave="onColDragLeave(event)" ondrop="onColDrop(event,'${s.id}')">
           <div class="pipeline-header" style="background:${s.color}">
             <span>${s.label}</span>
             <span class="pipeline-count">${cols.length}</span>
           </div>
-          ${cols.map(l=>`<div class="pipeline-card" style="--sc:${s.color}" onclick="openPanel('${l.id}')">
+          ${cols.map(l=>`<div class="pipeline-card" style="--sc:${s.color};cursor:grab" draggable="true" ondragstart="onCardDrag(event,'${l.id}')" ondragend="onCardDragEnd(event)" onclick="openPanel('${l.id}')">
             <div class="pc-name">${l.name}</div>
             <div class="pc-value">${formatShort(Number(pipe==='tk'?l.valueTk:l.valueTc)||0)}</div>
             ${l.nextAction?`<div style="font-size:9.5px;color:var(--amber);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👉 ${l.nextAction}</div>`:''}
