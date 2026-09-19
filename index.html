@@ -783,6 +783,9 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
 
 <script>
+/* ★ v9.38 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
+   panel hiện 2 bảng nút Thiết kế + Thi công cho KH ở cả 2 pipeline;
+   updateStage ghi đúng trường theo tiền tố id; tự chữa dữ liệu lệch (normalizeStageConsistency). */
 
 // ══════════════════════════════════════════════════════════════
 // AUTH & PERMISSION SYSTEM
@@ -1481,6 +1484,48 @@ function pipeProgress(l){
 function getPipelineOfStage(stageId){return getPipe(stageId);}
 function getStageObj(stageId){return STAGES_TK.find(s=>s.id===stageId)||STAGES_TC.find(s=>s.id===stageId)||STAGES_CS.find(s=>s.id===stageId)||{label:stageId,color:'#555',badge:''};}
 
+// ── CHUẨN HÓA GIAI ĐOẠN (v9.38): 1 nguồn sự thật cho mỗi pipeline ──
+// KH ở CẢ 2 pipeline: l.stage = giai đoạn Thiết kế, l.stageTc = giai đoạn Thi công.
+// KH 1 pipeline: mọi giai đoạn nằm ở l.stage. Đọc bằng leadStage(), ghi bằng setLeadStage().
+function leadStage(l,pipe){
+  if(!l) return 'tk_new';
+  if(pipe==='tc') return l.stageTc || (getPipe(l.stage||'tk_new')==='tc' ? l.stage : 'tc_new');
+  if(pipe==='cs') return getPipe(l.stage||'')==='cs' ? l.stage : 'cs_new';
+  return getPipe(l.stage||'tk_new')==='tk' ? (l.stage||'tk_new') : 'tk_new';
+}
+function setLeadStage(l,stageId){
+  // Ghi về ĐÚNG trường theo tiền tố id: tc_ → stageTc nếu KH ở cả 2 pipeline; còn lại → stage
+  if(l && l.inBothPipelines && String(stageId).startsWith('tc_')) l.stageTc=stageId;
+  else if(l) l.stage=stageId;
+}
+// Bảng nút cập nhật giai đoạn cho MỘT pipeline (dùng chung trong panel chi tiết)
+function stageSelectorHtml(l,pipe){
+  const stages=getStages(pipe);
+  const cur=leadStage(l,pipe);
+  const title = pipe==='cs'?'Chăm sóc sau bán':pipe==='tc'?'Thi công':'Thiết kế';
+  return `<div class="section-title">• Cập nhật Giai đoạn (${title})</div>
+    <div class="stage-selector">
+      ${stages.map(s=>`<div class="stage-btn ${cur===s.id?'active':''} ${s.autoTransfer?'highlight-auto':''}" 
+        style="--stage-bg:${getSBG(s.id)};--stage-c:${getSC(s.id)};--stage-bc:${getSC(s.id)}" 
+        onclick="updateStage('${l.id}','${s.id}')" 
+        title="${s.autoTransfer?'⚡ Giai đoạn này sẽ hỏi chuyển sang Pipeline Thi công':''}">${s.label}${s.autoTransfer?' ⚡':''}</div>`).join('')}
+    </div>`;
+}
+// Tự chữa dữ liệu cũ bị lệch trường giai đoạn (chạy khi nạp & sau đồng bộ)
+function normalizeStageConsistency(){
+  let changed=false;
+  (leads||[]).forEach(l=>{
+    if(!l) return;
+    // Bản lỗi cũ: KH ở cả 2 pipeline nhưng l.stage bị ghi đè bằng giai đoạn Thi công.
+    // l.stage (gần nhất người dùng bấm) mới là ý định TC đúng → dời về stageTc, khôi phục TK.
+    if(l.inBothPipelines && getPipe(l.stage||'tk_new')==='tc'){
+      l.stageTc=l.stage; l.stage='tk_accept'; changed=true;
+    }
+    if(l.inBothPipelines && !l.stageTc){ l.stageTc='tc_sign_tc'; changed=true; }
+  });
+  return changed;
+}
+
 // Aliases SBG/SC — dùng khắp nơi trong render functions
 // SBG_TK, SC_TK, SBG_TC, SC_TC được khai báo ở trên; merge thành SBG/SC để code gọn
 const SBG = {...SBG_TK, ...SBG_TC, ...SBG_CS};
@@ -1529,6 +1574,7 @@ function migrateLeads(){
     if(l.value && !l.valueTk && !l.valueTc){ l.valueTk=l.value; changed=true; }
     // owner cũ (AN/BT/EM) giữ nguyên - staffName sẽ fallback hiển thị
   });
+  if(normalizeStageConsistency()) changed=true;
   if(changed) saveLocal();
 }
 
@@ -1681,7 +1727,7 @@ async function syncFromSheets(){
     await flushQueue();
     const data=await apiFetch({action:'getAll'});
     // ✓ MERGE thay vì ghi đè — bảo vệ dữ liệu đang sửa trên thiết bị này
-    if(Array.isArray(data.leads)) leads = mergeById(leads, data.leads);
+    if(Array.isArray(data.leads)){ leads = mergeById(leads, data.leads); normalizeStageConsistency(); }
     if(Array.isArray(data.tasks)) tasks = mergeById(tasks, data.tasks);
 
     // Staff: Sheets là nguồn sự thật (ít sửa, ít xung đột)
@@ -3287,7 +3333,7 @@ function openPanel(id){
   const stages=getStages(pipe);
 
   document.getElementById('panel-name').textContent=l.name;
-  document.getElementById('panel-sub').textContent=`${pipe==='tc'?'Thi công':'Thiết kế'} · ${l.type||''} · ${l.area||''} · Score: ${l.score||0}`;
+  document.getElementById('panel-sub').textContent=`${l.inBothPipelines?'Thiết kế & Thi công':pipe==='tc'?'Thi công':'Thiết kế'} · ${l.type||''} · ${l.area||''} · Score: ${l.score||0}`;
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
 
@@ -3341,20 +3387,9 @@ function openPanel(id){
     </div>
     <div class="section-title">Ghi chú</div>
     <div style="background:var(--lgray);border-radius:8px;padding:11px;font-size:12.5px;color:var(--charcoal);margin-bottom:16px;line-height:1.6">${l.note||'Chưa có ghi chú'}</div>
-    <div class="section-title">• Cập nhật Giai đoạn (${pipe==='cs'?'Chăm sóc sau bán':pipe==='tc'?'Thi công':'Thiết kế'})</div>
-    <div class="stage-selector">
-      ${stages.map(s=>`<div class="stage-btn ${l.stage===s.id?'active':''} ${s.autoTransfer?'highlight-auto':''}" 
-        style="--stage-bg:${getSBG(s.id)};--stage-c:${getSC(s.id)};--stage-bc:${getSC(s.id)}" 
-        onclick="updateStage('${l.id}','${s.id}')" 
-        title="${s.autoTransfer?'⚡ Giai đoạn này sẽ hỏi chuyển sang Pipeline Thi công':''}">${s.label}${s.autoTransfer?' ⚡':''}</div>`).join('')}
-    </div>
-    ${l.inBothPipelines?`<div style="margin-bottom:16px">
-      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--mgray);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #ede9e1">⚡ Giai đoạn Thi công</div>
-      <div style="font-size:12px;color:var(--charcoal);background:var(--lgray);padding:8px 12px;border-radius:7px">
-        ${getStageObj(l.stageTc||'tc_new').label} 
-        <button class="btn btn-sm btn-tc" style="margin-left:8px;font-size:10px" onclick="switchPanelToTC('${l.id}')">Xem TC →</button>
-      </div>
-    </div>`:''}
+    ${l.inBothPipelines
+      ? stageSelectorHtml(l,'tk') + `<div style="height:6px"></div>` + stageSelectorHtml(l,'tc')
+      : stageSelectorHtml(l,pipe)}
     <div class="section-title">📜 Lịch sử tương tác</div>
     ${canEdit?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
       <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="addInteraction('${l.id}','call')">📞 Đã gọi</button>
@@ -3428,15 +3463,7 @@ function renderPM360(d){
 
 function closePanel(){document.getElementById('panel-overlay').classList.remove('open');document.getElementById('detail-panel').classList.remove('open');selectedLead=null;}
 
-function switchPanelToTC(id){
-  // Tạo view TC trong panel cho KH có cả 2 pipeline
-  const l=leads.find(l=>l.id==id); if(!l||!l.stageTc) return;
-  // Swap stage tạm thời để hiện TC
-  const origStage=l.stage;
-  l.stage=l.stageTc;
-  openPanel(id);
-  l.stage=origStage;
-}
+function switchPanelToTC(id){ openPanel(id); }
 
 // ── UPDATE STAGE (logic tự động chuyển TC) ───────────────────
 async function updateStage(id,stage){
@@ -3466,11 +3493,13 @@ async function updateStage(id,stage){
     return;
   }
 
-  // Normal stage update
-  l.stage=stage;
+  // Normal stage update — ghi ĐÚNG trường theo pipeline (v9.38)
+  const isTcWrite = l.inBothPipelines && String(stage).startsWith('tc_');
+  const oldLbl = getStageObj(isTcWrite ? (l.stageTc||'tc_new') : l.stage).label;
+  setLeadStage(l,stage);
   const nw=getStageObj(stage).label;
   if(!Array.isArray(l.history)) l.history=[];
-  l.history.unshift({t:`Cập nhật: ${old} → ${nw}`,time:nowStr()});
+  l.history.unshift({t:`Cập nhật: ${oldLbl} → ${nw}`,time:nowStr()});
   l.lastContact=new Date().toISOString().split('T')[0];
   touch(l);
   // Tự động tạo checklist tasks cho giai đoạn mới
@@ -3482,7 +3511,7 @@ async function updateStage(id,stage){
   saveLocal(); openPanel(id); rerenderCurrent();
   await pushLead(l);
   for(const t of newChkTasks) pushTask(t);
-  logActivity('changeStage','KH',l.id,l.name,`${old} → ${nw}`,old,nw);
+  logActivity('changeStage','KH',l.id,l.name,`${oldLbl} → ${nw}`,oldLbl,nw);
   if(newChkTasks.length > 0)
     toast(`→ ${nw} · ✓ ${newChkTasks.length} việc mới`);
   else
@@ -3524,7 +3553,7 @@ function addDaysISO(d){ const t=new Date(); t.setDate(t.getDate()+d); return t.t
 
 async function completeStage(id){
   const l=leads.find(l=>l.id==id); if(!l) return;
-  const isTC = (l.stage==='tc_handover');
+  const isTC = (l.inBothPipelines ? l.stageTc==='tc_handover' : l.stage==='tc_handover');
   const isTK = (l.stage==='tk_accept');
   if(!isTC && !isTK){ toast('Khách chưa ở giai đoạn cuối để hoàn thành','⚠️'); return; }
 
@@ -3540,7 +3569,7 @@ async function completeStage(id){
   }
 
   // Hoàn thành toàn bộ → đưa vào chăm sóc sau bán
-  const loai = isTC ? 'Thi công' : (l.inBothPipelines?'Thiết kế & Thi công':'Thiết kế');
+  const loai = l.inBothPipelines ? 'Thiết kế & Thi công' : (isTC ? 'Thi công' : 'Thiết kế');
   if(!confirm(`Hoàn thành ${loai} cho "${l.name}"?\n\nKhách sẽ chuyển sang DANH SÁCH CHĂM SÓC SAU BÁN HÀNG và hệ thống tự tạo ${CARE_SCHEDULE.length} lịch chăm sóc (7 ngày, 30 ngày, 6 tháng, 1 năm).`)) return;
 
   // Đánh dấu trạng thái chăm sóc + CHUYỂN VÀO PIPELINE CHĂM SÓC SAU BÁN
