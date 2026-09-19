@@ -783,7 +783,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
 
 <script>
-/* ★ v9.38 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
+/* ★ v9.39 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
    panel hiện 2 bảng nút Thiết kế + Thi công cho KH ở cả 2 pipeline;
    updateStage ghi đúng trường theo tiền tố id; tự chữa dữ liệu lệch (normalizeStageConsistency). */
 
@@ -1513,18 +1513,22 @@ function stageSelectorHtml(l,pipe){
 }
 // Tự chữa dữ liệu cũ bị lệch trường giai đoạn (chạy khi nạp & sau đồng bộ)
 function normalizeStageConsistency(){
-  let changed=false;
+  const healed=[];
   (leads||[]).forEach(l=>{
     if(!l) return;
+    let hit=false;
     // Bản lỗi cũ: KH ở cả 2 pipeline nhưng l.stage bị ghi đè bằng giai đoạn Thi công.
     // l.stage (gần nhất người dùng bấm) mới là ý định TC đúng → dời về stageTc, khôi phục TK.
     if(l.inBothPipelines && getPipe(l.stage||'tk_new')==='tc'){
-      l.stageTc=l.stage; l.stage='tk_accept'; changed=true;
+      l.stageTc=l.stage; l.stage='tk_accept'; hit=true;
     }
-    if(l.inBothPipelines && !l.stageTc){ l.stageTc='tc_sign_tc'; changed=true; }
+    if(l.inBothPipelines && !l.stageTc){ l.stageTc='tc_sign_tc'; hit=true; }
+    if(hit){ touch(l); healed.push(l); }
   });
-  return changed;
+  return healed;
 }
+// Đẩy các bản vừa tự chữa lên Google Sheet (nếu đang online) để đồng bộ mọi thiết bị
+function pushHealed(healed){ if(healed && healed.length && getApiUrl()) healed.forEach(l=>{ try{ pushLead(l); }catch(e){} }); }
 
 // Aliases SBG/SC — dùng khắp nơi trong render functions
 // SBG_TK, SC_TK, SBG_TC, SC_TC được khai báo ở trên; merge thành SBG/SC để code gọn
@@ -1574,8 +1578,10 @@ function migrateLeads(){
     if(l.value && !l.valueTk && !l.valueTc){ l.valueTk=l.value; changed=true; }
     // owner cũ (AN/BT/EM) giữ nguyên - staffName sẽ fallback hiển thị
   });
-  if(normalizeStageConsistency()) changed=true;
+  const _healed=normalizeStageConsistency();
+  if(_healed.length) changed=true;
   if(changed) saveLocal();
+  pushHealed(_healed);
 }
 
 function loadLocal(){
@@ -1727,7 +1733,7 @@ async function syncFromSheets(){
     await flushQueue();
     const data=await apiFetch({action:'getAll'});
     // ✓ MERGE thay vì ghi đè — bảo vệ dữ liệu đang sửa trên thiết bị này
-    if(Array.isArray(data.leads)){ leads = mergeById(leads, data.leads); normalizeStageConsistency(); }
+    if(Array.isArray(data.leads)){ leads = mergeById(leads, data.leads); pushHealed(normalizeStageConsistency()); }
     if(Array.isArray(data.tasks)) tasks = mergeById(tasks, data.tasks);
 
     // Staff: Sheets là nguồn sự thật (ít sửa, ít xung đột)
