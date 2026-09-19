@@ -783,7 +783,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
 
 <script>
-/* ★ v9.40 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
+/* ★ v9.41 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
    panel hiện 2 bảng nút Thiết kế + Thi công cho KH ở cả 2 pipeline;
    updateStage ghi đúng trường theo tiền tố id; tự chữa dữ liệu lệch (normalizeStageConsistency). */
 
@@ -2243,7 +2243,7 @@ function renderLeads(){
             <td><div style="display:flex;align-items:center;gap:6px"><span class="health-dot ${leadHealth(l)}" title="${healthLabel(leadHealth(l))}"></span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:6px">${l.name}${huyHieuNguoi(l)}</div><div style="font-size:10.5px;color:var(--mgray);display:flex;align-items:center;gap:6px"><span onclick="event.stopPropagation();moHanhTrinh('${l.id}')" title="Mở hành trình khách hàng" style="cursor:pointer;color:#1D4E89;font-weight:700;white-space:nowrap">🗺 ${tinhHanhTrinh(l).soXong}/9</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nextAction?'👉 '+l.nextAction:(l.area||'–')}</span></div>${leadTags(l).length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${leadTags(l).slice(0,4).map(t=>`<span class="tag-chip" style="background:${tagStyle(t).bg};color:${tagStyle(t).color};font-size:9.5px;padding:1px 7px">${esc2(t)}</span>`).join('')}</div>`:''}</div></div></td>
             <td style="font-family:Arial, sans-serif;font-size:11.5px">${l.phone}</td>
             <td style="font-size:12px">${l.type||'–'}</td>
-            <td><span style="font-size:9.5px;padding:3px 8px;border-radius:10px;font-weight:600;background:${pipe==='tc'?'#E0F4F1':'#EBF3FC'};color:${pipe==='tc'?'#8F6A2B':'#0F3460'}">${pipe==='tc'?'🔨 TC':'🎨 TK'}</span>${l.inBothPipelines?` <span style="font-size:9px;padding:2px 5px;border-radius:8px;background:#FFF0E0;color:#7A3800">+TC</span>`:''}${l.afterSale?` <span style="font-size:9px;padding:2px 5px;border-radius:8px;background:#E6F4EC;color:#0F5132">💚 Sau bán</span>`:''}</td>
+            <td><span style="font-size:9.5px;padding:3px 8px;border-radius:10px;font-weight:600;background:${pipe==='tc'?'#E0F4F1':pipe==='cs'?'#E6F4EC':'#EBF3FC'};color:${pipe==='tc'?'#8F6A2B':pipe==='cs'?'#0F5132':'#0F3460'}">${pipe==='tc'?'🔨 TC':pipe==='cs'?'💚 Sau bán':'🎨 TK'}</span>${l.inBothPipelines?` <span style="font-size:9px;padding:2px 5px;border-radius:8px;background:#FFF0E0;color:#7A3800">+TC</span>`:''}${(l.afterSale&&pipe!=='cs')?` <span style="font-size:9px;padding:2px 5px;border-radius:8px;background:#E6F4EC;color:#0F5132">💚 Sau bán</span>`:''}</td>
             <td><span class="badge ${st.badge}">${st.label}</span>${l.pmStatus?`<div style="font-size:10px;color:var(--brass-deep,#8F6A2B);margin-top:3px">🔨 ${l.pmStatus}</div>`:''}</td>
             <td style="font-weight:600;color:var(--amber);font-family:Arial, sans-serif;font-size:11.5px">${formatShort(Number(l.valueTc||l.valueTk)||0)}</td>
             <td><div class="score-bar"><div class="score-track"><div class="score-fill" style="width:${l.score||0}%;background:${sc}"></div></div><div class="score-num">${l.score||0}</div></div></td>
@@ -3351,7 +3351,7 @@ function openPanel(id){
   const stages=getStages(pipe);
 
   document.getElementById('panel-name').textContent=l.name;
-  document.getElementById('panel-sub').textContent=`${l.inBothPipelines?'Thiết kế & Thi công':pipe==='tc'?'Thi công':'Thiết kế'} · ${l.type||''} · ${l.area||''} · Score: ${l.score||0}`;
+  document.getElementById('panel-sub').textContent=`${l.inBothPipelines?'Thiết kế & Thi công':pipe==='tc'?'Thi công':pipe==='cs'?'Chăm sóc sau bán':'Thiết kế'} · ${l.type||''} · ${l.area||''} · Score: ${l.score||0}`;
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
 
@@ -3366,7 +3366,7 @@ function openPanel(id){
       <div class="pm360-loading">Đang tải dữ liệu dự án từ PM…</div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-      <span style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:${pipe==='tc'?'#E0F4F1':'#EBF3FC'};color:${pipe==='tc'?'#8F6A2B':'#0F3460'}">${pipe==='tc'?'🔨 Pipeline Thi công':'🎨 Pipeline Thiết kế'}</span>
+      <span style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:${pipe==='tc'?'#E0F4F1':'#EBF3FC'};color:${pipe==='tc'?'#8F6A2B':'#0F3460'}">${pipe==='tc'?'🔨 Pipeline Thi công':pipe==='cs'?'💚 Chăm sóc sau bán':'🎨 Pipeline Thiết kế'}</span>
       ${l.inBothPipelines?`<span style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:#FFF0E0;color:#7A3800">⚡ Có trong cả 2 Pipeline</span>`:''}
     </div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
@@ -5295,6 +5295,7 @@ function htColBaoGia(l, H, quyen){
         + 'border-radius:6px;white-space:nowrap;text-align:center;line-height:1.3">'+esc2(x['Trạng thái'])+'</span>'
         + '<button onclick="event.stopPropagation();bgPrint(\''+esc2(x['Mã BG'])+'\')" title="Xuất/In gửi khách" '
         + 'style="border:1px solid #DED8CE;background:#fff;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer;color:#8A6D3B">🖨 In</button>'
+        + (x['File']?'<a href="'+esc2(x['File'])+'" target="_blank" onclick="event.stopPropagation()" title="Mở/tải file báo giá đính kèm" style="border:1px solid #DED8CE;background:#fff;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer;color:#1D4E89;text-decoration:none">📥 File</a>':'')
         + '</div></div></div>';
     });
   }
@@ -5824,7 +5825,13 @@ function htFormBaoGia(ma){
     + '</div></details>'
     + '<div style="margin-bottom:10px"><label style="'+lab+'">Điều khoản thanh toán</label><textarea id="bg-dk" rows="2" style="'+inp+';font-family:inherit">'+esc2(x?(x['Điều khoản']||''):'Đợt 1: tạm ứng 50% khi ký hợp đồng. Đợt 2: 45% khi thi công đạt 70%. Đợt 3: 5% sau nghiệm thu bàn giao.')+'</textarea></div>'
     + '<div style="margin-bottom:10px"><label style="'+lab+'">Ghi chú</label><textarea id="bg-gc" rows="2" style="'+inp+';font-family:inherit">'+esc2(x?x['Ghi chú']:'')+'</textarea></div>'
-    + '<div style="margin-bottom:10px"><label style="'+lab+'">Link file (Drive/PDF nếu có)</label><input id="bg-file" value="'+esc2(x?x['File']:'')+'" placeholder="dán link nếu có" style="'+inp+'"></div>'
+    + '<div style="margin-bottom:10px"><label style="'+lab+'">File báo giá (Excel/PDF — tải lên hoặc dán link)</label>'
+      + '<div style="display:flex;gap:6px;align-items:center;margin-top:5px">'
+      + '<input id="bg-file" value="'+esc2(x?x['File']:'')+'" placeholder="dán link, hoặc bấm Tải file lên →" style="'+inp+';margin-top:0;flex:1">'
+      + '<label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap;margin:0">📎 Tải file lên<input type="file" accept=".xlsx,.xls,.pdf,.doc,.docx,.png,.jpg,.jpeg" style="display:none" onchange="bgUploadFile(this)"></label>'
+      + '</div>'
+      + '<div id="bg-file-note" style="font-size:11px;color:#8A6D3B;margin-top:4px">'+(x&&x['File']?('<a href="'+esc2(x['File'])+'" target="_blank" style="color:#1D4E89">📥 Mở file hiện tại</a>'):'')+'</div>'
+      + '</div>'
     + (!x ? '<div style="background:#E7F0F5;color:#3A6B8A;padding:9px 12px;border-radius:8px;font-size:12px;margin-bottom:10px">Sẽ tạo <b>phiên bản v'+pbMoi+'</b>'+(bgs.length?' — bản v'+(pbMoi-1)+' chuyển "Đã thay thế"':'')+'</div>' : '')
     + '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center">'
     + (x&&x['Trạng thái']!=='Đã thay thế' ? '<select id="bg-tt" style="padding:8px;border:1px solid #DED8CE;border-radius:7px;font-size:12.5px;margin-right:auto">'+BG_TT.map(function(t){return '<option'+(x['Trạng thái']===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select>' : '')
@@ -5834,6 +5841,22 @@ function htFormBaoGia(ma){
     + '<button class="btn btn-primary" onclick="htLuuBaoGia(\''+(ma||'')+'\')">Lưu báo giá</button></div>';
   modal2(x?('Báo giá v'+(x['Phiên bản']||1)):'📄 Lập báo giá chi tiết', h);
   setTimeout(function(){ bgCalc(); var d=bgIsDetail(); var hb=document.getElementById('bg-headbtns'); if(hb) hb.style.display=d?'inline':'none'; var lg=document.getElementById('bg-legend'); if(lg) lg.style.display=d?'block':'none'; }, 30);
+}
+async function bgUploadFile(input){
+  var f = input.files && input.files[0]; if(!f) return;
+  if(f.size > 35*1024*1024){ toast('File quá lớn (>35MB) — hãy tải lên Drive rồi dán link','⚠️'); input.value=''; return; }
+  if(!getApiUrl()){ toast('Chưa kết nối Google Sheet/Drive — bấm Kết nối trước khi tải file','⚠️'); input.value=''; return; }
+  var note = document.getElementById('bg-file-note');
+  if(note) note.innerHTML='⏳ Đang tải "'+esc2(f.name)+'" lên Google Drive…';
+  try{
+    var dataUrl = await new Promise(function(res,rej){ var rd=new FileReader(); rd.onload=function(){res(rd.result);}; rd.onerror=function(){rej(new Error('Không đọc được file'));}; rd.readAsDataURL(f); });
+    var b64 = String(dataUrl).split(',')[1]||'';
+    var r = await apiPost({action:'uploadFile', data:{name:f.name, mimeType:f.type||'application/octet-stream', data:b64}});
+    var el=document.getElementById('bg-file'); if(el && r && r.url) el.value=r.url;
+    if(note) note.innerHTML = (r&&r.url) ? ('✅ Đã tải lên · <a href="'+esc2(r.url)+'" target="_blank" style="color:#1D4E89">📥 Mở file</a> · nhớ bấm <b>Lưu báo giá</b>') : '✅ Đã tải lên';
+    toast('Đã tải file lên Drive — nhớ bấm Lưu báo giá');
+  }catch(e){ if(note) note.innerHTML='❌ Lỗi tải file: '+esc2(String((e&&e.message)||e)); toast('Tải file thất bại','⚠️'); }
+  input.value='';
 }
 function htLuuBaoGia(ma){
   var l = window.__htLead;
