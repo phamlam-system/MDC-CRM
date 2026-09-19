@@ -783,7 +783,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
 
 <script>
-/* ★ v9.41 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
+/* ★ v9.42 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
    panel hiện 2 bảng nút Thiết kế + Thi công cho KH ở cả 2 pipeline;
    updateStage ghi đúng trường theo tiền tố id; tự chữa dữ liệu lệch (normalizeStageConsistency). */
 
@@ -1535,6 +1535,8 @@ function normalizeStageConsistency(){
     if(l.inBothPipelines && !l.stageTc){ l.stageTc='tc_sign_tc'; hit=true; }
     // KH KHÔNG thuộc 2 pipeline mà còn sót stageTc (dữ liệu cũ) → xóa để board đọc đúng l.stage
     if(!l.inBothPipelines && l.stageTc!=null && l.stageTc!==''){ delete l.stageTc; hit=true; }
+    // KH đã sang Chăm sóc sau bán (afterSale) nhưng stage trống/không phải cs → đưa vào pipeline chăm sóc
+    if(l.afterSale && getPipe(l.stage||'')!=='cs'){ if(l.stage && !l.stagePrev) l.stagePrev=l.stage; l.stage='cs_new'; hit=true; }
     if(hit){ touch(l); healed.push(l); }
   });
   return healed;
