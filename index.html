@@ -783,7 +783,7 @@ input[type="time"].form-input{font-family:Arial, sans-serif;font-size:12px}
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
 
 <script>
-/* ★ v9.42 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
+/* ★ v9.43 — CHUẨN HÓA GIAI ĐOẠN: 1 nguồn sự thật/pipeline (leadStage/setLeadStage);
    panel hiện 2 bảng nút Thiết kế + Thi công cho KH ở cả 2 pipeline;
    updateStage ghi đúng trường theo tiền tố id; tự chữa dữ liệu lệch (normalizeStageConsistency). */
 
@@ -2094,7 +2094,7 @@ function renderCarePipeline(vl){
     <div class="pipeline-board">
       ${stages.map(s=>{
         const cols=csLeads.filter(l=>l.stage===s.id);
-        return`<div class="pipeline-col">
+        return`<div class="pipeline-col" ondragenter="onColDragEnter(event)" ondragover="onColDragOver(event)" ondragleave="onColDragLeave(event)" ondrop="onColDrop(event,'${s.id}')">
           <div class="pipeline-header" style="background:${s.color}">
             <span>${s.label}</span><span class="pipeline-count">${cols.length}</span>
           </div>
@@ -2102,7 +2102,7 @@ function renderCarePipeline(vl){
             const since=l.afterSaleSince?Math.floor((Date.now()-new Date(l.afterSaleSince).getTime())/86400000):null;
             const nextCare=tasks.filter(t=>t.leadId===l.id&&t.isCare&&!t.done).sort((a,b)=>(a.date||'').localeCompare(b.date||''))[0];
             const overdue=nextCare&&nextCare.date&&nextCare.date<today;
-            return `<div class="pipeline-card" style="--sc:${s.color}" onclick="openPanel('${l.id}')">
+            return `<div class="pipeline-card" style="--sc:${s.color};cursor:grab" draggable="true" ondragstart="onCardDrag(event,'${l.id}')" ondragend="onCardDragEnd(event)" onclick="openPanel('${l.id}')">
               <div class="pc-name">${esc2(l.name)}</div>
               <div class="pc-value">${money((Number(l.valueTk)||0)+(Number(l.valueTc)||0))}</div>
               ${since!=null?`<div style="font-size:9.5px;color:var(--mgray);margin-top:3px">Bàn giao ${since} ngày trước</div>`:''}
