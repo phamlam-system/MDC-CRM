@@ -869,23 +869,7 @@ async function doLogin(){
   // Chuẩn hóa SĐT VN: bỏ '84' hoặc '0' ở đầu để +84/0xxx/xxx đều khớp
   const normPhone=x=>{let d=String(x||'').replace(/[^0-9]/g,'');if(d.indexOf('84')===0&&d.length>=11)d=d.slice(2);if(d.indexOf('0')===0)d=d.slice(1);return d;};
   const rawP=normPhone(rawPhone);
-  // ── ĐĂNG NHẬP KHẨN CẤP (mạng lưới an toàn) ───────────────────────
-  // Chỉ dùng khi sheet Nhân sự hỏng/lệch cột khiến không ai đăng nhập được.
-  // V8: ghi nhật ký mỗi lần dùng để kiểm soát; nên đổi mật khẩu định kỳ.
-  if((raw==='admin@mdc.vn'||raw==='sos') && p==='MDC-cuuho-2026'){
-    currentUser={id:'admin_001','Mã NV':'admin_001',name:'Quản trị (khẩn cấp)',
-      password:p,roleTitle:'Tổng giám đốc',phone:'',email:'admin@mdc.vn',
-      capBac:'tonggiamdoc','Vai trò':'tonggiamdoc',perm:'admin',
-      capDuyet:'Tổng giám đốc','Cấp duyệt':'Tổng giám đốc',active:true,
-      color:'#7A3800',initials:'SOS'};
-    err.classList.remove('show');
-    localStorage.setItem(LS_SESSION,JSON.stringify({id:currentUser.id,at:Date.now()}));
-    startApp();
-    // Ghi nhật ký + báo cho quản trị biết đây là phiên khẩn cấp
-    setTimeout(()=>{ try{ logActivity('login_emergency','Hệ thống','','Quản trị (khẩn cấp)','Đăng nhập KHẨN CẤP — kiểm tra sheet Nhân sự','',''); }catch(e){} },1500);
-    setTimeout(()=>{ try{ toast('Đang dùng đăng nhập khẩn cấp — hãy kiểm tra dữ liệu Nhân sự','⚠️'); }catch(e){} },2500);
-    return;
-  }
+  // ── ĐĂNG NHẬP KHẨN CẤP: đã chuyển sang MÁY CHỦ (Script property MDC_EMERGENCY_CODE) — không còn để lộ trong file. Nhập 'sos' + mã cứu hộ → verifyLogin xác thực phía backend.
   const matchFn=s=>{
     const em=(s.email||'').toLowerCase().trim();
     const un=(s.username||'').toLowerCase().trim();
@@ -920,7 +904,7 @@ async function doLogin(){
         if(u.active===false){err.textContent='⛔ Tài khoản đã bị khóa (đã nghỉ việc)';err.classList.add('show');return;}
         err.classList.remove('show');
         currentUser=u;
-        localStorage.setItem(LS_SESSION,JSON.stringify({id:u.id,at:Date.now()}));
+        localStorage.setItem(LS_SESSION,JSON.stringify({id:u.id,at:Date.now(),stoken:(serverResult&&serverResult.token)||'',perm:u.perm||''}));
         startApp();
         setTimeout(()=>logActivity('login','Hệ thống','',u.name,'Đăng nhập CRM','',''),2000);
         return;
@@ -1622,6 +1606,9 @@ function applySettingsUI(s){
 // URL backend hiện hành (v5-selfheal). Mọi thiết bị PHẢI dùng URL này.
 const CANONICAL_API='https://script.google.com/macros/s/AKfycbxamtecKswoDZh4kX1xTlco_-319E4dKEOBjrLwpjS541HVI-kW1AxNsquLBdMJ55gk/exec';
 const SECRET_TOKEN='MDC-Secure-2026-Kp9Qv3Ls2Tn8w'; // ★ P0 bảo mật: phải khớp SECRET_TOKEN ở backend
+// ★ v9.45 — Token PHIÊN (do máy chủ cấp khi đăng nhập). Gắn vào mọi request; backend dùng để xác thực & phân quyền.
+function getSToken(){ try{ var s=JSON.parse(localStorage.getItem(LS_SESSION)||'null'); return (s&&s.stoken)||''; }catch(e){ return ''; } }
+function handleSessionExpired(){ try{ localStorage.removeItem(LS_SESSION); }catch(e){} currentUser=null; try{ var sb=document.getElementById('main-sidebar'); if(sb)sb.style.display='none'; var ma=document.getElementById('main-area'); if(ma)ma.style.display='none'; var ls=document.getElementById('login-screen'); if(ls)ls.classList.remove('hidden'); }catch(e){} try{ toast('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại','⚠️'); }catch(e){} }
 // Các URL deployment CŨ (không có verifyLogin) — tự động thay bằng CANONICAL_API khi gặp.
 const OBSOLETE_APIS=[
   'AKfycbzVMYIh9fgmNo3omy9b0xL4OAKoQt7EZJ1jTgXTDlE1JzgRRGORVeZgshODS5Smpw4S'
@@ -1649,7 +1636,7 @@ async function apiFetch(params){
   // → tránh CORS preflight OPTIONS mà Google Apps Script không xử lý được.
   // ★ Thêm _ts (cache-buster) + cache:'no-store' để điện thoại (Safari) KHÔNG dùng
   //   bản trả về cũ đã lưu cache → luôn gọi đúng backend hiện hành.
-  const q=new URLSearchParams(params); q.set('_ts', Date.now()); q.set('token', SECRET_TOKEN);
+  const q=new URLSearchParams(params); q.set('_ts', Date.now()); q.set('token', SECRET_TOKEN); q.set('stoken', getSToken());
   const res=await fetch(url+'?'+q.toString(),{
     method:'GET',
     redirect:'follow',
@@ -1657,7 +1644,7 @@ async function apiFetch(params){
   });
   if(!res.ok) throw new Error('HTTP '+res.status);
   const json=await res.json();
-  if(!json.ok) throw new Error(json.error||'API error');
+  if(!json.ok){ if(json.needLogin){ handleSessionExpired(); } throw new Error(json.error||'API error'); }
   return json;
 }
 
@@ -1670,11 +1657,11 @@ async function apiPost(body){
     method:'POST',
     redirect:'follow',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(Object.assign({token:SECRET_TOKEN}, body))
+    body:JSON.stringify(Object.assign({token:SECRET_TOKEN, stoken:getSToken()}, body))
   });
   if(!res.ok) throw new Error('HTTP '+res.status);
   const json=await res.json();
-  if(!json.ok) throw new Error(json.error||'API error');
+  if(!json.ok){ if(json.needLogin){ handleSessionExpired(); } throw new Error(json.error||'API error'); }
   return json;
 }
 
@@ -1868,9 +1855,23 @@ async function syncNow(){
   }
 }
 
+// ★ v9.45 — BẢN ĐỒ TRANG DÙNG CHUNG (một nguồn duy nhất cho showPage & rerenderCurrent)
+var CRM_RENDERERS={dashboard:renderDashboard,pipeline_tk:()=>renderPipelineBoard('tk'),pipeline_tc:()=>renderPipelineBoard('tc'),pipeline_cs:()=>renderPipelineBoard('cs'),leads:renderLeads,baogia:renderBaoGiaModule,hopdong:renderHopDongModule,tasks:renderTasks,calendar:renderCalendar,catalog:renderCatalog,dinhmuc:renderDinhMuc,reports:renderReports,connect:renderConnect,settings:renderSettings,staff:renderStaff,actlog:renderActivityLog,trash:renderTrash};
+// Chỉ TRANG THEO DÕI được tự vẽ lại sau đồng bộ 45s. Trang thao tác (báo giá/định mức/hợp đồng/danh mục/kết nối/cài đặt) KHÔNG tự vẽ lại để không mất dữ liệu đang nhập.
+var CRM_AUTO_REFRESH={dashboard:1,pipeline_tk:1,pipeline_tc:1,pipeline_cs:1,leads:1,tasks:1,calendar:1,reports:1};
+function crmIsEditing(){
+  try{
+    var m1=document.getElementById('modal-overlay'); if(m1&&m1.classList.contains('open'))return true;
+    var m2=document.getElementById('crm-modal2'); if(m2&&(m2.classList.contains('open')||m2.classList.contains('show')||m2.style.display==='flex'||m2.style.display==='block'))return true;
+    var ae=document.activeElement; if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))return true;
+  }catch(e){}
+  return false;
+}
 function rerenderCurrent(){
-  const r={dashboard:renderDashboard,pipeline_tk:()=>renderPipelineBoard('tk'),pipeline_tc:()=>renderPipelineBoard('tc'),pipeline_cs:()=>renderPipelineBoard('cs'),leads:renderLeads,tasks:renderTasks,calendar:renderCalendar,catalog:renderCatalog,reports:renderReports,staff:renderStaff,trash:renderTrash,actlog:renderActivityLog};
-  if(r[currentPage]) r[currentPage]();
+  if(CRM_RENDERERS[currentPage]) CRM_RENDERERS[currentPage]();
+}
+function autoRerenderCurrent(){
+  if(currentUser && CRM_AUTO_REFRESH[currentPage] && !crmIsEditing()) rerenderCurrent();
 }
 
 function setSyncState(state,text){
@@ -1898,20 +1899,7 @@ function showPage(page,el){
   if(el) el.classList.add('active');
   const titles={dashboard:'Dashboard',pipeline_tk:'Pipeline Thiết kế',pipeline_tc:'Pipeline Thi công',pipeline_cs:'Chăm sóc sau bán',leads:'Tất cả Khách hàng',baogia:'Báo giá',hopdong:'Hợp đồng',tasks:'Công việc',calendar:'Lịch hẹn',catalog:'Danh mục Công tác & Vật tư',dinhmuc:'Định mức & Đơn giá',reports:'Báo cáo',staff:'Nhân sự & Phân quyền',connect:'Kết nối Google Sheets',settings:'Cài đặt',actlog:'Nhật ký thao tác',trash:'Thùng rác'};
   const _pt=document.getElementById('page-title'); if(_pt) _pt.textContent=titles[page]||page;
-  const renders={
-    dashboard:renderDashboard,
-    pipeline_tk:()=>renderPipelineBoard('tk'),
-    pipeline_tc:()=>renderPipelineBoard('tc'),
-    pipeline_cs:()=>renderPipelineBoard('cs'),
-    leads:renderLeads,baogia:renderBaoGiaModule,hopdong:renderHopDongModule,tasks:renderTasks,
-    calendar:renderCalendar,
-    catalog:renderCatalog,dinhmuc:renderDinhMuc,
-    reports:renderReports,connect:renderConnect,settings:renderSettings,
-    staff:renderStaff,
-    actlog:renderActivityLog,
-    trash:renderTrash
-  };
-  (renders[page]||(() => {}))();
+  (CRM_RENDERERS[page]||(function(){}))();
 }
 
 // ── DASHBOARD — Bàn làm việc / Trung tâm chỉ huy ─────────────
@@ -4167,7 +4155,7 @@ function bootApp(){
 }
 
 // Auto-sync định kỳ (45s). syncFromSheets đã tự flushQueue trước khi kéo về.
-setInterval(()=>{if(currentUser&&getApiUrl()&&!isSyncing)syncFromSheets().then(()=>{if(currentUser)rerenderCurrent();});},45*1000);
+setInterval(()=>{if(currentUser&&getApiUrl()&&!isSyncing)syncFromSheets().then(()=>{autoRerenderCurrent();});},45*1000);
 // Thử đẩy lại hàng đợi offline thường xuyên hơn (15s) — không kéo data, nhẹ
 setInterval(()=>{if(getApiUrl()&&loadQueue().length)flushQueue();},15*1000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser&&getApiUrl()&&!isSyncing)syncFromSheets();});
