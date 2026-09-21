@@ -1017,7 +1017,7 @@ function applyPermissionUI(){
   if(rt)rt.textContent=pLbl+' · MDC';
   document.querySelectorAll('.admin-only').forEach(el=>{el.style.display=isAdmin()?'':'none';});
   const addBtn=document.getElementById('btn-add-lead');
-  if(addBtn)addBtn.style.display=isManager()?'':'none';
+  if(addBtn)addBtn.style.display=currentUser?'':'none';
 }
 
 // Staff helpers
@@ -3660,7 +3660,7 @@ function updateStageDropdown(){
 }
 
 function openAddLead(pipe='tk', defaultStage=null){
-  if(!isManager()){toast('Bạn không có quyền thêm KH','⛔');return;}
+  if(!currentUser){toast('Vui lòng đăng nhập lại','⛔');return;}
   editingLeadId=null;
   document.getElementById('modal-title').textContent='Thêm Khách hàng mới';
   document.getElementById('modal-save-btn').textContent='Lưu';
@@ -3694,7 +3694,8 @@ function openEditLead(id){
   document.getElementById('f-value-tc').value=l.valueTc||'';
   document.getElementById('f-area').value=l.area||'';
   document.getElementById('f-timeline').value=l.timeline||'';
-  document.getElementById('f-owner').value=l.owner||'AN';
+  populateOwnerDropdown();
+  if(isAdmin()){ document.getElementById('f-owner').value=l.owner||'AN'; }
   document.getElementById('f-score').value=l.score||50;
   document.getElementById('f-pipeline').value=getPipelineOfStage(l.stage||'tk_new');
   updateStageDropdown();
