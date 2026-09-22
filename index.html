@@ -5861,6 +5861,7 @@ function bgImpParse(){
     idx.dg =find('don gia');
     idx.tt =find('thanh tien','thanh tien truoc thue');
     idx.gc =find('ghi chu');
+    if(idx.mt<0 && idx.dvt>0){ var _dmax=Math.max(idx.dai,idx.rong,idx.cao,idx.ten); var _c=idx.dvt-1; if(_c>_dmax && _c!==idx.dai && _c!==idx.rong && _c!==idx.cao && _c!==idx.ten) idx.mt=_c; }
     if(idx.ten<0){ hdr=-1; pos=true; }
   }
   var P={stt:0,ten:1,mt:2,dvt:3,dai:4,rong:5,cao:6,kl:7,sl:8,dg:9,tt:10,gc:11};
