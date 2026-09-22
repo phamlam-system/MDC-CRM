@@ -4791,11 +4791,24 @@ function vtcNhomTheoLoai(loai){
   return VTCAT_NHOM.slice();
 }
 
+/* ── Đồng bộ Danh mục Công tác & Vật tư ↔ Google Sheet (v9.49) — bảng nguồn thật, tùy chỉnh trực tiếp trên Sheet ── */
+function catEnsureCloud(){ if(window.__catCloudTried) return; window.__catCloudTried=true; try{ catCloudLoad(true); vtcCloudLoad(true); }catch(e){} }
+function catCloudSave(){ if(typeof apiPost!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
+  toast('Đang lưu Danh mục công tác lên Sheet…');
+  apiPost({app:'pm',action:'saveCatCongTac',data:catAll()}).then(function(r){ toast('✅ Đã lưu Danh mục công tác lên Sheet'+(r&&r.count?(' ('+r.count+' công tác)'):'')); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
+function catCloudLoad(silent){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())){ if(!silent) toast('Chưa kết nối Sheet','⚠️'); return; }
+  apiFetch({app:'pm',action:'getCatCongTac'}).then(function(r){ if(r&&Array.isArray(r.value)&&r.value.length){ catSave(r.value); if(document.getElementById('cat-list')||document.getElementById('vtc-list')) renderCatalog(); if(!silent) toast('✅ Đã tải Danh mục công tác từ Sheet ('+r.value.length+' công tác)'); } else if(!silent) toast('Trên Sheet chưa có Danh mục công tác. Bấm "☁ Lưu lên Sheet" từ máy chuẩn.','⚠️'); }).catch(function(e){ if(!silent) toast('Lỗi: '+e.message,'❌'); }); }
+function vtcCloudSave(){ if(typeof apiPost!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())) return toast('Chưa kết nối Sheet','⚠️');
+  toast('Đang lưu Danh mục vật tư lên Sheet…');
+  apiPost({app:'pm',action:'saveCatVatTu',data:vtcAll()}).then(function(r){ toast('✅ Đã lưu Danh mục vật tư lên Sheet'+(r&&r.count?(' ('+r.count+' vật tư)'):'')); }).catch(function(e){ toast('Lỗi: '+e.message,'❌'); }); }
+function vtcCloudLoad(silent){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='function'&&getApiUrl())){ if(!silent) toast('Chưa kết nối Sheet','⚠️'); return; }
+  apiFetch({app:'pm',action:'getCatVatTu'}).then(function(r){ if(r&&Array.isArray(r.value)&&r.value.length){ vtcSave(r.value); if(document.getElementById('cat-list')||document.getElementById('vtc-list')) renderCatalog(); if(!silent) toast('✅ Đã tải Danh mục vật tư từ Sheet ('+r.value.length+' vật tư)'); } else if(!silent) toast('Trên Sheet chưa có Danh mục vật tư. Bấm "☁ Lưu lên Sheet" từ máy chuẩn.','⚠️'); }).catch(function(e){ if(!silent) toast('Lỗi: '+e.message,'❌'); }); }
 /* ── Màn quản lý danh mục (2 tab: Công tác & Vật tư) ── */
 var _catTab = 'cong';
 function catSetTab(t){ _catTab=t; renderCatalog(); }
 function renderCatalog(){
   var admin = (typeof isAdmin==='function') ? isAdmin() : true;
+  if(typeof catEnsureCloud==='function') catEnsureCloud();   /* ★ v9.49 — tự tải danh mục từ Sheet lần đầu */
   var tabBtn=function(id,txt){ var on=_catTab===id; return '<button onclick="catSetTab(\''+id+'\')" style="padding:8px 16px;border:none;border-bottom:3px solid '+(on?'#B08D57':'transparent')+';background:none;cursor:pointer;font-size:13px;font-weight:'+(on?'800':'600')+';color:'+(on?'#8A6D3B':'#9A8F82')+'">'+txt+'</button>'; };
   var head='<div class="table-wrap" style="padding:0;overflow:hidden">'
     + '<div style="padding:16px 18px 0;border-bottom:1px solid var(--lgray,#eee)">'
@@ -4807,6 +4820,8 @@ function renderCatalog(){
     body='<div style="padding:12px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#FBF9F4">'
       + (admin?'<button class="btn btn-primary btn-sm" onclick="vtcForm()">＋ Thêm vật tư</button>':'')
       + (admin?'<button class="btn btn-outline btn-sm" onclick="vtcResetSeed()" title="Nạp lại bộ vật tư gốc">↻ Nạp lại mẫu</button>':'')
+      + (admin?'<button class="btn btn-outline btn-sm" onclick="vtcCloudSave()" title="Đưa danh mục vật tư lên Google Sheet để chỉnh &amp; dùng chung mọi máy">☁ Lưu lên Sheet</button>':'')
+      + '<button class="btn btn-outline btn-sm" onclick="vtcCloudLoad()" title="Tải danh mục vật tư từ Google Sheet">⬇ Tải từ Sheet</button>'
       + '<input id="vtc-q" placeholder="🔍 Tìm vật tư…" oninput="vtcRenderList()" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px">'
       + '<select id="vtc-fnhom" onchange="vtcRenderList()" style="padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"><option value="">Tất cả giai đoạn</option>'
       + VTCAT_NHOM.map(function(t){return '<option>'+esc2(t)+'</option>';}).join('') + '</select></div>'
@@ -4817,6 +4832,8 @@ function renderCatalog(){
     body='<div style="padding:12px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#FBF9F4">'
       + (admin?'<button class="btn btn-primary btn-sm" onclick="catForm()">＋ Thêm công tác</button>':'')
       + (admin?'<button class="btn btn-outline btn-sm" onclick="catResetSeed()" title="Nạp lại bộ công tác gốc">↻ Nạp lại mẫu</button>':'')
+      + (admin?'<button class="btn btn-outline btn-sm" onclick="catCloudSave()" title="Đưa danh mục công tác lên Google Sheet để chỉnh &amp; dùng chung mọi máy">☁ Lưu lên Sheet</button>':'')
+      + '<button class="btn btn-outline btn-sm" onclick="catCloudLoad()" title="Tải danh mục công tác từ Google Sheet">⬇ Tải từ Sheet</button>'
       + '<input id="cat-q" placeholder="🔍 Tìm công tác…" oninput="catRenderList()" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px">'
       + '<select id="cat-floai" onchange="catRenderList()" style="padding:8px 10px;border:1px solid #DED8CE;border-radius:7px;font-size:13px"><option value="">Tất cả giai đoạn</option>'
       + LOAI_BAOGIA.map(function(t){return '<option>'+esc2(t)+'</option>';}).join('') + '</select></div>'
@@ -7116,17 +7133,27 @@ function dmFmt(n){ return (Math.round(+n||0)).toLocaleString('vi-VN'); }
 /* ── Đồng bộ Google Sheet (dùng chung mọi máy) — qua kho pmkv key 'crm_dm' ── */
 function dmCloudSave(){
   if(typeof apiPost!=='function' || !(typeof getApiUrl==='function'&&getApiUrl())){ toast('Chưa kết nối Google Sheets','⚠️'); return; }
-  toast('Đang lưu định mức lên Sheet…');
-  apiPost({app:'pm',action:'savePMKV',data:{key:'crm_dm',value:JSON.stringify(dmAll())}})
-    .then(function(){ toast('✅ Đã lưu định mức lên Sheet — mọi máy sẽ dùng chung'); })
+  toast('Đang lưu định mức + bảng Loại SP & Đơn giá bốc tách lên Sheet…');
+  var jobs=[ apiPost({app:'pm',action:'savePMKV',data:{key:'crm_dm',value:JSON.stringify(dmAll())}}),
+            apiPost({app:'pm',action:'saveDmTypes',data:(dmAll().types||DM_SEED.types)}),
+            apiPost({app:'pm',action:'saveDmBoRates',data:boRateRows()}) ];
+  Promise.all(jobs)
+    .then(function(){ toast('✅ Đã lưu định mức + bảng Loại SP & Đơn giá bốc tách lên Sheet'); })
     .catch(function(e){ toast('Lỗi lưu lên Sheet: '+e.message,'❌'); });
 }
 function dmCloudLoad(silent){
   if(typeof apiFetch!=='function' || !(typeof getApiUrl==='function'&&getApiUrl())) return Promise.resolve(false);
   return apiFetch({app:'pm',action:'getPMKV',key:'crm_dm'}).then(function(r){
-    if(r&&r.value&&r.value.mat&&r.value.markup){ dmSave(r.value); if(!silent) toast('✅ Đã tải định mức từ Sheet'); return true; }
-    if(!silent) toast('Trên Sheet chưa có định mức. Hãy bấm "Lưu lên Sheet" từ máy có bảng giá chuẩn.','⚠️');
-    return false;
+    var got=false;
+    if(r&&r.value&&r.value.mat&&r.value.markup){ dmSave(r.value); got=true; }
+    return apiFetch({app:'pm',action:'getDmTables'}).then(function(t){
+      if(t){ var D=dmAll(), chg=false;
+        if(t.types&&t.types.length){ D.types=t.types; chg=true; }
+        if(t.boRates&&typeof t.boRates==='object'&&Object.keys(t.boRates).length){ D.boRates=t.boRates; chg=true; }
+        if(chg){ dmSave(D); got=true; } }
+      if(!silent){ if(got) toast('✅ Đã tải định mức (bảng Loại SP & Đơn giá bốc tách) từ Sheet'); else toast('Trên Sheet chưa có định mức. Hãy bấm "Lưu lên Sheet" từ máy có bảng giá chuẩn.','⚠️'); }
+      return got;
+    }).catch(function(){ if(!silent&&got) toast('✅ Đã tải định mức từ Sheet'); return got; });
   }).catch(function(e){ if(!silent) toast('Lỗi tải từ Sheet: '+e.message,'❌'); return false; });
 }
 function dmEnsureCloud(){ if(window.__dmCloudTried) return; window.__dmCloudTried=true; dmCloudLoad(true).then(function(ok){ if(ok&&currentPage==='dinhmuc') renderDinhMuc(); }); }
@@ -7673,7 +7700,7 @@ function boLoadTpl(existing){
   var T=BO_TPL[__bo.tpl];
   var p={}; T.params.forEach(function(pp){ p[pp.k]=pp.def; }); if(existing&&existing.p) Object.assign(p,existing.p);
   var m={}; T.mats.forEach(function(k){ m[k]=boDefIdxK(k); }); if(existing&&existing.m) Object.assign(m,existing.m); var _fullN=boFullOpts().length; T.mats.forEach(function(k){ if(m[k]==null||m[k]<0||m[k]>=_fullN) m[k]=boDefIdxK(k); });
-  var r={}; (T.rates||[]).forEach(function(k){ r[k]=BO_RATE_DEF[k]; }); if((T.rates||[]).indexOf('nc')>-1) r.nc=(dmAll().rates.tuNhanCongVan||150000); if((T.rates||[]).indexOf('kinh')>-1 && typeof vlKinhGia==='function'){ var _kg=vlKinhGia(); if(_kg) r.kinh=_kg; } if(existing&&existing.rates) Object.assign(r,existing.rates);
+  var r={}; (T.rates||[]).forEach(function(k){ r[k]=boRate(k); }); if((T.rates||[]).indexOf('nc')>-1) r.nc=(dmAll().rates.tuNhanCongVan||150000); if((T.rates||[]).indexOf('kinh')>-1 && typeof vlKinhGia==='function'){ var _kg=vlKinhGia(); if(_kg) r.kinh=_kg; } if(existing&&existing.rates) Object.assign(r,existing.rates);
   __bo.p=p; __bo.m=m; __bo.rates=r;
   __bo.canhKieu=(existing&&existing.canhKieu)||__bo.canhKieu||'phang';
 }
@@ -7752,6 +7779,11 @@ function dmCfgEditRow(el){ var row=el.closest('.bg-row'); if(!row) return; var c
 /* mở rộng đơn giá phụ */
 BO_RATE_DEF.chan=250000; BO_RATE_DEF.led=180000;
 BO_RATE_LB.chan='Chân bàn/tủ (/cái)'; BO_RATE_LB.led='Đèn LED dây (/md)';
+/* ★ v9.50 — Đơn giá bốc tách tùy chỉnh trên Sheet (bảng DM_DonGia_BocTach). boRate(k) = override dmAll().boRates đè lên BO_RATE_DEF gốc. */
+var BO_RATE_DVT={canh:'₫/md', treo:'₫/md', keo:'₫/cái', ketHop:'₫/m²', ncOp:'₫/m²', chan:'₫/cái', led:'₫/md'};
+var BO_RATE_KEYS=['canh','treo','keo','ketHop','ncOp','chan','led'];   /* loại nc & kinh: đã lấy từ đơn giá nhân công & Danh mục vật liệu */
+function boRate(k){ var ov=(dmAll().boRates||{}); return (ov[k]!=null)?(+ov[k]||0):(+BO_RATE_DEF[k]||0); }
+function boRateRows(){ var ov=(dmAll().boRates||{}); return BO_RATE_KEYS.map(function(k){ return { ma:k, label:(BO_RATE_LB[k]||k), gia:(ov[k]!=null?(+ov[k]||0):(+BO_RATE_DEF[k]||0)), dvt:(BO_RATE_DVT[k]||'') }; }); }
 
 /* sơ đồ đơn giản cho giường & bàn */
 function boSvgBed(W,Hdg){
