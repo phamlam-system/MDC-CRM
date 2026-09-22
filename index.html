@@ -2411,62 +2411,80 @@ function formatTaskDate(task){
 // ══════════════════════════════════════════════════════════════
 let calMonth = new Date().getMonth();   // 0-11
 let calYear  = new Date().getFullYear();
+let calMode  = 'month';                  // ★ v9.48 — 'month' | 'week' | 'day'
+let calRef   = new Date();               // mốc ngày cho chế độ Tuần / Ngày
+function calSetMode(m){ calMode=m; if(m!=='month'){ var dd=Math.min(calRef.getDate(),28); calRef=new Date(calYear, calMonth, dd); } renderCalendar(); }
 function calShift(delta){
-  calMonth += delta;
-  if(calMonth<0){ calMonth=11; calYear--; }
-  else if(calMonth>11){ calMonth=0; calYear++; }
+  if(calMode==='month'){
+    calMonth += delta;
+    if(calMonth<0){ calMonth=11; calYear--; }
+    else if(calMonth>11){ calMonth=0; calYear++; }
+  } else {
+    calRef = new Date(calRef.getTime() + delta*(calMode==='week'?7:1)*86400000);
+    calMonth=calRef.getMonth(); calYear=calRef.getFullYear();
+  }
   renderCalendar();
 }
-function calToday(){ const n=new Date(); calMonth=n.getMonth(); calYear=n.getFullYear(); renderCalendar(); }
+function calToday(){ const n=new Date(); calMonth=n.getMonth(); calYear=n.getFullYear(); calRef=n; renderCalendar(); }
 // Task của người dùng hiện tại (admin thấy tất cả)
 function myVisibleTasks(){
   if(!currentUser) return [];
   return isAdmin() ? tasks : tasks.filter(t=>t.assignee===currentUser.id||!t.assignee);
 }
 function renderCalendar(){
-  const first=new Date(calYear, calMonth, 1);
-  const startDow=(first.getDay()+6)%7;            // T2=0 … CN=6 (tuần bắt đầu Thứ Hai)
-  const daysInMonth=new Date(calYear, calMonth+1, 0).getDate();
-  const monthNames=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
   const todayStr=new Date().toISOString().split('T')[0];
-
-  // Gom task theo ngày
   const byDay={};
-  myVisibleTasks().filter(t=>!t.done && t.date).forEach(t=>{
-    (byDay[t.date]=byDay[t.date]||[]).push(t);
-  });
-
-  // Dựng các ô (padding đầu tháng + ngày)
-  let cells='';
-  for(let i=0;i<startDow;i++) cells+='<div class="cal-cell cal-empty"></div>';
-  for(let d=1;d<=daysInMonth;d++){
-    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const items=(byDay[ds]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
-    const isToday=ds===todayStr;
-    const overdue=ds<todayStr;
-    const chips=items.slice(0,3).map(t=>{
-      const tt=TASK_TYPES[t.type]||TASK_TYPES.other;
-      const who=t.lead||staffName(t.assignee)||'';
-      return `<div class="cal-chip" style="background:${tt.bg};color:${tt.color}" onclick="event.stopPropagation();goToTaskLead('${t.leadId||''}')" title="${esc2((t.time?t.time+' · ':'')+(t.text||'')+(who?' · '+who:''))}">
-        ${t.time?`<b>${esc2(t.time.slice(0,5))}</b> `:''}${tt.icon} ${esc2((t.text||'').slice(0,18))}</div>`;
-    }).join('');
-    const more=items.length>3?`<div class="cal-more">+${items.length-3} việc khác</div>`:'';
-    cells+=`<div class="cal-cell ${isToday?'cal-today':''}" onclick="openAddTaskOnDate('${ds}')">
-      <div class="cal-num ${isToday?'cal-num-today':''} ${overdue&&items.length?'cal-num-over':''}">${d}</div>
-      ${chips}${more}</div>`;
-  }
-
+  myVisibleTasks().filter(t=>!t.done && t.date).forEach(t=>{ (byDay[t.date]=byDay[t.date]||[]).push(t); });
+  const fmtDs=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const monthNames=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
   const dow=['T2','T3','T4','T5','T6','T7','CN'];
+  const chip=(t)=>{ const tt=TASK_TYPES[t.type]||TASK_TYPES.other; const who=t.lead||staffName(t.assignee)||''; return `<div class="cal-chip" style="background:${tt.bg};color:${tt.color}" onclick="event.stopPropagation();goToTaskLead('${t.leadId||''}')" title="${esc2((t.time?t.time+' · ':'')+(t.text||'')+(who?' · '+who:''))}">${t.time?`<b>${esc2(t.time.slice(0,5))}</b> `:''}${tt.icon} ${esc2((t.text||'').slice(0,22))}</div>`; };
+  const modeBtns=`<div style="margin-left:8px;display:inline-flex;border:1px solid #DED8CE;border-radius:8px;overflow:hidden">`
+    + ['month','week','day'].map(m=>`<button class="btn btn-sm" style="border:none;border-radius:0;${calMode===m?'background:var(--gold,#B08D57);color:#fff':'background:#fff;color:#6F6355'}" onclick="calSetMode('${m}')">${({month:'Tháng',week:'Tuần',day:'Ngày'})[m]}</button>`).join('') + `</div>`;
+  let title='', body='';
+  if(calMode==='month'){
+    const first=new Date(calYear, calMonth, 1);
+    const startDow=(first.getDay()+6)%7;
+    const daysInMonth=new Date(calYear, calMonth+1, 0).getDate();
+    let cells='';
+    for(let i=0;i<startDow;i++) cells+='<div class="cal-cell cal-empty"></div>';
+    for(let d=1;d<=daysInMonth;d++){
+      const ds=fmtDs(calYear,calMonth,d);
+      const items=(byDay[ds]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      const isToday=ds===todayStr, overdue=ds<todayStr;
+      const chips=items.slice(0,3).map(chip).join('');
+      const more=items.length>3?`<div class="cal-more">+${items.length-3} việc khác</div>`:'';
+      cells+=`<div class="cal-cell ${isToday?'cal-today':''}" onclick="openAddTaskOnDate('${ds}')"><div class="cal-num ${isToday?'cal-num-today':''} ${overdue&&items.length?'cal-num-over':''}">${d}</div>${chips}${more}</div>`;
+    }
+    title=`${monthNames[calMonth]} ${calYear}`;
+    body=`<div class="cal-grid cal-head">${dow.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div><div class="cal-grid">${cells}</div>`;
+  } else if(calMode==='week'){
+    const ref=new Date(calRef); const wd=(ref.getDay()+6)%7; const mon=new Date(ref.getTime()-wd*86400000);
+    let cols='';
+    for(let i=0;i<7;i++){ const dt=new Date(mon.getTime()+i*86400000); const ds=fmtDs(dt.getFullYear(),dt.getMonth(),dt.getDate());
+      const items=(byDay[ds]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      const isToday=ds===todayStr;
+      cols+=`<div class="cal-cell" style="min-height:150px;${isToday?'outline:2px solid var(--gold,#B08D57);outline-offset:-2px':''}" onclick="openAddTaskOnDate('${ds}')"><div class="cal-num ${isToday?'cal-num-today':''}">${dow[i]} ${dt.getDate()}/${dt.getMonth()+1}</div>${items.map(chip).join('')||'<div style="font-size:11px;color:#c4bdb0;margin-top:6px">—</div>'}</div>`;
+    }
+    const monEnd=new Date(mon.getTime()+6*86400000);
+    title=`Tuần ${mon.getDate()}/${mon.getMonth()+1} – ${monEnd.getDate()}/${monEnd.getMonth()+1}/${monEnd.getFullYear()}`;
+    body=`<div class="cal-grid">${cols}</div>`;
+  } else {
+    const dt=new Date(calRef); const ds=fmtDs(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    const items=(byDay[ds]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    title=`${dow[(dt.getDay()+6)%7]}, ${dt.getDate()}/${dt.getMonth()+1}/${dt.getFullYear()}`;
+    body=`<div class="table-wrap" style="padding:14px;max-width:640px;cursor:pointer" onclick="openAddTaskOnDate('${ds}')">${items.length?items.map(chip).join(''):'<div style="color:#9A8F82;font-size:13px;text-align:center;padding:20px">Không có việc/hẹn — bấm để thêm</div>'}</div>`;
+  }
   document.getElementById('page-content').innerHTML=`
     <div class="cal-toolbar">
       <button class="btn btn-outline btn-sm" onclick="calShift(-1)">‹ Trước</button>
-      <div class="cal-title">${monthNames[calMonth]} ${calYear}</div>
+      <div class="cal-title">${title}</div>
       <button class="btn btn-outline btn-sm" onclick="calShift(1)">Sau ›</button>
       <button class="btn btn-outline btn-sm" style="margin-left:8px" onclick="calToday()">Hôm nay</button>
-      <div style="margin-left:auto;font-size:12px;color:var(--mgray)">Bấm vào một ngày để thêm lịch hẹn</div>
+      ${modeBtns}
+      <div style="margin-left:auto;font-size:12px;color:var(--mgray)">Bấm vào ngày để thêm lịch hẹn</div>
     </div>
-    <div class="cal-grid cal-head">${dow.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
-    <div class="cal-grid">${cells}</div>`;
+    ${body}`;
 }
 // Thêm việc/hẹn với ngày định sẵn (bấm vào ô lịch)
 function openAddTaskOnDate(ds){
@@ -3049,6 +3067,28 @@ function renderReports(){
         }).join('');
         return `<div class="table-wrap"><table class="data-table">${head}<tbody>${body}</tbody></table></div>`;
       })()}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+      <div class="chart-card"><div class="chart-title">📊 Win / Loss theo lý do</div>
+        ${(function(){
+          const lost=all.filter(l=>['tk_lost','tc_lost'].includes(l.stage));
+          if(!lost.length) return '<div style="color:var(--mgray);text-align:center;padding:20px">Chưa có deal mất</div>';
+          const by={}; lost.forEach(l=>{ const r=(l.lostReason||'Chưa rõ lý do'); by[r]=(by[r]||0)+1; });
+          const arr=Object.entries(by).sort((a,b)=>b[1]-a[1]); const mx=Math.max.apply(null,arr.map(x=>x[1]));
+          const noReason=lost.filter(l=>!l.lostReason).length;
+          return arr.map(([r,n])=>`<div class="bar-group"><div class="bar-label-row"><span class="bar-label">${esc2(r)}</span><span class="bar-amount">${n} deal</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%;background:var(--ruby,#B03A3A)"></div></div></div>`).join('')
+            + (noReason?`<div style="font-size:11.5px;color:#9A8F82;margin-top:6px">${noReason} deal chưa ghi lý do — mở KH đã mất để bổ sung.</div>`:'');
+        })()}
+      </div>
+      <div class="chart-card"><div class="chart-title">⏳ Deal đang kẹt (ở lâu 1 giai đoạn)</div>
+        ${(function(){
+          const kt=dealsKet();
+          if(!kt.length) return '<div style="color:#0F5132;text-align:center;padding:20px">Không có deal kẹt 👍</div>';
+          return '<div class="table-wrap"><table class="data-table"><thead><tr><th>Khách hàng</th><th>Giai đoạn</th><th style="text-align:center">Số ngày</th></tr></thead><tbody>'
+            + kt.slice(0,12).map(l=>`<tr onclick="openPanel('${l.id}')" style="cursor:pointer"><td style="font-weight:600">${esc2(l.name||'')}</td><td>${esc2(getStageObj(leadStage(l)).label)}</td><td style="text-align:center;color:#B23A2E;font-weight:700">${daysInStage(l)}d</td></tr>`).join('')
+            + '</tbody></table></div>'+(kt.length>12?`<div style="font-size:11.5px;color:#9A8F82;margin-top:6px">… và ${kt.length-12} deal khác</div>`:'');
+        })()}
+      </div>
     </div>`;
 }
 
@@ -3528,10 +3568,12 @@ async function updateStage(id,stage){
   const oldLbl = getStageObj(isTcWrite ? (l.stageTc||'tc_new') : l.stage).label;
   setLeadStage(l,stage);
   const nw=getStageObj(stage).label;
+  l.stageAt=Date.now();  // ★ v9.48 — mốc vào giai đoạn hiện tại (dùng cho time-in-stage)
   if(!Array.isArray(l.history)) l.history=[];
-  l.history.unshift({t:`Cập nhật: ${oldLbl} → ${nw}`,time:nowStr()});
+  l.history.unshift({t:`Cập nhật: ${oldLbl} → ${nw}`,time:nowStr(),ts:Date.now(),kind:'stage'});
   l.lastContact=new Date().toISOString().split('T')[0];
   touch(l);
+  if(stage==='tk_lost'||stage==='tc_lost'){ l.lostAt=Date.now(); setTimeout(function(){ try{ bgLostReason(l.id); }catch(e){} }, 350); }
   // Tự động tạo checklist tasks cho giai đoạn mới
   const newChkTasks = createStageChecklistTasks(l, stage);
   if(newChkTasks.length > 0){
@@ -3546,6 +3588,48 @@ async function updateStage(id,stage){
     toast(`→ ${nw} · ✓ ${newChkTasks.length} việc mới`);
   else
     toast(`Chuyển sang: ${nw}`);
+}
+
+// ★ v9.48 — WIN/LOSS: lý do mất deal
+var LOST_REASONS=['Giá cao','Chọn đối thủ','Không còn nhu cầu','Chưa đủ ngân sách','Mất liên lạc','Tiến độ không đáp ứng','Khác'];
+function bgLostReason(id){
+  var l=leads.find(function(x){return x.id==id;}); if(!l) return;
+  var cur=l.lostReason||'';
+  var h='<div style="font-size:12.5px;color:#7A756C;margin-bottom:10px">Vì sao mất deal <b>'+esc2(l.name||'')+'</b>? (giúp báo cáo Win/Loss chính xác)</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+    + LOST_REASONS.map(function(r){ return '<button type="button" class="btn btn-outline btn-sm" style="'+(cur===r?'background:#FBE9E7;border-color:#E7A9A2;color:#B23A2E;font-weight:700':'')+'" onclick="bgSetLostReason(\''+id+'\',\''+esc2(r)+'\')">'+esc2(r)+'</button>'; }).join('')
+    +'</div>'
+    +'<div><label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase">Ghi chú thêm (tùy chọn)</label>'
+    +'<input id="lost-note" value="'+esc2(l.lostNote||'')+'" placeholder="Chi tiết…" style="width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-outline" onclick="dongModal2()">Để sau</button></div>';
+  modal2('❌ Lý do mất deal', h);
+}
+async function bgSetLostReason(id, reason){
+  var l=leads.find(function(x){return x.id==id;}); if(!l) return;
+  l.lostReason=reason;
+  var note=(document.getElementById('lost-note')||{}).value||''; if(note) l.lostNote=note;
+  if(!Array.isArray(l.history)) l.history=[];
+  l.history.unshift({t:'❌ Lý do mất deal: '+reason+(note?(' — '+note):''),time:nowStr(),ts:Date.now(),kind:'system',by:(currentUser&&currentUser.name)||''});
+  touch(l); saveLocal(); dongModal2();
+  try{ await pushLead(l); }catch(e){}
+  toast('Đã lưu lý do: '+reason);
+  if(currentPage==='reports') rerenderCurrent();
+}
+// ★ v9.48 — TIME-IN-STAGE: số ngày ở giai đoạn hiện tại
+function stageEnteredMs(l){
+  if(l.stageAt) return +l.stageAt;
+  if(Array.isArray(l.history)){ for(var i=0;i<l.history.length;i++){ var e=l.history[i]; if(e&&e.kind==='stage'&&e.ts) return +e.ts; } }
+  var ref=l.lastContact||l.created; var d=ref?new Date(ref):null; return (d&&!isNaN(d))?d.getTime():Date.now();
+}
+function daysInStage(l){ return Math.floor((Date.now()-stageEnteredMs(l))/86400000); }
+// Deal đang mở nhưng "kẹt" quá lâu ở một giai đoạn (ngưỡng theo SLA giai đoạn, tối thiểu 7 ngày)
+function dealsKet(){
+  var closed=['tk_accept','tk_lost','tc_handover','tc_lost'];
+  return visibleLeads().filter(function(l){
+    var st=leadStage(l); if(closed.indexOf(st)>-1) return false;
+    var sla=(typeof STAGE_SLA!=='undefined'&&STAGE_SLA[st])?STAGE_SLA[st]:7;
+    return daysInStage(l) > Math.max(sla, 7);
+  }).sort(function(a,b){ return daysInStage(b)-daysInStage(a); });
 }
 
 async function handleTransferAccept(id){
@@ -4494,6 +4578,10 @@ function htOf(kho, maKH){ return (HT[kho]||[]).filter(function(x){ return String
 
 /* Trạng thái báo giá theo thứ tự vòng đời */
 var BG_TT = ['Bản nháp','Chờ duyệt','Đã duyệt','Đã gửi khách','Khách chấp thuận','Từ chối','Đã thay thế'];
+/* ★ v9.47 — CHUẨN HÓA TRẠNG THÁI: chống lệch chuỗi (khoảng trắng thừa, hoa/thường) làm rớt khỏi TỔNG TIỀN.
+   ttChuan: gom khoảng trắng + trim + thường. ttLa: so khớp với 1 trong các trạng thái đích (đã chuẩn hóa). */
+function ttChuan(s){ return String(s==null?'':s).replace(/\s+/g,' ').trim().toLowerCase(); }
+function ttLa(s){ var x=ttChuan(s); for(var i=1;i<arguments.length;i++){ if(ttChuan(arguments[i])===x) return true; } return false; }
 var BG_MAU = {
   'Bản nháp':      ['#EFEBE4','#6F6355'], 'Chờ duyệt':      ['#EDE7F6','#5E35B1'],
   'Đã duyệt':      ['#E3F1E1','#2E6B32'], 'Đã gửi khách':   ['#E3EDF9','#1D4E89'],
@@ -5141,7 +5229,7 @@ function tinhHanhTrinh(l){
   var hienTai = BUOC_HT.length;
   for(var i=0;i<BUOC_HT.length;i++){ if(!xong[BUOC_HT[i].k]){ hienTai = i; break; } }
   return {xong:xong, soXong:n, hienTai:hienTai, bg:bg, ks:ks, ls:ls, hd:hd,
-          bgMoi: bg.filter(function(b){return b['Trạng thái']!=='Đã thay thế';})
+          bgMoi: bg.filter(function(b){return !ttLa(b['Trạng thái'],'Đã thay thế');})
                    .sort(function(a,b){ return (+b['Phiên bản']||0)-(+a['Phiên bản']||0); })[0] || null};
 }
 
@@ -5754,9 +5842,46 @@ function bgApplyMau(force){
   if(force && !mau.length) toast('Loại này chưa có mẫu — hãy tự thêm hạng mục');
   bgCalc();
 }
+// ★ v9.48 — TỰ LƯU NHÁP form báo giá (chống mất khi lỡ đóng; khác với lưu 'Bản nháp' lên Sheet)
+function bgDraftKey(id){ return 'mdc_crm_bgdraft_'+id; }
+function bgDraftClear(id){ try{ localStorage.removeItem(bgDraftKey(id)); }catch(e){} }
+function bgDraftSave(){
+  try{
+    var l=window.__htLead; if(!l||window.__bgFormMa) return;      // chỉ lưu nháp cho báo giá MỚI
+    if(!document.getElementById('bg-items')) return;
+    var items=(typeof bgCollect==='function')?bgCollect():[];
+    var ten=(document.getElementById('bg-ten')||{}).value||'';
+    var hasData=(items&&items.some(function(i){return (+i.sl||+i.kl||+i.dg);}))||(ten&&ten.indexOf('Báo giá – ')!==0);
+    if(!hasData) return;
+    var s={ ten:ten, loai:(document.getElementById('bg-loai')||{}).value||'', ngay:(document.getElementById('bg-ngay')||{}).value||'',
+      hl:(document.getElementById('bg-hl')||{}).value||'', ck:(document.getElementById('bg-ck')||{}).value||'',
+      vat:(document.getElementById('bg-vat')||{}).value||'', items:items, at:Date.now() };
+    localStorage.setItem(bgDraftKey(l.id), JSON.stringify(s));
+  }catch(e){}
+}
+function bgDraftBanner(id,s){
+  var t=''; try{ t=new Date(s.at).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}); }catch(e){}
+  return '<div id="bg-draft-banner" style="background:#EDE7F6;border:1px solid #D6CBEA;color:#5E35B1;padding:9px 12px;border-radius:8px;font-size:12.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+    +'📝 Có nháp chưa lưu'+(t?(' ('+t+')'):'')+'.'
+    +'<button type="button" class="btn btn-sm btn-primary" style="margin-left:auto" onclick="bgDraftApply(\''+id+'\')">Khôi phục</button>'
+    +'<button type="button" class="btn btn-sm btn-outline" onclick="bgDraftClear(\''+id+'\');var b=document.getElementById(\'bg-draft-banner\');if(b)b.style.display=\'none\'">Bỏ nháp</button></div>';
+}
+function bgDraftApply(id){
+  try{ var s=JSON.parse(localStorage.getItem(bgDraftKey(id))||'null'); if(!s) return;
+    var set=function(k,v){ var e=document.getElementById(k); if(e&&v!=null&&v!=='') e.value=v; };
+    if(s.loai){ var le=document.getElementById('bg-loai'); if(le){ le.value=s.loai; window.__bgLoai=s.loai; } }
+    set('bg-ten',s.ten); set('bg-ngay',s.ngay); set('bg-hl',s.hl); set('bg-ck',s.ck); set('bg-vat',s.vat);
+    if(s.items&&s.items.length){ var c=document.getElementById('bg-items'); if(c) c.innerHTML=s.items.map(bgRowHtml).join(''); }
+    if(typeof bgCalc==='function') bgCalc();
+    var b=document.getElementById('bg-draft-banner'); if(b) b.style.display='none';
+    toast('Đã khôi phục nháp chưa lưu');
+  }catch(e){}
+}
 function htFormBaoGia(ma){
   var l = window.__htLead; if(!l) return;
+  window.__bgFormMa = ma||'';
   var x = ma ? (HT.baogia||[]).filter(function(r){return r['Mã BG']===ma;})[0] : null;
+  var _bgDraft = (!ma) ? (function(){ try{ return JSON.parse(localStorage.getItem(bgDraftKey(l.id))||'null'); }catch(e){ return null; } })() : null;
   var bgs = htOf('baogia', l.id);
   var pbMoi = bgs.reduce(function(a,b){ return Math.max(a, +b['Phiên bản']||0); }, 0) + 1;
   var m = x ? (BG_MAU[x['Trạng thái']]||['#EFEBE4','#6F6355']) : null;
@@ -5769,7 +5894,7 @@ function htFormBaoGia(ma){
   var lab='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px';
   var inp='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px';
 
-  var h = (x ? '<div style="background:'+m[0]+';color:'+m[1]+';padding:8px 12px;border-radius:8px;font-size:12.5px;margin-bottom:12px"><b>v'+(x['Phiên bản']||1)+'</b> · '+esc2(x['Trạng thái'])+(x['Người lập']?' · lập bởi '+esc2(x['Người lập']):'')+(x['Người duyệt']?' · duyệt bởi '+esc2(x['Người duyệt']):'')+'</div>' : '')
+  var h = (_bgDraft ? bgDraftBanner(l.id,_bgDraft) : '') + (x ? '<div style="background:'+m[0]+';color:'+m[1]+';padding:8px 12px;border-radius:8px;font-size:12.5px;margin-bottom:12px"><b>v'+(x['Phiên bản']||1)+'</b> · '+esc2(x['Trạng thái'])+(x['Người lập']?' · lập bởi '+esc2(x['Người lập']):'')+(x['Người duyệt']?' · duyệt bởi '+esc2(x['Người duyệt']):'')+'</div>' : '')
     + '<datalist id="bg-dvt-list">'+DVT_BG.map(function(d){return '<option value="'+d+'">';}).join('')+'</datalist>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
     + '<div><label style="'+lab+'">Tiêu đề báo giá</label><input id="bg-ten" value="'+esc2(x?x['Tiêu đề']:('Báo giá – '+(l.name||'')))+'" style="'+inp+'"></div>'
@@ -5854,7 +5979,7 @@ function htFormBaoGia(ma){
     + '<button class="btn btn-outline" onclick="htRender()">Hủy</button>'
     + '<button class="btn btn-primary" onclick="htLuuBaoGia(\''+(ma||'')+'\')">Lưu báo giá</button></div>';
   modal2(x?('Báo giá v'+(x['Phiên bản']||1)):'📄 Lập báo giá chi tiết', h);
-  setTimeout(function(){ bgCalc(); var d=bgIsDetail(); var hb=document.getElementById('bg-headbtns'); if(hb) hb.style.display=d?'inline':'none'; var lg=document.getElementById('bg-legend'); if(lg) lg.style.display=d?'block':'none'; }, 30);
+  setTimeout(function(){ bgCalc(); var d=bgIsDetail(); var hb=document.getElementById('bg-headbtns'); if(hb) hb.style.display=d?'inline':'none'; var lg=document.getElementById('bg-legend'); if(lg) lg.style.display=d?'block':'none'; var _box=document.getElementById('crm-modal2'); if(_box) _box.oninput=function(){ bgDraftSave(); }; }, 30);
 }
 async function bgUploadFile(input){
   var f = input.files && input.files[0]; if(!f) return;
@@ -5901,7 +6026,7 @@ function htLuuBaoGia(ma){
     var bgs = htOf('baogia', l.id);
     var pb = bgs.reduce(function(a,b){ return Math.max(a, +b['Phiên bản']||0); }, 0) + 1;
     bgs.forEach(function(b){
-      if(b['Trạng thái']!=='Đã thay thế' && b['Trạng thái']!=='Từ chối'){
+      if(!ttLa(b['Trạng thái'],'Đã thay thế','Từ chối')){
         b['Trạng thái']='Đã thay thế'; ops.push({action:'saveBaoGia', data:b});
       }
     });
@@ -5914,6 +6039,7 @@ function htLuuBaoGia(ma){
   bgExtSave(rec['Mã BG'], { ct: bgCtCollect(), vt: bgVtCollect(), qt:(document.getElementById('bg-qt')||{}).value||'' });
   htSave();
   ops.forEach(function(o){ htGui(o.action, o.data); });
+  try{ if(l&&l.id) bgDraftClear(l.id); }catch(e){}
   htRender(); toast('Đã lưu báo giá');
 }
 /* ★ Xuất/In báo giá chuyên nghiệp gửi khách */
@@ -6822,7 +6948,7 @@ function bgmRows(){
 function bgmRender(){
   var rows=bgmRows(), sum=document.getElementById('bgm-sum');
   if(sum){
-    var hieuLuc=rows.filter(function(b){return b['Trạng thái']!=='Đã thay thế'&&b['Trạng thái']!=='Từ chối';});
+    var hieuLuc=rows.filter(function(b){return !ttLa(b['Trạng thái'],'Đã thay thế','Từ chối');});
     var giaTri=hieuLuc.reduce(function(a,b){return a+(+b['Giá trị (đ)']||0);},0);
     var choDuyet=rows.filter(function(b){return b['Trạng thái']==='Chờ duyệt';}).length;
     var chapThuan=rows.filter(function(b){return b['Trạng thái']==='Khách chấp thuận';}).length;
