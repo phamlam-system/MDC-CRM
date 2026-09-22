@@ -3252,6 +3252,18 @@ function renderSettings(){
           <button class="btn btn-primary" onclick="saveSettingsForm()">Lưu</button>
         </div>
       </div>
+      <div class="table-wrap" style="padding:22px;margin-bottom:14px">
+        <div class="section-title">⚖️ Tham số nghiệp vụ</div>
+        <div style="font-size:12px;color:var(--mgray);margin-bottom:10px">Ngưỡng giá trị báo giá để xác định cấp duyệt. VAT mặc định chỉnh trong 🏢 Thông tin Công ty (đang ${(typeof vatMacDinh==='function'?vatMacDinh():8)}%).</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Dưới mức này → Trưởng phòng duyệt (đ)</label><input class="form-input" id="s-nguongtp" type="number" value="${nguongDuyet().tp}"></div>
+          <div class="form-group"><label class="form-label">Đến mức này → Giám đốc duyệt (đ)</label><input class="form-input" id="s-nguonggd" type="number" value="${nguongDuyet().gd}"></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--mgray);margin-top:6px">Trên ngưỡng Giám đốc → Tổng giám đốc duyệt.</div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end">
+          <button class="btn btn-primary" onclick="saveNguongForm()">Lưu ngưỡng duyệt</button>
+        </div>
+      </div>
       <div class="table-wrap" style="padding:22px">
         <div class="section-title">🔗 Trạng thái</div>
         <div style="background:var(--lgray);border-radius:8px;padding:12px;font-size:12px;font-family:Arial, sans-serif;line-height:1.9">
@@ -3270,8 +3282,18 @@ function renderSettings(){
 }
 
 function saveSettingsForm(){
-  persistSettings({name:document.getElementById('s-name').value,role:document.getElementById('s-role').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value||''});
+  var cur=loadSettings();
+  persistSettings(Object.assign({}, cur, {name:document.getElementById('s-name').value,role:document.getElementById('s-role').value,email:document.getElementById('s-email').value,phone:document.getElementById('s-phone').value||''}));
   toast('Đã lưu cài đặt!');
+}
+function saveNguongForm(){
+  var cur=loadSettings();
+  var tp=parseInt(document.getElementById('s-nguongtp').value)||30000000;
+  var gd=parseInt(document.getElementById('s-nguonggd').value)||200000000;
+  if(gd<tp){ toast('Ngưỡng Giám đốc phải ≥ ngưỡng Trưởng phòng','⚠️'); return; }
+  persistSettings(Object.assign({}, cur, {nguongTP:tp, nguongGD:gd}));
+  toast('Đã lưu ngưỡng duyệt!');
+  if(currentPage==='settings') rerenderCurrent();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -5248,10 +5270,11 @@ function htHanhDongChinh(l, H, quyen){
 /* ─── DUYỆT BÁO GIÁ THEO NGƯỠNG ───────────────────────────────
    Quy định MDC: < 30 triệu → Trưởng phòng · 30–200 triệu → Giám đốc
    · > 200 triệu → Tổng giám đốc. Chỉ hiển thị cấp duyệt cần thiết. */
+function nguongDuyet(){ try{ var s=loadSettings(); return { tp:(parseInt(s.nguongTP)||30000000), gd:(parseInt(s.nguongGD)||200000000) }; }catch(e){ return {tp:30000000, gd:200000000}; } }
 function approvalLevel(giaTri){
-  var v=+giaTri||0;
-  if(v<30000000)  return {cap:'Trưởng phòng',    mau:'#0F5132', bg:'#E7F6EA', ic:'👤'};
-  if(v<=200000000)return {cap:'Giám đốc',        mau:'#7A3800', bg:'#FFF0E0', ic:'👔'};
+  var v=+giaTri||0; var ng=nguongDuyet();
+  if(v<ng.tp)  return {cap:'Trưởng phòng',    mau:'#0F5132', bg:'#E7F6EA', ic:'👤'};
+  if(v<=ng.gd) return {cap:'Giám đốc',        mau:'#7A3800', bg:'#FFF0E0', ic:'👔'};
   return                {cap:'Tổng giám đốc',    mau:'#B23A2E', bg:'#FBE9E7', ic:'🏛️'};
 }
 function approvalBadge(giaTri){
