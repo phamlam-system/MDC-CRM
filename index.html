@@ -1762,6 +1762,7 @@ async function syncFromSheets(){
     saveLocal();
     setSyncState('connected',`✓ Đồng bộ lúc ${nowStr()}`);
     isConnected=true;
+    try{ if(typeof cfgAutoLoad==='function') cfgAutoLoad(); }catch(_e){}  /* ★ v9.56 — cấu hình Kịch bản·Công việc·HĐ từ Sheet */
     updateBadges();
     return true;
   }catch(e){
@@ -3259,6 +3260,7 @@ function renderConnect(){
         </div>
         ${saved?`<div style="background:var(--lgreen);border:1px solid #bbf7d0;border-radius:8px;padding:11px 14px;font-size:12.5px;color:var(--emerald);display:flex;align-items:center;gap:8px"><span>✅</span> Đã có URL. Nhấn "Kết nối & Test" để kiểm tra lại.</div>`:''}
       </div>
+      ${typeof cfgCardHtml==='function'?cfgCardHtml():''}
     </div>`;
 }
 
@@ -3697,7 +3699,7 @@ async function completeStage(id){
 
   // Hoàn thành toàn bộ → đưa vào chăm sóc sau bán
   const loai = l.inBothPipelines ? 'Thiết kế & Thi công' : (isTC ? 'Thi công' : 'Thiết kế');
-  if(!confirm(`Hoàn thành ${loai} cho "${l.name}"?\n\nKhách sẽ chuyển sang DANH SÁCH CHĂM SÓC SAU BÁN HÀNG và hệ thống tự tạo ${CARE_SCHEDULE.length} lịch chăm sóc (7 ngày, 30 ngày, 6 tháng, 1 năm).`)) return;
+  if(!confirm(`Hoàn thành ${loai} cho "${l.name}"?\n\nKhách sẽ chuyển sang DANH SÁCH CHĂM SÓC SAU BÁN HÀNG và hệ thống tự tạo ${CARE_SCHEDULE.length} lịch chăm sóc (${CARE_SCHEDULE.map(c=>c.days+' ngày').join(', ')}).`)) return;
 
   // Đánh dấu trạng thái chăm sóc + CHUYỂN VÀO PIPELINE CHĂM SÓC SAU BÁN
   l.stagePrev = l.stage;          // lưu giai đoạn hoàn thành gốc (tk_accept/tc_handover)
@@ -5798,7 +5800,7 @@ function bgImport(){
   el.onclick=function(e){ if(e.target===el) bgImpClose(); };
   var note=(typeof XLSX==='undefined')?'<div style="color:#B23A2E;font-size:11.5px;margin-top:4px">⚠ Chưa nạp được thư viện đọc Excel — anh vẫn có thể DÁN bảng vào ô dưới.</div>':'';
   el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:840px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
-    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.55)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.56)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
     +'<div style="padding:14px 18px;overflow:auto">'
     +'<div style="font-size:12px;color:#6F6355;line-height:1.55;margin-bottom:10px">Chọn <b>file Excel (.xlsx/.csv)</b> báo giá/dự toán — hoặc <b>dán</b> bảng copy từ Excel/Google Sheet. Hệ tự nhận diện cột: <b>Tên hạng mục / Chi tiết đơn hàng</b>, <b>Chất liệu · quy cách</b> (→ mô tả), <b>ĐVT</b>, <b>Dài/Rộng/Cao</b>, <b>Khối lượng</b>, <b>Số lượng</b>, <b>Đơn giá</b>, <b>Thành tiền</b>, <b>Ghi chú</b>. Dòng tiêu đề · nhóm (Tầng/Phòng) · dòng tổng được xử lý tự động.'+note+'</div>'
     +'<div style="margin-bottom:8px"><label class="btn btn-outline btn-sm" style="cursor:pointer"><input type="file" accept=".xlsx,.xls,.xlsm,.csv,text/csv" style="display:none" onchange="bgImpFile(this)">📂 Chọn file Excel / CSV</label></div>'
@@ -8720,6 +8722,241 @@ function hdWordDoc(){
   document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },1500);
   toast('Đã xuất Word: '+a.download);
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   ★ v9.56 — CẤU HÌNH NGHIỆP VỤ ↔ GOOGLE SHEET: KỊCH BẢN · CÔNG VIỆC · HỢP ĐỒNG
+   9 tab BẢNG-LÀ-NGUỒN (như Danh mục v6.9/v6.12) — sửa trực tiếp trên Sheet, app ⬇ Tải là áp dụng
+   (app cũng tự tải khi đồng bộ, tối đa 5 phút/lần). Tab trống / không có → giữ MẶC ĐỊNH trong code.
+   Đọc theo TÊN CỘT (đổi thứ tự cột không sao). Cột "Dùng" = Không → bỏ qua dòng đó.
+   Backend: action getCauHinh / saveCauHinh (v6.14).
+   ══════════════════════════════════════════════════════════════════════ */
+var CFG_KEY='mdc_crm_cfg_v1';
+var CFG_TABS=['KB_KichBanGiaiDoan','KB_TinNhanMau','KB_ChamSocSauBan','CV_LoaiCongViec','CV_SLA_GiaiDoan','HD_LoaiHopDong','HD_CanCu','HD_DieuKhoan','HD_MauThanhToan'];
+var CFG_TAB_INFO={
+  KB_KichBanGiaiDoan:'Kịch bản & checklist việc tự tạo theo từng giai đoạn pipeline',
+  KB_TinNhanMau:'Mẫu tin nhắn Zalo/SMS gửi khách ({ten}, {nv})',
+  KB_ChamSocSauBan:'Lịch chăm sóc sau bàn giao (tự tạo việc)',
+  CV_LoaiCongViec:'Loại công việc: tên, biểu tượng, màu',
+  CV_SLA_GiaiDoan:'SLA (số ngày) tối đa cho mỗi giai đoạn',
+  HD_LoaiHopDong:'Loại hợp đồng: tiền tố số, tên, phạm vi, bảo hành',
+  HD_CanCu:'Căn cứ pháp lý theo bộ (TK / KT / TC / CHUNG…)',
+  HD_DieuKhoan:'Các điều khoản hợp đồng theo bộ (TK / TC…)',
+  HD_MauThanhToan:'Mẫu chia đợt thanh toán khi ký HĐ'
+};
+var CFG_URG={red:'Khẩn cấp',orange:'Quan trọng',green:'Bình thường'};
+function cfgClone(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* Ảnh chụp MẶC ĐỊNH trong code (trước khi áp cấu hình Sheet) */
+var CFG_DEF=(function(){
+  var ccSets={TK:HD_CC_TK,KT:HD_CC_KT,TC:HD_CC_TC,CHUNG:HD_CC_CHUNG};
+  var types={};
+  Object.keys(HD_TYPES).forEach(function(k){ var t=HD_TYPES[k];
+    var cc=Object.keys(ccSets).filter(function(b){ return ccSets[b]===t.cc; })[0]||'TC';
+    types[k]={prefix:t.prefix,ten:t.ten,fam:t.fam,cc:cc,dk:(t.dieu===hdDieuTK?'TK':'TC'),baoHanh:!!t.baoHanh,phamVi:t.phamVi||''};
+  });
+  return { checklist:cfgClone(STAGE_CHECKLIST), msg:cfgClone(MSG_TEMPLATES), care:cfgClone(CARE_SCHEDULE),
+    taskTypes:cfgClone(TASK_TYPES), sla:cfgClone(STAGE_SLA), hdTypes:types,
+    cc:{TK:HD_CC_TK.slice(),KT:HD_CC_KT.slice(),TC:HD_CC_TC.slice(),CHUNG:HD_CC_CHUNG.slice()},
+    dieu:{TK:hdDieuTK(),TC:hdDieuTC()}, mauChot:cfgClone(MAU_CHOT) };
+})();
+var __cfgCur=cfgClone(CFG_DEF), __cfgMeta={src:'default',at:'',url:'',parts:{}};
+
+/* ---------- tiện ích ---------- */
+function cfgStageLabel(id){ var all=[].concat(STAGES_TK,STAGES_TC,STAGES_CS); var s=all.filter(function(x){return x.id===id;})[0]; return s?s.label:''; }
+function cfgPipeName(id){ id=String(id||''); return id.indexOf('tk_')===0?'Thiết kế':id.indexOf('tc_')===0?'Thi công':id.indexOf('cs_')===0?'Chăm sóc sau bán':''; }
+function cfgNorm(s){ return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim(); }
+function cfgOn(v){ if(v===false) return false; var n=cfgNorm(v); return !(n==='khong'||n==='ko'||n==='false'||n==='0'||n==='no'||n==='x'||n==='tat'); }
+function cfgNum(v,d){ var n=parseFloat(String(v==null?'':v).replace(/\s/g,'').replace(',','.')); return isNaN(n)?d:n; }
+function cfgUrg(v){ var n=cfgNorm(v); if(!n) return 'orange';
+  if(n==='red'||n.indexOf('khan')===0||n.indexOf('gap')===0||n==='cao') return 'red';
+  if(n==='green'||n.indexOf('binh')===0||n==='thap') return 'green'; return 'orange'; }
+function cfgType(v,tt){ var n=cfgNorm(v); if(!n) return 'other'; var ks=Object.keys(tt);
+  for(var i=0;i<ks.length;i++){ if(cfgNorm(ks[i])===n || cfgNorm(tt[ks[i]].label)===n) return ks[i]; }
+  return tt.other?'other':ks[0]; }
+/* bảng 2 chiều [head,...rows] → mảng object theo TÊN CỘT (khớp tiền tố, không dấu) */
+function cfgRows(tab, cols){
+  if(!Array.isArray(tab)||tab.length<2) return null;
+  var head=tab[0].map(cfgNorm), idx={};
+  Object.keys(cols).forEach(function(k){ var want=cfgNorm(cols[k]); var i=head.indexOf(want);
+    if(i<0) i=head.findIndex(function(h){ return h && (h.indexOf(want)===0 || want.indexOf(h)===0); });
+    idx[k]=i; });
+  var out=[];
+  for(var r=1;r<tab.length;r++){ var row=tab[r]||[], o={}, any=false;
+    Object.keys(idx).forEach(function(k){ var v=idx[k]>=0?row[idx[k]]:''; v=(v==null?'':String(v)).trim(); o[k]=v; if(v) any=true; });
+    if(any) out.push(o); }
+  return out;
+}
+function cfgSortStt(a){ return a.map(function(x,i){ return {x:x,i:i,s:cfgNum(x.stt,1e9)}; }).sort(function(p,q){ return (p.s-q.s)||(p.i-q.i); }).map(function(p){ return p.x; }); }
+
+/* ---------- MODEL → 9 BẢNG (để đẩy lên Sheet) ---------- */
+function cfgToTabs(M){
+  var tt=M.taskTypes, tl=function(k){ return (tt[k]&&tt[k].label)||k; };
+  var typeLabels=Object.keys(tt).map(tl), urgLabels=['Khẩn cấp','Quan trọng','Bình thường'], yn=['Có','Không'];
+  var T=[];
+  var r1=[]; Object.keys(M.checklist).forEach(function(st){ (M.checklist[st]||[]).forEach(function(x,i){
+    r1.push([cfgPipeName(st),st,cfgStageLabel(st),i+1,x.text||'',tl(x.type),CFG_URG[x.urgency]||'Quan trọng',x.sla||'',x.tip||'','Có']); }); });
+  T.push({name:'KB_KichBanGiaiDoan',head:['Pipeline','Mã giai đoạn','Tên giai đoạn','STT','Việc cần làm','Loại việc','Ưu tiên','SLA / thời điểm','Kịch bản · mẹo thực hiện','Dùng'],
+    rows:r1,lists:{5:typeLabels,6:urgLabels,9:yn},widths:[80,100,130,45,320,110,100,120,420,55],wrap:[4,8]});
+  T.push({name:'KB_TinNhanMau',head:['STT','Mã','Tên mẫu','Nội dung ({ten} = tên KH, {nv} = tên nhân viên)','Dùng'],
+    rows:M.msg.map(function(x,i){ return [i+1,x.id,(x.ten||'').trim(),x.noidung||'','Có']; }),lists:{4:yn},widths:[45,80,200,560,55],wrap:[3]});
+  T.push({name:'KB_ChamSocSauBan',head:['STT','Sau bàn giao (ngày)','Việc chăm sóc','Loại việc','Ưu tiên','Dùng'],
+    rows:M.care.map(function(x,i){ return [i+1,x.days,x.text||'',tl(x.type),CFG_URG[x.urgency]||'Quan trọng','Có']; }),lists:{3:typeLabels,4:urgLabels,5:yn},widths:[45,130,420,110,100,55],wrap:[2]});
+  T.push({name:'CV_LoaiCongViec',head:['Mã','Tên hiển thị','Biểu tượng','Màu nền','Màu chữ'],
+    rows:Object.keys(tt).map(function(k){ var x=tt[k]; return [k,x.label||'',x.icon||'',x.bg||'',x.color||'']; }),widths:[90,160,80,90,90]});
+  T.push({name:'CV_SLA_GiaiDoan',head:['Pipeline','Mã giai đoạn','Tên giai đoạn','SLA (ngày)'],
+    rows:Object.keys(M.sla).map(function(k){ return [cfgPipeName(k),k,cfgStageLabel(k),M.sla[k]]; }),widths:[90,110,150,90]});
+  var bs=Object.keys(M.cc), bd=Object.keys(M.dieu);
+  T.push({name:'HD_LoaiHopDong',head:['Mã','Tiền tố số HĐ','Tên hợp đồng','Nhóm (TK/TC)','Bộ căn cứ','Bộ điều khoản','Bảo hành','Phạm vi công việc mặc định','Dùng'],
+    rows:Object.keys(M.hdTypes).map(function(k){ var x=M.hdTypes[k]; return [k,x.prefix,x.ten,String(x.fam||'tc').toUpperCase(),x.cc,x.dk,x.baoHanh?'Có':'Không',x.phamVi||'','Có']; }),
+    lists:{3:['TK','TC'],4:bs,5:bd,6:yn,8:yn},widths:[80,100,300,90,90,100,70,480,55],wrap:[7]});
+  var r7=[]; bs.forEach(function(b){ (M.cc[b]||[]).forEach(function(c,i){ r7.push([b,i+1,c,'Có']); }); });
+  T.push({name:'HD_CanCu',head:['Bộ','STT','Căn cứ pháp lý','Dùng'],rows:r7,lists:{3:yn},widths:[70,45,520,55],wrap:[2]});
+  var r8=[]; bd.forEach(function(b){ (M.dieu[b]||[]).forEach(function(d,i){ r8.push([b,i+1,d.t||'',d.c||'','Có']); }); });
+  T.push({name:'HD_DieuKhoan',head:['Bộ','STT','Tiêu đề điều','Nội dung điều','Dùng'],rows:r8,lists:{4:yn},widths:[70,45,260,600,55],wrap:[2,3]});
+  var r9=[]; Object.keys(M.mauChot).forEach(function(m){ (M.mauChot[m]||[]).forEach(function(d,i){ r9.push([m,i+1,d[0],d[1],'Có']); }); });
+  T.push({name:'HD_MauThanhToan',head:['Mẫu','STT đợt','Tên đợt','Tỷ lệ (%)','Dùng'],rows:r9,lists:{4:yn},widths:[120,70,260,80,55]});
+  return T;
+}
+
+/* ---------- 9 BẢNG (từ Sheet) → MODEL ---------- */
+function cfgFromTabs(tabs){
+  var M=cfgClone(CFG_DEF), parts={}; tabs=tabs||{};
+  /* 4. Loại công việc (đọc trước — các bảng khác tra theo tên) */
+  var a=cfgRows(tabs.CV_LoaiCongViec,{ma:'Mã',label:'Tên hiển thị',icon:'Biểu tượng',bg:'Màu nền',color:'Màu chữ'});
+  if(a&&a.length){ var tt={}; a.forEach(function(x){ var k=String(x.ma||'').trim(); if(!k) return; var d=CFG_DEF.taskTypes[k]||CFG_DEF.taskTypes.other;
+      tt[k]={label:x.label||d.label,icon:x.icon||d.icon,bg:x.bg||d.bg,color:x.color||d.color}; });
+    if(!tt.other) tt.other=cfgClone(CFG_DEF.taskTypes.other);
+    if(Object.keys(tt).length){ M.taskTypes=tt; parts.CV_LoaiCongViec=Object.keys(tt).length; } }
+  var TT=M.taskTypes;
+  /* 1. Kịch bản theo giai đoạn */
+  a=cfgRows(tabs.KB_KichBanGiaiDoan,{st:'Mã giai đoạn',stt:'STT',text:'Việc cần làm',type:'Loại việc',urg:'Ưu tiên',sla:'SLA',tip:'Kịch bản',on:'Dùng'});
+  if(a&&a.length){ var ck={}, n=0;
+    a.forEach(function(x){ var st=String(x.st||'').trim(); if(!/^(tk|tc|cs)_/.test(st)) return; if(!ck[st]) ck[st]=[];
+      if(!x.text||!cfgOn(x.on)) return; ck[st].push(x); });
+    Object.keys(ck).forEach(function(st){ ck[st]=cfgSortStt(ck[st]).map(function(x){ n++; var o={text:x.text,type:cfgType(x.type,TT),urgency:cfgUrg(x.urg)}; if(x.sla) o.sla=x.sla; if(x.tip) o.tip=x.tip; return o; }); });
+    if(Object.keys(ck).length){ M.checklist=ck; parts.KB_KichBanGiaiDoan=n; } }
+  /* 2. Mẫu tin nhắn */
+  a=cfgRows(tabs.KB_TinNhanMau,{stt:'STT',id:'Mã',ten:'Tên mẫu',nd:'Nội dung',on:'Dùng'});
+  if(a&&a.length){ var ms=cfgSortStt(a.filter(function(x){ return x.nd&&cfgOn(x.on); })).map(function(x,i){ return {id:(x.id||('m'+(i+1))).replace(/[^\w-]/g,'_'),ten:x.ten||('Mẫu '+(i+1)),noidung:x.nd}; });
+    M.msg=ms; parts.KB_TinNhanMau=ms.length; }
+  /* 3. Chăm sóc sau bán */
+  a=cfgRows(tabs.KB_ChamSocSauBan,{stt:'STT',days:'Sau bàn giao',text:'Việc chăm sóc',type:'Loại việc',urg:'Ưu tiên',on:'Dùng'});
+  if(a&&a.length){ var cs=a.filter(function(x){ return x.text&&cfgOn(x.on)&&cfgNum(x.days,-1)>=0; }).map(function(x){ return {days:Math.round(cfgNum(x.days,7)),text:x.text,type:cfgType(x.type||'followup',TT),urgency:cfgUrg(x.urg)}; })
+      .sort(function(p,q){ return p.days-q.days; });
+    M.care=cs; parts.KB_ChamSocSauBan=cs.length; }
+  /* 5. SLA (gộp vào mặc định) */
+  a=cfgRows(tabs.CV_SLA_GiaiDoan,{st:'Mã giai đoạn',d:'SLA'});
+  if(a&&a.length){ var c5=0; a.forEach(function(x){ var st=String(x.st||'').trim(); var d=cfgNum(x.d,NaN); if(st&&!isNaN(d)&&d>0){ M.sla[st]=d; c5++; } }); if(c5) parts.CV_SLA_GiaiDoan=c5; }
+  /* 7. Căn cứ */
+  a=cfgRows(tabs.HD_CanCu,{bo:'Bộ',stt:'STT',c:'Căn cứ',on:'Dùng'});
+  if(a&&a.length){ var cc={}, c7=0; a.forEach(function(x){ var b=String(x.bo||'').trim().toUpperCase(); if(!b) return; if(!cc[b]) cc[b]=[]; if(x.c&&cfgOn(x.on)) cc[b].push(x); });
+    Object.keys(cc).forEach(function(b){ cc[b]=cfgSortStt(cc[b]).map(function(x){ c7++; return x.c; }); });
+    if(Object.keys(cc).length){ Object.keys(CFG_DEF.cc).forEach(function(b){ if(!cc[b]) cc[b]=CFG_DEF.cc[b].slice(); }); M.cc=cc; parts.HD_CanCu=c7; } }
+  /* 8. Điều khoản */
+  a=cfgRows(tabs.HD_DieuKhoan,{bo:'Bộ',stt:'STT',t:'Tiêu đề',c:'Nội dung',on:'Dùng'});
+  if(a&&a.length){ var dk={}, c8=0; a.forEach(function(x){ var b=String(x.bo||'').trim().toUpperCase(); if(!b) return; if(!dk[b]) dk[b]=[]; if((x.t||x.c)&&cfgOn(x.on)) dk[b].push(x); });
+    Object.keys(dk).forEach(function(b){ dk[b]=cfgSortStt(dk[b]).map(function(x){ c8++; return {t:x.t,c:x.c}; }); });
+    if(Object.keys(dk).length){ Object.keys(CFG_DEF.dieu).forEach(function(b){ if(!dk[b]) dk[b]=cfgClone(CFG_DEF.dieu[b]); }); M.dieu=dk; parts.HD_DieuKhoan=c8; } }
+  /* 6. Loại hợp đồng */
+  a=cfgRows(tabs.HD_LoaiHopDong,{ma:'Mã',prefix:'Tiền tố',ten:'Tên hợp đồng',fam:'Nhóm',cc:'Bộ căn cứ',dk:'Bộ điều khoản',bh:'Bảo hành',pv:'Phạm vi',on:'Dùng'});
+  if(a&&a.length){ var ht={};
+    a.forEach(function(x){ var k=String(x.ma||'').trim().toUpperCase().replace(/[^A-Z0-9_]/g,''); if(!k||!cfgOn(x.on)) return; var d=CFG_DEF.hdTypes[k]||{};
+      var fam=cfgNorm(x.fam)==='tk'?'tk':(cfgNorm(x.fam)==='tc'?'tc':(d.fam||'tc'));
+      var ccb=String(x.cc||d.cc||(fam==='tk'?'TK':'TC')).trim().toUpperCase(), dkb=String(x.dk||d.dk||(fam==='tk'?'TK':'TC')).trim().toUpperCase();
+      ht[k]={prefix:x.prefix||d.prefix||('HĐ'+k),ten:x.ten||d.ten||('HỢP ĐỒNG '+k),fam:fam,cc:(M.cc[ccb]?ccb:(fam==='tk'?'TK':'TC')),dk:(M.dieu[dkb]?dkb:(fam==='tk'?'TK':'TC')),
+        baoHanh:(x.bh?cfgOn(x.bh):(d.baoHanh!=null?d.baoHanh:fam==='tc')),phamVi:x.pv||d.phamVi||''}; });
+    if(!ht.TCNT) ht.TCNT=cfgClone(CFG_DEF.hdTypes.TCNT);   /* TCNT là loại mặc định của app — luôn giữ */
+    M.hdTypes=ht; parts.HD_LoaiHopDong=Object.keys(ht).length; }
+  /* 9. Mẫu thanh toán */
+  a=cfgRows(tabs.HD_MauThanhToan,{mau:'Mẫu',stt:'STT',ten:'Tên đợt',pct:'Tỷ lệ',on:'Dùng'});
+  if(a&&a.length){ var mc={}; a.forEach(function(x){ var m=String(x.mau||'').trim(); if(!m||!x.ten||!cfgOn(x.on)) return; (mc[m]=mc[m]||[]).push(x); });
+    Object.keys(mc).forEach(function(m){ mc[m]=cfgSortStt(mc[m]).map(function(x){ return [x.ten,cfgNum(x.pct,0)]; }); });
+    if(Object.keys(mc).length){ M.mauChot=mc; parts.HD_MauThanhToan=Object.keys(mc).length; } }
+  return {model:M, parts:parts};
+}
+
+/* ---------- ÁP MODEL vào các hằng số đang chạy (sửa tại chỗ, giữ tham chiếu) ---------- */
+function cfgReplaceObj(o,n){ Object.keys(o).forEach(function(k){ delete o[k]; }); Object.keys(n).forEach(function(k){ o[k]=n[k]; }); }
+function cfgReplaceArr(a,n){ a.splice.apply(a,[0,a.length].concat(n)); }
+function cfgApply(M){
+  M=cfgClone(M);
+  cfgReplaceObj(TASK_TYPES,M.taskTypes);
+  cfgReplaceObj(STAGE_CHECKLIST,M.checklist);
+  cfgReplaceArr(MSG_TEMPLATES,M.msg);
+  cfgReplaceArr(CARE_SCHEDULE,M.care);
+  cfgReplaceObj(STAGE_SLA,M.sla);
+  if(M.cc.TK) cfgReplaceArr(HD_CC_TK,M.cc.TK); if(M.cc.KT) cfgReplaceArr(HD_CC_KT,M.cc.KT);
+  if(M.cc.TC) cfgReplaceArr(HD_CC_TC,M.cc.TC); if(M.cc.CHUNG) cfgReplaceArr(HD_CC_CHUNG,M.cc.CHUNG);
+  var dieuFn=function(b){ return function(){ return cfgClone(M.dieu[b]||[]); }; };
+  hdDieuTK=dieuFn('TK'); hdDieuTC=dieuFn('TC');
+  var ccArr=function(b){ return ({TK:HD_CC_TK,KT:HD_CC_KT,TC:HD_CC_TC,CHUNG:HD_CC_CHUNG})[b]||(M.cc[b]||[]); };
+  var ht={}; Object.keys(M.hdTypes).forEach(function(k){ var x=M.hdTypes[k];
+    ht[k]={prefix:x.prefix,ten:x.ten,fam:x.fam,cc:ccArr(x.cc),dieu:dieuFn(x.dk),baoHanh:!!x.baoHanh,phamVi:x.phamVi}; });
+  cfgReplaceObj(HD_TYPES,ht);
+  cfgReplaceObj(MAU_CHOT,M.mauChot);
+  /* dựng lại ô chọn Loại việc trong form công việc */
+  try{ var sel=document.getElementById('t-type'); if(sel){ var v=sel.value;
+    sel.innerHTML=Object.keys(TASK_TYPES).map(function(k){ var t=TASK_TYPES[k]; return '<option value="'+k+'">'+((t.icon?t.icon+' ':'')+t.label).replace(/</g,'&lt;')+'</option>'; }).join('');
+    if(TASK_TYPES[v]) sel.value=v; } }catch(e){}
+  __cfgCur=M;
+}
+function cfgCacheSave(){ try{ localStorage.setItem(CFG_KEY,JSON.stringify({model:__cfgCur,meta:__cfgMeta})); }catch(e){} }
+function cfgBoot(){ try{ var raw=localStorage.getItem(CFG_KEY); if(!raw) return; var o=JSON.parse(raw); if(o&&o.model&&o.model.checklist){ cfgApply(o.model); __cfgMeta=o.meta||__cfgMeta; } }catch(e){ console.warn('cfgBoot',e); } }
+
+/* ---------- ĐỒNG BỘ VỚI SHEET ---------- */
+function cfgHasApi(){ return typeof getApiUrl==='function' && !!getApiUrl(); }
+function cfgCloudLoad(silent){
+  if(!cfgHasApi()){ if(!silent) toast('Chưa kết nối Sheet','⚠️'); return Promise.resolve(false); }
+  window.__cfgLastLoad=Date.now();
+  return apiFetch({app:'pm',action:'getCauHinh'}).then(function(r){
+    var tabs=(r&&r.tabs)||{}; if(r&&r.url) __cfgMeta.url=r.url;
+    if(!Object.keys(tabs).length){ if(!silent) toast('Sheet chưa có các tab cấu hình. Admin bấm "☁ Tạo / ghi đè lên Sheet" để tạo lần đầu.','⚠️'); cfgCacheSave(); cfgRefreshUI(); return false; }
+    var res=cfgFromTabs(tabs); cfgApply(res.model);
+    __cfgMeta.src='sheet'; __cfgMeta.at=new Date().toLocaleString('vi-VN'); __cfgMeta.parts=res.parts; cfgCacheSave(); cfgRefreshUI();
+    if(!silent) toast('✅ Đã tải cấu hình từ Sheet ('+Object.keys(res.parts).length+'/9 bảng áp dụng)');
+    return true;
+  }).catch(function(e){ if(!silent) toast('Lỗi tải cấu hình: '+e.message+' — kiểm tra đã deploy Backend v6.14 chưa','❌'); return false; });
+}
+function cfgAutoLoad(){ if(!cfgHasApi()) return; if(window.__cfgLastLoad && Date.now()-window.__cfgLastLoad<5*60*1000) return; cfgCloudLoad(true); }
+function cfgCloudSave(){
+  if(!cfgHasApi()) return toast('Chưa kết nối Sheet','⚠️');
+  if(typeof isAdmin==='function' && !isAdmin()) return toast('Chỉ Admin được ghi cấu hình lên Sheet','⚠️');
+  if(!confirm('Ghi cấu hình ĐANG DÙNG trên máy này lên Google Sheet?\n\nSẽ tạo / GHI ĐÈ 9 tab:\n• '+CFG_TABS.join('\n• ')+'\n\nNếu đã sửa trên Sheet mà chưa ⬇ Tải về, các sửa đó sẽ mất (vẫn khôi phục được bằng Lịch sử phiên bản của Google Sheet).')) return;
+  toast('Đang ghi 9 tab cấu hình lên Sheet…');
+  apiPost({app:'pm',action:'saveCauHinh',data:{tabs:cfgToTabs(__cfgCur)}}).then(function(r){
+    var n=(r&&r.tabs)?r.tabs.length:0; if(r&&r.url) __cfgMeta.url=r.url; __cfgMeta.src='sheet'; __cfgMeta.at=new Date().toLocaleString('vi-VN'); cfgCacheSave(); cfgRefreshUI();
+    toast('✅ Đã ghi '+n+' tab cấu hình lên Sheet — giờ có thể sửa trực tiếp trên Sheet');
+  }).catch(function(e){ toast('Lỗi: '+e.message+' — kiểm tra đã deploy Backend v6.14 chưa','❌'); });
+}
+function cfgResetLocal(){
+  if(!confirm('Bỏ cấu hình đã tải, dùng lại MẶC ĐỊNH trong code trên máy này?\n(Không ảnh hưởng Google Sheet)')) return;
+  try{ localStorage.removeItem(CFG_KEY); }catch(e){}
+  cfgApply(CFG_DEF); __cfgMeta={src:'default',at:'',url:__cfgMeta.url||'',parts:{}}; window.__cfgLastLoad=Date.now(); cfgRefreshUI(); toast('Đã về cấu hình mặc định (máy này)');
+}
+function cfgCounts(M){ var n=0; Object.keys(M.checklist).forEach(function(k){ n+=(M.checklist[k]||[]).length; });
+  var cc=0; Object.keys(M.cc).forEach(function(k){ cc+=M.cc[k].length; }); var dk=0; Object.keys(M.dieu).forEach(function(k){ dk+=M.dieu[k].length; });
+  return {KB_KichBanGiaiDoan:n+' việc / '+Object.keys(M.checklist).length+' GĐ',KB_TinNhanMau:M.msg.length+' mẫu',KB_ChamSocSauBan:M.care.length+' mốc',
+    CV_LoaiCongViec:Object.keys(M.taskTypes).length+' loại',CV_SLA_GiaiDoan:Object.keys(M.sla).length+' GĐ',HD_LoaiHopDong:Object.keys(M.hdTypes).length+' loại',
+    HD_CanCu:cc+' dòng / '+Object.keys(M.cc).length+' bộ',HD_DieuKhoan:dk+' điều / '+Object.keys(M.dieu).length+' bộ',HD_MauThanhToan:Object.keys(M.mauChot).length+' mẫu'}; }
+function cfgCardHtml(){
+  var c=cfgCounts(__cfgCur), admin=(typeof isAdmin==='function')?isAdmin():true, m=__cfgMeta;
+  var src=m.src==='sheet'?('<span style="color:var(--emerald);font-weight:600">● Google Sheet</span>'+(m.at?' · tải lúc '+m.at:'')):'<span style="color:var(--amber);font-weight:600">● Mặc định trong code</span>';
+  return '<div class="table-wrap" id="cfg-card" style="padding:24px;margin-bottom:16px">'
+    +'<div style="font-size:18px;font-weight:600;color:var(--navy);margin-bottom:4px">📋 Kịch bản · Công việc · Hợp đồng trên Google Sheet</div>'
+    +'<div style="font-size:12.5px;color:var(--mgray);line-height:1.65;margin-bottom:12px">Các kịch bản gọi/Zalo, checklist việc theo giai đoạn, mẫu tin nhắn, lịch chăm sóc, loại việc & SLA, loại hợp đồng, căn cứ, điều khoản, mẫu chia đợt thanh toán được đưa ra <b>9 tab</b> trên Google Sheet để tùy chỉnh. '
+    +'Sửa trên Sheet → bấm <b>⬇ Tải</b> (app cũng tự tải khi đồng bộ). Cột <b>Dùng = Không</b> để tạm tắt 1 dòng; thêm dòng mới là thêm việc/mẫu/điều khoản.</div>'
+    +'<div style="font-size:12.5px;margin-bottom:10px">Nguồn đang dùng: '+src+(m.url?' · <a href="'+m.url+'" target="_blank" rel="noopener">📄 Mở Google Sheet</a>':'')+'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">'
+    +CFG_TABS.map(function(t){ var ok=m.parts&&m.parts[t]; return '<tr style="border-top:1px solid #EEE9E0"><td style="padding:5px 6px;font-family:Consolas,monospace;white-space:nowrap">'+t+'</td><td style="padding:5px 6px;color:var(--mgray)">'+CFG_TAB_INFO[t]+'</td><td style="padding:5px 6px;white-space:nowrap;text-align:right">'+c[t]+(m.src==='sheet'?(ok?' ✅':' <span title="Tab trống/chưa có — đang dùng mặc định" style="color:#999">·mđ</span>'):'')+'</td></tr>'; }).join('')
+    +'</table><div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button class="btn btn-primary" onclick="cfgCloudLoad(false)">⬇ Tải cấu hình từ Sheet</button>'
+    +(admin?'<button class="btn btn-outline" onclick="cfgCloudSave()">☁ Tạo / ghi đè lên Sheet</button>':'')
+    +'<button class="btn btn-outline" onclick="cfgResetLocal()">↺ Dùng mặc định (máy này)</button></div>'
+    +'<div style="font-size:11.5px;color:var(--mgray);margin-top:10px">Lần đầu: Admin bấm <b>☁ Tạo / ghi đè lên Sheet</b> để dựng 9 tab từ cấu hình hiện tại. Sau đó chỉ sửa trên Sheet + ⬇ Tải — tránh sửa 2 nơi cùng lúc.</div>'
+    +'</div>';
+}
+function cfgRefreshUI(){ try{ var el=document.getElementById('cfg-card'); if(el){ var d=document.createElement('div'); d.innerHTML=cfgCardHtml(); el.replaceWith(d.firstChild); } }catch(e){} }
+cfgBoot();
 
 </script>
 </body>
