@@ -1657,7 +1657,7 @@ async function apiFetch(params){
   });
   if(!res.ok) throw new Error('HTTP '+res.status);
   const json=await res.json();
-  if(!json.ok){ if(json.needLogin){ handleSessionExpired(); } throw new Error(json.error||'API error'); }
+  if(!json.ok){ if(json.needLogin){ handleSessionExpired(); } var _er=new Error(json.error||'API error'); _er.json=json; throw _er; }
   return json;
 }
 
@@ -1674,7 +1674,7 @@ async function apiPost(body){
   });
   if(!res.ok) throw new Error('HTTP '+res.status);
   const json=await res.json();
-  if(!json.ok){ if(json.needLogin){ handleSessionExpired(); } throw new Error(json.error||'API error'); }
+  if(!json.ok){ if(json.needLogin){ handleSessionExpired(); } var _er=new Error(json.error||'API error'); _er.json=json; throw _er; }
   return json;
 }
 
@@ -1704,7 +1704,7 @@ async function flushQueue(){
   const remain=[];
   for(const body of q){
     try{ await apiPost(body); }
-    catch(e){ remain.push(body); }   // vẫn lỗi → giữ lại cho lần sau
+    catch(e){ if(e && e.json && e.json.denied) continue; remain.push(body); }   // vẫn lỗi → giữ lại cho lần sau (bị từ chối quyền/khóa sổ thì bỏ)
   }
   saveQueue(remain);
   updatePendingBadge();
@@ -1718,7 +1718,7 @@ function updatePendingBadge(){
 async function safePush(body){
   if(!getApiUrl()) return;
   try{ await apiPost(body); updatePendingBadge(); }
-  catch(e){ enqueue(body); }
+  catch(e){ if(e && e.json && e.json.denied){ try{ toast('⛔ '+e.json.error,'⚠️'); }catch(_){} return; } enqueue(body); }   /* ★ v9.61 */
 }
 
 // Hợp nhất 2 mảng theo id: giữ bản có updatedAt mới hơn.
@@ -5810,7 +5810,7 @@ function bgImport(){
   el.onclick=function(e){ if(e.target===el) bgImpClose(); };
   var note=(typeof XLSX==='undefined')?'<div style="color:#B23A2E;font-size:11.5px;margin-top:4px">⚠ Chưa nạp được thư viện đọc Excel — anh vẫn có thể DÁN bảng vào ô dưới.</div>':'';
   el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:840px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
-    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.60)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.61)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
     +'<div style="padding:14px 18px;overflow:auto">'
     +'<div style="font-size:12px;color:#6F6355;line-height:1.55;margin-bottom:10px">Chọn <b>file Excel (.xlsx/.csv)</b> báo giá/dự toán — hoặc <b>dán</b> bảng copy từ Excel/Google Sheet. Hệ tự nhận diện cột: <b>Tên hạng mục / Chi tiết đơn hàng</b>, <b>Chất liệu · quy cách</b> (→ mô tả), <b>ĐVT</b>, <b>Dài/Rộng/Cao</b>, <b>Khối lượng</b>, <b>Số lượng</b>, <b>Đơn giá</b>, <b>Thành tiền</b>, <b>Ghi chú</b>. Dòng tiêu đề · nhóm (Tầng/Phòng) · dòng tổng được xử lý tự động.'+note+'</div>'
     +'<div style="margin-bottom:8px"><label class="btn btn-outline btn-sm" style="cursor:pointer"><input type="file" accept=".xlsx,.xls,.xlsm,.csv,text/csv" style="display:none" onchange="bgImpFile(this)">📂 Chọn file Excel / CSV</label></div>'
@@ -6682,9 +6682,16 @@ function hdDotCuaHD(rec){
   var cungKH=(HT.hopdongKH||[]).filter(function(r){ return String(r['Mã KH'])===kh; })
     .sort(function(a,b){ return (a['Ngày ký']||'')>(b['Ngày ký']||'')?1:(a['Ngày ký']||'')<(b['Ngày ký']||'')?-1:0; });
   var chuCu=cungKH.length?cungKH[0]['Mã HĐKH']:ma;
+  /* ★ v9.61 — đợt do PM tạo: có thể thiếu Mã KH (khớp theo Mã DA) và thiếu Mã HĐKH (gắn theo nhóm TK/TC) */
+  var daKH={}; cungKH.forEach(function(r){ var x=(typeof rvMaDA==='function')?rvMaDA(r):String(r['Mã DA']||''); if(x) daKH[x]=1; });
+  var famCua=function(r){ return hdFamOf(hdLoaiDoan(r)); };
   return (HT.thanhtoan||[]).filter(function(d){
-    if(String(d['Mã KH'])!==kh) return false;
-    var m=d['Mã HĐKH']; return m ? m===ma : ma===chuCu;
+    var dk=String(d['Mã KH']||'');
+    if(dk){ if(dk!==kh) return false; } else if(!(d['Mã DA'] && daKH[String(d['Mã DA'])])) return false;
+    var m=d['Mã HĐKH']; if(m) return m===ma;
+    var nh=String(d['Nhóm HĐ']||'').toLowerCase() || hdFamOf(d['Loại HĐ']) || (/thiet ke/.test(hdN(d['Loại HĐ']))?'tk':/thi cong/.test(hdN(d['Loại HĐ']))?'tc':'');
+    if(nh){ var cung=cungKH.filter(function(r){ return hdHieuLuc(r) && famCua(r)===nh; }); if(cung.length) return ma===cung[cung.length-1]['Mã HĐKH']; }
+    return ma===chuCu;
   });
 }
 function hdThuCuaHD(rec){
@@ -6858,6 +6865,8 @@ function renderRevenue(){
     +'<div id="rv-body"></div>';
   document.getElementById('page-content').innerHTML=h;
   var mig=(typeof hdMigCanXuLy==='function')?hdMigCanXuLy().length:0;
+  var pmLech=(HT.thanhtoan||[]).filter(function(d){ return d['Mã DA'] && (!d['Mã KH'] || !d['Mã HĐKH']) && hdN(d['Trạng thái'])!=='huy'; }).length;   /* ★ v9.61 */
+  if(pmLech && rvCanConfirm()) document.getElementById('rv-body').insertAdjacentHTML('beforebegin','<div style="background:#EBF3FC;border:1px solid #C7DBF2;color:#0F3460;border-radius:9px;padding:9px 13px;font-size:12.5px;margin-bottom:12px">🔗 '+pmLech+' đợt thu tạo bên PM chưa gắn khách / hợp đồng — báo cáo đang tạm gắn theo dự án và nhóm TK/TC. <a href="javascript:void 0" onclick="rvDongBoPM()" style="color:#1D4E89;font-weight:700">Đồng bộ dữ liệu PM</a></div>');
   if(mig) document.getElementById('rv-body').insertAdjacentHTML('beforebegin','<div style="background:#FBF4E6;border:1px solid #EAD9B5;color:#8F6A2B;border-radius:9px;padding:9px 13px;font-size:12.5px;margin-bottom:12px">⚠ '+mig+' hợp đồng cũ chưa gắn loại — đang tạm đoán TK/TC. <a href="javascript:void 0" onclick="hdMigOpen()" style="color:#1D4E89;font-weight:700">Gắn loại ngay</a></div>');
   rvRender();
 }
@@ -7256,7 +7265,7 @@ function rvPSCuaHD(rec){
   var tcs=(HT.hopdongKH||[]).filter(function(r){ return hdHieuLuc(r) && rvMaDA(r)===da && hdFamOf(hdLoaiDoan(r))==='tc'; })
     .sort(function(a,b){ return (b['Ngày ký']||'')>(a['Ngày ký']||'')?1:-1; });
   if(!tcs.length || tcs[0]!==rec) return [];
-  return (HT.phatsinh||[]).filter(function(p){ return String(p['Mã DA'])===da && /da duyet/.test(hdN(p['Trạng thái'])); }).map(function(p){
+  return (HT.phatsinh||[]).filter(function(p){ return String(p['Mã DA'])===da && /da duyet|da chap thuan|da ky bo sung/.test(hdN(p['Trạng thái'])); }).map(function(p){   /* ★ v9.61: PM dùng 'Đã chấp thuận' */
     var v=rvNum(p['Giá trị (đ)']), am=/giam/.test(hdN(p['Loại']))||v<0;
     return {ma:p['Mã PS'], loai:'Phát sinh PM · '+(p['Loại']||''), ngay:rvNgay(p['Ngày duyệt']||p['Ngày']), gt:(am?-1:1)*Math.abs(v), tt:null, lyDo:p['Mô tả']||p['Lý do']||'', nguon:'PM', rec:p};
   });
@@ -7287,7 +7296,7 @@ function rvPctTuDong(rec, fam, l){
   var bg = l && ((l.inBothPipelines?l.stageTc:l.stage)==='tc_handover' || getPipe(l.stage||'')==='cs');
   if(da && /ban giao/.test(hdN(da['Giai đoạn']))) bg=true;
   if(bg) return {pct:100, cc:'Đã bàn giao'};
-  if(da) return {pct:Math.max(0,Math.min(100,rvNum(da['Tiến độ (%)']))), cc:'Tiến độ PM '+(da['Mã DA']||'')};
+  if(da) return {pct:Math.max(0,Math.min(100,rvNum(da['Tiến độ (%)']))), cc:'Tiến độ PM '+(da['Mã DA']||'')+(da['Nguồn tiến độ']?' · '+da['Nguồn tiến độ']:'')};
   return {pct:0, cc:'Chưa có dự án PM'};
 }
 function rvGN(ma){ return (HT.ghinhan||[]).filter(function(g){ return g['Mã HĐKH']===ma; }); }
@@ -8031,6 +8040,17 @@ function rvInDoiChieu(maKH){
     +'<p class="note">Biên bản lập thành 02 bản, mỗi bên giữ 01 bản có giá trị như nhau. Nếu có sai lệch, đề nghị Bên A phản hồi trong vòng 07 ngày kể từ ngày nhận biên bản.</p>'
     +'<div class="ky" style="grid-template-columns:1fr 1fr"><div><b>ĐẠI DIỆN BÊN A</b><i>(Ký, ghi rõ họ tên)</i></div><div><b>ĐẠI DIỆN BÊN B</b><i>(Ký, ghi rõ họ tên, đóng dấu)</i></div></div>';
   rvMoIn('DoiChieuCongNo_'+((l&&l.name)||maKH), h);
+}
+/* ★ v9.61 — Đồng bộ PM: backend gắn KH/HĐ cho đợt thu PM + cập nhật giá trị HĐ vào sheet Dự án */
+async function rvDongBoPM(){
+  if(!rvCanConfirm()) return toast('Chỉ Admin / Kế toán','⚠️');
+  if(!getApiUrl()) return toast('Chưa kết nối Google Sheets','⚠️');
+  toast('Đang đồng bộ dữ liệu PM…');
+  try{ var r=await apiPost({action:'chuanHoaDongBoPM', data:{}});
+    toast('Đã đồng bộ: gắn khách '+(r.ganKH||0)+' · gắn HĐ '+(r.ganHD||0)+' đợt · cập nhật '+(r.duAn||0)+' dự án');
+    if(typeof syncFromSheets==='function'){ await syncFromSheets(); }
+    if(currentPage==='revenue') renderRevenue();
+  }catch(e){ toast('Lỗi đồng bộ: '+(e.message||e)+' — kiểm tra đã deploy backend v6.19 chưa','⚠️'); }
 }
 /* ══════════════════════════ hết khối v9.60 ══════════════════════════ */
 
