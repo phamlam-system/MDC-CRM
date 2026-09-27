@@ -5861,7 +5861,7 @@ function bgImport(){
   el.onclick=function(e){ if(e.target===el) bgImpClose(); };
   var note=(typeof XLSX==='undefined')?'<div style="color:#B23A2E;font-size:11.5px;margin-top:4px">⚠ Chưa nạp được thư viện đọc Excel — anh vẫn có thể DÁN bảng vào ô dưới.</div>':'';
   el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:840px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
-    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.66b)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.67)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
     +'<div style="padding:14px 18px;overflow:auto">'
     +'<div style="font-size:12px;color:#6F6355;line-height:1.55;margin-bottom:10px">Chọn <b>file Excel (.xlsx/.csv)</b> báo giá/dự toán — hoặc <b>dán</b> bảng copy từ Excel/Google Sheet. Hệ tự nhận diện cột: <b>Tên hạng mục / Chi tiết đơn hàng</b>, <b>Chất liệu · quy cách</b> (→ mô tả), <b>ĐVT</b>, <b>Dài/Rộng/Cao</b>, <b>Khối lượng</b>, <b>Số lượng</b>, <b>Đơn giá</b>, <b>Thành tiền</b>, <b>Ghi chú</b>. Dòng tiêu đề · nhóm (Tầng/Phòng) · dòng tổng được xử lý tự động.'+note+'</div>'
     +'<div style="margin-bottom:8px"><label class="btn btn-outline btn-sm" style="cursor:pointer"><input type="file" accept=".xlsx,.xls,.xlsm,.csv,text/csv" style="display:none" onchange="bgImpFile(this)">📂 Chọn file Excel / CSV</label></div>'
@@ -6863,6 +6863,10 @@ function rvCanConfirm(){ return (typeof isAdmin==='function' && isAdmin()) || rv
 function rvD(d){ var z=function(n){ return String(n).padStart(2,'0'); }; return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); }
 function rvToday(){ return rvD(new Date()); }
 function rvAddDays(s,n){ var d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+n); return rvD(d); }
+function rvAddMonths(s,m){ var d=new Date(s+'T00:00:00'), ng=d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+(+m||0)); var cuoi=new Date(d.getFullYear(), d.getMonth()+1, 0).getDate(); d.setDate(Math.min(ng,cuoi)); return rvD(d); }
+function rvThangBH(rec){ var m=parseInt(rec && rec['Thời hạn bảo hành (tháng)'],10); return m>0?m:12; }
+/* Đợt "giữ lại bảo hành": theo loại đợt, điều kiện thu hoặc tên đợt */
+function rvLaBH(d){ if(!d) return false; return d['Loại đợt']==='Giữ lại bảo hành' || d['Mã điều kiện']==='HET_BH' || /bao hanh|giu lai/.test(hdN(d['Tên đợt'])); }
 function rvDays(a,b){ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000); }
 function rvNgay(s){ s=String(s||'').trim(); if(!s) return '';
   var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return m[1]+'-'+m[2]+'-'+m[3];
@@ -6955,7 +6959,8 @@ function rvTongQuan(D){
   var kyTT=ky.reduce(function(a,o){return a+o.tt;},0), kyGT=ky.reduce(function(a,o){return a+o.gt;},0);
   var nTK=ky.filter(function(o){return o.fam==='tk';}).length, nTC=ky.filter(function(o){return o.fam==='tc';}).length;
   var T=rvThuTrongKy(D);
-  var con=D.hds.reduce(function(a,o){return a+o.con;},0), qh=D.hds.reduce(function(a,o){return a+o.quaHan;},0);
+  var con=D.hds.reduce(function(a,o){return a+o.conThuong;},0), qh=D.hds.reduce(function(a,o){return a+o.quaHan;},0);
+  var bhC=D.hds.reduce(function(a,o){return a+o.bhCon;},0), bhN=D.hds.filter(function(o){ return o.bhCon>0; }).length, bhSom=D.hds.map(function(o){ return o.bhHan; }).filter(Boolean).sort()[0]||'';
   var nQH=0, khQH={}, sap=0, t7=rvAddDays(D.today,7);
   D.hds.forEach(function(o){ o.dots.forEach(function(d){ if(d.qh>0){ nQH++; khQH[o.kh]=1; } if(d.con>0 && d.han && d.han>=D.today && d.han<=t7) sap+=d.con; }); });
   var bk=rvBookingKy(D), dtKy=rvDtTrongKy(D), bl=D.hds.reduce(function(a,o){return a+o.backlog;},0);
@@ -6965,7 +6970,8 @@ function rvTongQuan(D){
     +rvCard('Backlog', rvShort(bl), 'Còn phải thực hiện · trước thuế', '#8F6A2B', "RV.tab='ghinhan';renderRevenue()")
     +(function(){ var c=rvChiTieu('CTY',D.R,RV.nhom); return c.ky?rvCard('Đạt kế hoạch ký', Math.round(bk*100/c.ky)+'%', 'Chỉ tiêu '+rvShort(c.ky), bk>=c.ky?'#0F5132':'#B23A2E', "RV.tab='nhanvien';renderRevenue()"):''; })()
     +rvCard('Tiền thu trong kỳ', rvShort(T.s), 'Quy trước thuế ≈ '+rvShort(T.sTT)+(T.cho?' · <span style="color:#8F6A2B">chờ KT xác nhận '+rvShort(T.cho)+'</span>':''), '#0F5132', "RV.tab='phieuthu';renderRevenue()")
-    +rvCard('Còn phải thu', rvShort(con), 'Toàn bộ HĐ đang hiệu lực · gồm VAT', '#3A2E22', "RV.tab='khach';renderRevenue()")
+    +rvCard('Còn phải thu', rvShort(con), 'Toàn bộ HĐ đang hiệu lực · gồm VAT'+(bhC?' · chưa gồm giữ lại BH':''), '#3A2E22', "RV.tab='khach';renderRevenue()")
+    +(bhC?rvCard('Giữ lại bảo hành', rvShort(bhC), bhN+' HĐ · thu khi hết hạn BH'+(bhSom?' · sớm nhất '+rvVN(bhSom):''), '#5B3E8C', "RV.tab='congno';renderRevenue()"):'')
     +rvCard('Quá hạn', rvShort(qh), nQH+' đợt · '+Object.keys(khQH).length+' khách', qh?'#B23A2E':'#0F5132', "RV.tab='congno';renderRevenue()")
     +rvCard('Đến hạn 7 ngày tới', rvShort(sap), 'Cần nhắc khách chuẩn bị', '#8F6A2B', "RV.tab='congno';renderRevenue()"));
   h+=rvBox('Giá trị ký · doanh thu ghi nhận · tiền thu theo tháng <span style="font-weight:400;color:#9A8F82;font-size:11.5px">· trước thuế · 12 tháng đến '+rvVN(D.R.den).slice(3)+'</span>', '<div style="padding:10px 12px 6px">'+rvChart12(D)+'</div>');
@@ -7075,10 +7081,13 @@ function rvLoai(D){
 function rvDotList(D){ var a=[]; D.hds.forEach(function(o){ o.dots.forEach(function(d){ if(d.con>0) a.push({o:o,d:d}); }); }); return a; }
 function rvBtnThu(maTT, veKH, nho){ return '<button onclick="event.stopPropagation();rvFormPhieuThu(\''+esc2(maTT)+'\''+(veKH?',\''+esc2(veKH)+'\'':'')+')" style="border:1px solid #0F5132;color:#0F5132;background:#fff;border-radius:6px;padding:'+(nho?'3px 8px':'4px 9px')+';font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap">＋ '+(nho?'Thu':'Ghi thu')+'</button>'; }
 function rvCongNo(D){
-  var a=rvDotList(D), t7=rvAddDays(D.today,7);
+  var aAll=rvDotList(D), t7=rvAddDays(D.today,7);
+  var bhDs=aAll.filter(function(x){ return x.d.bh && !x.d.qh; });   /* ★ v9.67 — giữ lại BH chưa đến hạn: tách riêng */
+  var a=aAll.filter(function(x){ return !(x.d.bh && !x.d.qh); });
   var bk=[['Chưa đến hạn',function(x){ return !x.d.qh; },'#6F6355'],['Quá hạn 1–30 ngày',function(x){ return x.d.qh>=1&&x.d.qh<=30; },'#C07A2B'],
           ['Quá hạn 31–60 ngày',function(x){ return x.d.qh>30&&x.d.qh<=60; },'#B8562E'],['Quá hạn 61–90 ngày',function(x){ return x.d.qh>60&&x.d.qh<=90; },'#B23A2E'],['Quá hạn trên 90 ngày',function(x){ return x.d.qh>90; },'#8C1D18']];
-  var h=rvGrid(bk.map(function(b){ var ds=a.filter(b[1]); return rvCard(b[0], rvShort(ds.reduce(function(s,x){return s+x.d.con;},0)), ds.length+' đợt', b[2]); }).join(''));
+  var h=rvGrid(bk.map(function(b){ var ds=a.filter(b[1]); return rvCard(b[0], rvShort(ds.reduce(function(s,x){return s+x.d.con;},0)), ds.length+' đợt', b[2]); }).join('')
+    +(bhDs.length?rvCard('Giữ lại bảo hành', rvShort(bhDs.reduce(function(s,x){return s+x.d.con;},0)), bhDs.length+' đợt · chưa đến hạn', '#5B3E8C'):''));
   var thieuHan=a.filter(function(x){ return !x.d.han; }).length;
   if(thieuHan) h+='<div style="font-size:12px;color:#8F6A2B;margin:-6px 0 12px">⚠ '+thieuHan+' đợt chưa có ngày đến hạn — đang xếp vào "Chưa đến hạn".</div>';
   var bang=function(ds, cot){ if(!ds.length) return '<div style="padding:20px;text-align:center;color:#9A8F82;font-size:12.5px">Không có.</div>';
@@ -7093,7 +7102,23 @@ function rvCongNo(D){
   var sap=a.filter(function(x){ return x.d.han && x.d.han>=D.today && x.d.han<=t7; }).sort(function(p,q){ return p.d.han>q.d.han?1:-1; });
   h+=rvBox('Quá hạn · '+qh.length+' đợt · '+rvShort(qh.reduce(function(s,x){return s+x.d.con;},0)), bang(qh,'Quá hạn'));
   h+=rvBox('Đến hạn trong 7 ngày tới · '+sap.length+' đợt', bang(sap,'Còn'));
+  if(bhDs.length) h+=rvBox('🛡 Tiền khách giữ lại bảo hành · '+bhDs.length+' đợt · '+rvShort(bhDs.reduce(function(s,x){return s+x.d.con;},0)), rvBangBH(bhDs, D));
   return h;
+}
+/* ★ v9.67 — bảng tiền giữ lại bảo hành (chưa đến hạn) */
+function rvBangBH(ds, D){
+  ds=ds.slice().sort(function(p,q){ return (p.d.han||'9')>(q.d.han||'9')?1:-1; });
+  return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><tr>'
+    +['Khách hàng','Hợp đồng','Đợt','Thời hạn BH','Hết hạn BH','Còn','Giữ lại',''].map(function(x,i){ return '<th style="'+RV_TH+(i>=5&&i<=6?';text-align:right':';text-align:left')+'">'+x+'</th>'; }).join('')+'</tr>'
+    +ds.map(function(x){ var con=x.d.han?rvDays(D.today,x.d.han):null;
+      return '<tr><td style="'+RV_TD+'"><a href="javascript:void 0" onclick="rvKhachCard(\''+esc2(x.o.kh)+'\')" style="color:#1D4E89;font-weight:700;text-decoration:none">'+esc2(x.o.ten)+'</a></td>'
+        +'<td style="'+RV_TD+'">'+esc2(x.o.rec['Số HĐ']||x.o.ma)+'</td><td style="'+RV_TD+'">'+esc2(x.d.ten)+'</td>'
+        +'<td style="'+RV_TD+'">'+rvThangBH(x.o.rec)+' tháng</td>'
+        +'<td style="'+RV_TD+';white-space:nowrap">'+(x.d.han?rvVN(x.d.han):'<span style="color:#9A8F82">chờ bàn giao</span>')+'</td>'
+        +'<td style="'+RV_TD+RV_N+';color:'+(con!=null&&con<=30?'#B23A2E':'#6F6355')+'">'+(con!=null?con+' ngày':'—')+'</td>'
+        +'<td style="'+RV_TD+RV_N+';font-weight:700;color:#5B3E8C">'+rvShort(x.d.con)+'</td>'
+        +'<td style="'+RV_TD+';text-align:right;white-space:nowrap">'+(rvCanConfirm()?'<button onclick="event.stopPropagation();hdBHKhauTruForm(\''+esc2(x.d.ma)+'\')" style="border:1px solid #8F6A2B;color:#8F6A2B;background:#fff;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;margin-right:4px">Khấu trừ</button>':'')+rvBtnThu(x.d.ma)+'</td></tr>'; }).join('')
+    +'</table></div><div style="padding:8px 12px;font-size:11.5px;color:#6F6355">Khoản này là tiền của hợp đồng nhưng chỉ thu khi hết hạn bảo hành — không tính vào "Còn phải thu" thường. Hệ thống nhắc trước 30 ngày; khi hết hạn chưa thu sẽ chuyển sang quá hạn.</div>';
 }
 
 /* ─── TAB 5: PHIẾU THU ─── */
@@ -7154,12 +7179,12 @@ function rvKhachCard(maKH){
       +'<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:11px;color:#6F6355;margin-top:6px"><span>Hoàn thành <b style="color:#5B3E8C">'+o.pct+'%</b> · '+esc2(o.cc)+' · DT ghi nhận '+rvShort(o.dtLK)+' · backlog '+rvShort(o.backlog)+'</span>'
       +'<span>'+(o.fam==='tk'?'<a href="javascript:void 0" onclick="rvMocForm(\''+esc2(o.ma)+'\')" style="color:#1D4E89;font-weight:600">✎ Mốc bàn giao</a> · ':'')+(o.fam==='tc' && rvCoHM(o.rec)?'<a href="javascript:void 0" onclick="rvHMForm(\''+esc2(o.ma)+'\')" style="color:#1D4E89;font-weight:600">✎ Hạng mục</a> · ':'')+(o.thanhLy?'<span style="color:#9A8F82">đã thanh lý</span>':'<a href="javascript:void 0" onclick="rvPLForm(\''+esc2(o.ma)+'\',\''+esc2(maKH)+'\')" style="color:#1D4E89;font-weight:600">＋ Phụ lục</a>')+'</span></div></div>'
       +(o.dots.length?'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><tr>'+['Đợt','Hạn','Giá trị','Đã thu','Còn',''].map(function(x,i){ return '<th style="'+RV_TH+(i>=2&&i<=4?';text-align:right':';text-align:left')+'">'+x+'</th>'; }).join('')+'</tr>'
-        +o.dots.map(function(d){ return '<tr><td style="'+RV_TD+'"><b>'+esc2(d.ten)+'</b>'
+        +o.dots.map(function(d){ return '<tr><td style="'+RV_TD+'"><b>'+esc2(d.ten)+'</b>'+(d.bh?' <span style="background:#EFE8F7;color:#5B3E8C;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px">🛡 GIỮ LẠI BH · '+rvThangBH(o.rec)+' THÁNG</span>':'')
             +d.pts.map(function(p){ return '<div style="font-size:10.5px;color:#6F6355;margin-top:2px">↳ '+esc2(p['Mã PT'])+' · '+rvVN(p['Ngày thu'])+' · '+rvMoney(p['Số tiền (đ)'])+' đ · '+esc2(p['Kế toán xác nhận']||'')+'</div>'; }).join('')+'</td>'
             +'<td style="'+RV_TD+';white-space:nowrap;color:'+(d.qh?'#B23A2E':'#6F6355')+'">'+rvVN(d.han)+(d.qh?'<div style="font-size:10.5px;font-weight:700">quá '+d.qh+' ngày</div>':'')+(d.dk?'<div style="font-size:10px;color:#9A8F82">'+esc2(rvDkTen(d.dk))+'</div>':'')+(d.giam?'<div style="font-size:10px;color:#8F6A2B">tặng TK −'+rvShort(d.giam)+'</div>':'')+'</td>'
             +'<td style="'+RV_TD+RV_N+'">'+rvShort(d.v)+'</td><td style="'+RV_TD+RV_N+';color:#0F5132">'+(d.t?rvShort(d.t):'–')+'</td>'
             +'<td style="'+RV_TD+RV_N+';font-weight:700;color:'+(d.con?'#B23A2E':'#0F5132')+'">'+(d.con?rvShort(d.con):'✓')+'</td>'
-            +'<td style="'+RV_TD+';text-align:right">'+(d.con?rvBtnThu(d.ma,maKH,true):'')+'</td></tr>'; }).join('')+'</table></div>'
+            +'<td style="'+RV_TD+';text-align:right;white-space:nowrap">'+(d.bh && d.con && rvCanConfirm()?'<button onclick="event.stopPropagation();hdBHKhauTruForm(\''+esc2(d.ma)+'\',\''+esc2(maKH)+'\')" title="Khách trừ tiền bảo hành (sửa lỗi…)" style="border:1px solid #8F6A2B;color:#8F6A2B;background:#fff;border-radius:6px;padding:3px 7px;font-size:10.5px;cursor:pointer;margin-right:4px">Khấu trừ</button>':'')+(d.con?rvBtnThu(d.ma,maKH,true):'')+'</td></tr>'; }).join('')+'</table></div>'
         :'<div style="padding:10px 12px;font-size:12px;color:#8F6A2B">⚠ Chưa khai đợt thanh toán cho hợp đồng này.</div>')
       +(o.chuaLich>0?'<div style="padding:6px 12px;font-size:11.5px;color:#8F6A2B;border-top:1px solid #F1EBE0">⚠ '+rvMoney(o.chuaLich)+' đ chưa có đợt thu (phụ lục / phát sinh) — sửa HĐ để khai thêm đợt.</div>':'')
       +rvPLHtml(o, maKH)+'</div>';
@@ -7305,7 +7330,7 @@ var RV_MOC_MAU={
   TKKT:[['Hồ sơ cơ sở / concept',30],['Hồ sơ kỹ thuật',50],['Hồ sơ xin phép / hoàn công',20]]
 };
 var RV_DK=[['','Theo ngày'],['KY','Khi ký HĐ'],['NT_TK','Nghiệm thu thiết kế'],['TD30','Tiến độ PM ≥ 30%'],['TD50','Tiến độ PM ≥ 50%'],
-           ['TD70','Tiến độ PM ≥ 70%'],['TD90','Tiến độ PM ≥ 90%'],['BAN_GIAO','Bàn giao công trình'],['HET_BH','Hết hạn bảo hành (12 tháng)']];
+           ['TD70','Tiến độ PM ≥ 70%'],['TD90','Tiến độ PM ≥ 90%'],['BAN_GIAO','Bàn giao công trình'],['HET_BH','Hết hạn bảo hành']];
 function rvDkTen(k){ var x=RV_DK.filter(function(a){ return a[0]===k; })[0]; return x?x[1]:''; }
 function rvDkDoan(ten){ var n=hdN(ten);
   if(/tam ung|sau ky|khi ky/.test(n)) return 'KY'; if(/bao hanh|giu lai/.test(n)) return 'HET_BH';
@@ -7370,10 +7395,14 @@ function rvHD(r, today){
     var cu=Math.max(t-sPT,0);
     if(cu>0) o.thu.push({ngay:rvNgay(d['Ngày thu'])||han||o.ngayKy, tien:cu, pt:null, dot:d});
     var qh=(con>0 && han && han<today) ? rvDays(han,today) : 0;
-    o.dots.push({rec:d, ma:d['Mã TT'], ten:d['Tên đợt']||'', v:v, t:t, con:con, han:han, qh:qh, pts:pts, dk:d['Mã điều kiện']||'', giam:rvNum(d['Giảm trừ (đ)'])});
+    o.dots.push({bh:rvLaBH(d), rec:d, ma:d['Mã TT'], ten:d['Tên đợt']||'', v:v, t:t, con:con, han:han, qh:qh, pts:pts, dk:d['Mã điều kiện']||'', giam:rvNum(d['Giảm trừ (đ)'])});
     o.tongDot+=v; o.daThu+=t; if(con>0 && han && han<=today) o.denHan+=con; if(qh>0) o.quaHan+=con;
   });
   o.con=Math.max(o.gtPay-o.daThu,0);
+  /* ★ v9.67 — tiền khách giữ lại bảo hành: tách khỏi công nợ thường */
+  o.bhV=0; o.bhCon=0; o.bhHan=''; o.bhQH=0;
+  o.dots.forEach(function(d){ if(!d.bh) return; o.bhV+=d.v; o.bhCon+=d.con; if(d.con>0 && d.han && (!o.bhHan || d.han<o.bhHan)) o.bhHan=d.han; if(d.qh>0) o.bhQH+=d.con; });
+  o.conThuong=Math.max(o.con-o.bhCon,0);
   o.chuaLich=Math.max(o.gtPay-Math.max(o.tongDot,o.daThu),0);
   /* % hoàn thành & ghi nhận (kỳ hiện tại) */
   var au=rvPctTuDong(r,fam,l), g=rvGNKy(o.ma, rvKyNay());
@@ -7649,7 +7678,7 @@ function rvDkDat(dk, o){
   }
   var mm=String(dk).match(/^TD(\d+)$/); if(mm) return (o.fam==='tc' && au.pct>=+mm[1]) ? today : '';
   if(dk==='BAN_GIAO') return (o.fam==='tc' && au.cc==='Đã bàn giao') ? today : '';
-  if(dk==='HET_BH'){ if(!(o.fam==='tc' && au.cc==='Đã bàn giao')) return ''; var bgDot=o.dots.filter(function(d){ return d.dk==='BAN_GIAO' && d.han; })[0]; var bg=bgDot?bgDot.han:rvDkDat('BAN_GIAO',o); return bg?rvAddDays(bg,365):''; }
+  if(dk==='HET_BH'){ if(!(o.fam==='tc' && au.cc==='Đã bàn giao')) return ''; var bgDot=o.dots.filter(function(d){ return d.dk==='BAN_GIAO' && d.han; })[0]; var bg=bgDot?bgDot.han:rvDkDat('BAN_GIAO',o); return bg?rvAddMonths(bg, rvThangBH(o.rec)):''; }   /* ★ v9.67 — thời hạn BH theo từng HĐ */
   return '';
 }
 function rvApDieuKien(){
@@ -7845,6 +7874,8 @@ function rvCanhBao(D){
   if(q30.length) a.push(['#B23A2E','Quá hạn trên 30 ngày: '+q30.length+' đợt · '+sum(q30)+' — báo CEO, cân nhắc tạm dừng thi công','congno']);
   if(q7.length) a.push(['#C07A2B','Quá hạn 7–30 ngày: '+q7.length+' đợt · '+sum(q7)+' — GĐ Kinh doanh đôn đốc','congno']);
   if(s3.length) a.push(['#8F6A2B','Đến hạn trong 3 ngày: '+s3.length+' đợt · '+sum(s3)+' — nhắc khách chuẩn bị','congno']);
+  var bh30=[]; D.hds.forEach(function(o){ o.dots.forEach(function(d){ if(d.bh && d.con>0 && d.han && d.han>=D.today && rvDays(D.today,d.han)<=30) bh30.push({o:o,d:d}); }); });   /* ★ v9.67 */
+  if(bh30.length) a.push(['#5B3E8C','Sắp hết hạn bảo hành (≤ 30 ngày): '+bh30.length+' đợt giữ lại · '+sum(bh30)+' — chuẩn bị biên bản hết bảo hành & đề nghị thu','congno']);
   var uv=D.hds.filter(function(o){ return o.gtPay && o.chenh>0.2*o.gtPay; }), tv=D.hds.filter(function(o){ return o.gtPay && -o.chenh>0.5*o.gtPay; });
   if(uv.length) a.push(['#B23A2E','MDC đang ứng vốn > 20% giá trị ở '+uv.length+' HĐ — làm xong chưa thu kịp','ghinhan']);
   if(tv.length) a.push(['#1D4E89','Thu vượt tiến độ > 50% ở '+tv.length+' HĐ — kiểm tra tiến độ có chậm','ghinhan']);
@@ -8672,6 +8703,80 @@ function renderHealth(){
 }
 /* ══════════════════════════ hết khối v9.66 ══════════════════════════ */
 
+/* ══════════════════════════ ★ v9.67 — GIỮ LẠI BẢO HÀNH ══════════════════════════
+   Khai % giữ lại + thời hạn BH khi ký HĐ · tách khỏi công nợ thường · nhắc trước 30 ngày · khấu trừ bảo hành (phụ lục giảm). */
+function htBHRow(x, dot){
+  var bhDot=(dot||[]).filter(rvLaBH)[0], pct=bhDot?(+bhDot['% giá trị HĐ']||''):'', thang=x?rvThangBH(x):12;
+  var st='padding:5px 7px;border:1px solid #DED8CE;border-radius:6px;font-size:12px';
+  return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding:9px 10px;background:#F7F3FB;border-radius:8px;font-size:12px;color:#5B3E8C">'
+    +'<b>🛡 Khách giữ lại bảo hành</b>'
+    +'<input id="hd-bh-pct" type="number" min="0" max="30" step="0.5" value="'+pct+'" placeholder="%" style="'+st+';width:64px;text-align:right"> %'
+    +'<span>trong</span><select id="hd-bh-thang" style="'+st+'">'+[6,12,18,24,36].map(function(m){ return '<option value="'+m+'"'+(m===thang?' selected':'')+'>'+m+' tháng</option>'; }).join('')+'</select>'
+    +'<button type="button" onclick="htApBH()" style="padding:5px 11px;border:1px solid #5B3E8C;background:#fff;color:#5B3E8C;border-radius:99px;font-size:11.5px;font-weight:700;cursor:pointer">Áp dụng vào đợt thu</button>'
+    +'<span style="flex-basis:100%;font-size:11px;color:#7A6A8C">Tạo 1 đợt "Giữ lại bảo hành" (thu khi hết hạn BH, tính từ ngày bàn giao); các đợt còn lại tự giảm % tương ứng. Nhập 0 để bỏ giữ lại.</span></div>';
+}
+function htApBH(){
+  var p=Math.max(0,Math.min(30, +((document.getElementById('hd-bh-pct')||{}).value)||0));
+  var gt=+((document.getElementById('hd-gt')||{}).value)||0;
+  var ds=(window.__htDot||[]).filter(function(d){ return d.ten || d.tien; });
+  var cu=ds.filter(function(d){ return /bao hanh|giu lai/.test(hdN(d.ten)) || d.dk==='HET_BH'; })[0];
+  var con=ds.filter(function(d){ return d!==cu; });
+  if(!con.length && p) return toast('Khai các đợt thu trước (hoặc chọn mẫu), rồi áp dụng giữ lại bảo hành','⚠️');
+  var tongCu=con.reduce(function(a,d){ return a+(+d.pct||0); },0) || 100, dich=100-p, dem=0;
+  con.forEach(function(d,i){ var np=(i===con.length-1)?Math.round((dich-dem)*100)/100:Math.round((+d.pct||0)*dich/tongCu*100)/100; dem+=np; d.pct=np; d.tien=Math.round(gt*np/100); });
+  if(p){ if(!cu){ cu={ten:'Giữ lại bảo hành '+p+'%', ngay:'', dk:'HET_BH'}; con.push(cu); } cu.ten=cu.ten && /bao hanh|giu lai/.test(hdN(cu.ten))?cu.ten.replace(/\d+([.,]\d+)?\s*%/, p+'%'):'Giữ lại bảo hành '+p+'%'; cu.pct=p; cu.tien=Math.round(gt*p/100); cu.dk='HET_BH'; cu.ngay=''; }
+  window.__htDot=p?(con.indexOf(cu)<0?con.concat([cu]):con):con.filter(function(d){ return d!==cu; });
+  if(cu && !p && cu.ma) toast('Đã bỏ đợt giữ lại bảo hành — bấm Xác nhận để lưu','ℹ️');
+  htVeDot();
+}
+/* ─── Khấu trừ bảo hành: khách trừ tiền giữ lại (sửa lỗi, bảo hành không đạt…) → phụ lục giảm + giảm đợt ─── */
+function hdBHKhauTruForm(maTT, veKH){
+  if(!rvCanConfirm()) return toast('Chỉ Admin / Kế toán được khấu trừ bảo hành','🔒');
+  var d=(HT.thanhtoan||[]).filter(function(x){ return x['Mã TT']===maTT; })[0]; if(!d) return;
+  var r=hdTim(d['Mã HĐKH']); var o=r?rvHD(r):null; var dd=o?o.dots.filter(function(x){ return x.ma===maTT; })[0]:null; if(!dd) return toast('Không tìm thấy đợt trong hợp đồng','⚠️');
+  var st='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px', lb='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px';
+  modal2('🛡 Khấu trừ bảo hành · '+(r['Số HĐ']||r['Mã HĐKH']),
+    '<div style="font-size:12.5px;color:#6F6355;margin-bottom:10px">'+esc2(o.ten)+' · đợt <b>'+esc2(dd.ten)+'</b> · còn giữ lại <b style="color:#5B3E8C">'+rvShort(dd.con)+'</b></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="'+lb+'">Ngày</label><input id="kt-ngay" type="date" value="'+rvToday()+'" style="'+st+'"></div>'
+    +'<div><label style="'+lb+'">Số tiền khấu trừ (đ, gồm VAT)</label><input id="kt-tien" type="number" min="0" max="'+dd.con+'" style="'+st+';font-weight:700"></div></div>'
+    +'<div style="margin-bottom:10px"><label style="'+lb+'">Lý do <span style="color:#B23A2E">*</span></label><input id="kt-ld" placeholder="vd: Khách tự sửa bản lề tủ bếp theo biên bản ngày …" style="'+st+'"></div>'
+    +'<div style="font-size:11.5px;color:#6F6355;background:#F6F2EA;border-radius:8px;padding:9px 11px;margin-bottom:12px">Hệ thống lập phụ lục <b>Khấu trừ bảo hành</b> (giảm giá trị HĐ & doanh thu), giảm đợt giữ lại tương ứng. Khấu trừ hết → đợt chuyển "Hủy".</div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="'+(veKH?'rvKhachCard(\''+esc2(veKH)+'\')':'dongModal2()')+'">Đóng</button>'
+    +'<button style="background:#8F6A2B;color:#fff;border:none;padding:9px 16px;font-weight:700;border-radius:8px;cursor:pointer" onclick="hdBHKhauTruLuu(\''+esc2(maTT)+'\',\''+esc2(veKH||'')+'\')">✓ Khấu trừ</button></div>');
+}
+function hdBHKhauTruLuu(maTT, veKH){
+  if(!rvCanConfirm()) return;
+  var d=(HT.thanhtoan||[]).filter(function(x){ return x['Mã TT']===maTT; })[0]; if(!d) return;
+  var r=hdTim(d['Mã HĐKH']); if(!r) return;
+  var o=rvHD(r), dd=o.dots.filter(function(x){ return x.ma===maTT; })[0]; if(!dd) return;
+  var ngay=rvNgay((document.getElementById('kt-ngay')||{}).value)||rvToday();
+  if(rvChanKhoa(ngay,'khấu trừ bảo hành')) return;
+  var x=Math.round(rvNum((document.getElementById('kt-tien')||{}).value)); if(!(x>0)) return toast('Nhập số tiền khấu trừ','⚠️');
+  if(x>dd.con) return toast('Không được lớn hơn số còn giữ lại ('+rvMoney(dd.con)+' đ)','⚠️');
+  var ld=String((document.getElementById('kt-ld')||{}).value||'').trim(); if(!ld) return toast('Nhập lý do khấu trừ','⚠️');
+  var me=(currentUser&&currentUser.name)||'';
+  var ops=hdGom(function(){
+    if(!HT.phuluc) HT.phuluc=[];
+    var p={'Mã PL':htMaMoi('phuluc','PL'),'Mã HĐKH':r['Mã HĐKH'],'Mã KH':r['Mã KH'],'Loại':'Khấu trừ bảo hành','Ngày':ngay,'Giá trị (đ)':-x,'Giá trị trước thuế (đ)':-Math.round(x*o.heSo),
+      'Lý do':ld,'Nguồn':'CRM','Mã PS':'','HĐ liên quan':'','Miễn thu TK (đ)':'','Trừ vào TC (đ)':'','Trạng thái':'Đã duyệt','Người tạo':me,'Người duyệt':me,'Ngày duyệt':rvToday(),'Ghi chú':'Đợt '+maTT};
+    HT.phuluc.push(p); htGui('savePhuLuc', p);
+    var v=rvNum(d['Giá trị (đ)'])-x, t=rvNum(d['Đã thu (đ)']);
+    d['Giá trị (đ)']=Math.max(v,0);
+    d['Trạng thái']=v<=0&&t<=0?'Hủy':(t>=v?'Đã thu đủ':(t>0?'Đã thu một phần':(d['Trạng thái']||'Chưa đến hạn')));
+    d['Ghi chú']=(String(d['Ghi chú']||'')+' · [KHẤU TRỪ BH '+rvVN(ngay)+': −'+rvMoney(x)+' đ · '+ld+']').replace(/^ · /,'');
+    htGui('savePayment', {'Mã TT':maTT,'Giá trị (đ)':d['Giá trị (đ)'],'Trạng thái':d['Trạng thái'],'Ghi chú':d['Ghi chú']});
+  });
+  htSave();
+  hdGuiBatch(ops,'khấu trừ bảo hành').then(function(ok){ if(ok && typeof rvLuuTamTinh==='function') rvLuuTamTinh(true); });
+  var l=bgmLeadOf(r['Mã KH']); if(l && hdTinhGiaTriLead(l) && typeof pushLead==='function') pushLead(l);
+  toast('Đã khấu trừ bảo hành '+rvMoney(x)+' đ','✅');
+  if(veKH) rvKhachCard(veKH); else dongModal2();
+  if(currentPage==='revenue' && typeof rvRender==='function') rvRender();
+}
+/* ══════════════════════════ hết khối v9.67 ══════════════════════════ */
+
+
 
 
 
@@ -8741,7 +8846,9 @@ function htFormKyHopDong(ma){
     + '<th style="text-align:left;padding:4px">Nội dung thanh toán</th><th style="text-align:left;padding:4px;width:130px">Thời điểm</th>'
     + '<th style="text-align:right;padding:4px;width:66px">%</th><th style="text-align:right;padding:4px;width:120px">Số tiền</th>'
     + '<th style="width:32px"></th></tr></thead><tbody id="hd-dot"></tbody></table></div>'
-    + '<div id="hd-canh" style="font-size:11.5px;margin-top:8px"></div></div>'
+    + '<div id="hd-canh" style="font-size:11.5px;margin-top:8px"></div>'
+    + htBHRow(x, dot)   /* ★ v9.67 — giữ lại bảo hành */
+    + '</div>'
     + '<div style="display:flex;gap:8px;justify-content:flex-end">'
     + '<button class="btn btn-outline" onclick="htRender()">Hủy</button>'
     + '<button class="btn" style="background:#0F5132;color:#fff;border:none;padding:9px 18px;font-weight:600;border-radius:8px" '
@@ -8845,6 +8952,7 @@ function htLuuHopDong(ma){
   rec['Trạng thái'] = 'Đang hiệu lực';
   rec['Người ký'] = rec['Người ký'] || (currentUser&&currentUser.name) || '';
   hdGanTruongV957(rec, l, loai, vatP, Math.round(gt/(1+vatP/100)));   /* ★ v9.57 */
+  rec['Thời hạn bảo hành (tháng)'] = +((document.getElementById('hd-bh-thang')||{}).value) || rec['Thời hạn bảo hành (tháng)'] || 12;   /* ★ v9.67 */
   if(!ma) HT.hopdongKH.push(rec);
 
   /* Đợt thanh toán — ghi vào bảng dùng chung với PM */
