@@ -5864,7 +5864,7 @@ function bgImport(){
   el.onclick=function(e){ if(e.target===el) bgImpClose(); };
   var note=(typeof XLSX==='undefined')?'<div style="color:#B23A2E;font-size:11.5px;margin-top:4px">⚠ Chưa nạp được thư viện đọc Excel — anh vẫn có thể DÁN bảng vào ô dưới.</div>':'';
   el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:840px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
-    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.72)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.73)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
     +'<div style="padding:14px 18px;overflow:auto">'
     +'<div style="font-size:12px;color:#6F6355;line-height:1.55;margin-bottom:10px">Chọn <b>file Excel (.xlsx/.csv)</b> báo giá/dự toán — hoặc <b>dán</b> bảng copy từ Excel/Google Sheet. Hệ tự nhận diện cột: <b>Tên hạng mục / Chi tiết đơn hàng</b>, <b>Chất liệu · quy cách</b> (→ mô tả), <b>ĐVT</b>, <b>Dài/Rộng/Cao</b>, <b>Khối lượng</b>, <b>Số lượng</b>, <b>Đơn giá</b>, <b>Thành tiền</b>, <b>Ghi chú</b>. Dòng tiêu đề · nhóm (Tầng/Phòng) · dòng tổng được xử lý tự động.'+note+'</div>'
     +'<div style="margin-bottom:8px"><label class="btn btn-outline btn-sm" style="cursor:pointer"><input type="file" accept=".xlsx,.xls,.xlsm,.csv,text/csv" style="display:none" onchange="bgImpFile(this)">📂 Chọn file Excel / CSV</label></div>'
@@ -8364,6 +8364,7 @@ function hdNutQuanLy(hd, quyen){
   var b='';
   if(quyen) b+='<button onclick="htFormKyHopDong(\''+ma+'\')" style="'+st+';color:#1D4E89">✏️ Sửa</button>';
   if(quyen || rvCanConfirm()) b+='<button onclick="hdNgayKyForm(\''+ma+'\')" style="'+st+';color:#5B3E8C">📅 Ngày ký</button>';   /* ★ v9.72 */
+  if(quyen || rvCanConfirm()) b+='<button onclick="hdSoHDForm(\''+ma+'\')" style="'+st+';color:#5B3E8C">🔢 Số HĐ</button>';   /* ★ v9.73 */
   if(rvCanConfirm()) b+='<button onclick="hdTLForm(\''+ma+'\')" style="'+st+';color:#8F6A2B">⛔ Hủy / Thanh lý</button>';
   if(typeof isAdmin==='function' && isAdmin()) b+='<button onclick="hdXoaForm(\''+ma+'\')" style="'+st+';color:#B23A2E">🗑 Xóa</button>';
   return '<span style="margin-left:auto;display:flex;gap:14px;flex-wrap:wrap">'+b+'</span>';
@@ -9240,6 +9241,81 @@ function hdNgayKyLuu(ma){
     });
 }
 /* ══════════════════════════ hết khối v9.72 ══════════════════════════ */
+/* ══════════════ v9.73 · ĐỔI SỐ HỢP ĐỒNG — ĐỒNG BỘ CRM + PM ══════════════
+   Module Hợp đồng: bấm ✏️ cạnh số HĐ. Máy chủ (backend v6.29) kiểm tra trùng số, ghi lịch sử, cập nhật văn bản soạn thảo,
+   số HĐ của dự án PM (kho số HĐ + Kế hoạch chung). Mọi màn hình, phiếu in, báo cáo, cổng khách đọc trực tiếp nên tự đổi. */
+function hdSoChuan(v){ return String(v==null?'':v).replace(/\s+/g,' ').trim(); }
+function hdSoHDKiemTra(r, moi){
+  if(!moi) return 'Số hợp đồng không được để trống';
+  if(moi.length>60) return 'Số hợp đồng quá dài (tối đa 60 ký tự)';
+  if(r && hdThanhLy(r) && !isAdmin()) return 'Hợp đồng đã thanh lý — chỉ Admin được đổi số hợp đồng';
+  var k=moi.toLowerCase(), ma=r?r['Mã HĐKH']:'';
+  var t=(HT.hopdongKH||[]).filter(function(x){ return x['Mã HĐKH']!==ma && hdN(x['Trạng thái'])!=='huy' && !/huy/.test(hdN(x['Trạng thái'])) && hdSoChuan(x['Số HĐ']).toLowerCase()===k; })[0];
+  if(t) return 'Số "'+moi+'" đã dùng cho hợp đồng '+(t['Mã HĐKH'])+' — '+(bgmKhachName(t['Mã KH'])||t['Mã KH']||'');
+  return '';
+}
+function hdGoiYSoHD(r){
+  var y=new Date().getFullYear(), fam=r?hdFamOf(hdLoaiDoan(r)):'', dv0=(typeof dv==='function')?dv():{}, vt=String(dv0.tenTM||dv0.ten||'MDC').replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,6)||'MDC';
+  var n=(HT.hopdongKH||[]).filter(function(x){ return String(x['Ngày ký']||'').slice(0,4)===String(y); }).length+1;
+  return String(n).padStart(2,'0')+'/'+y+'/HĐ'+(fam==='tk'?'TK':fam==='tc'?'TC':'')+'-'+vt;
+}
+function hdSoHDForm(ma){
+  var r=hdTim(ma); if(!r) return;
+  if(!hdQuyenNgayKy(r)) return toast('Bạn không có quyền sửa hợp đồng của khách này','🔒');
+  var cu=hdSoChuan(r['Số HĐ']), st='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px';
+  var lb=function(t){ return '<label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px">'+t+'</label>'; };
+  var h='<div style="font-size:12.5px;color:#6F6355;margin-bottom:12px">'+hdBadgeLoai(r)+' '+esc2(bgmKhachName(r['Mã KH'])||'')+' · ký '+esc2(rvVN(r['Ngày ký']))+' · '+formatShort(rvNum(r['Giá trị (đ)']))+' · <span style="color:#9A8F82">'+esc2(ma)+'</span></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:10px;margin-bottom:10px">'
+    +'<div>'+lb('Số hợp đồng hiện tại')+'<div style="'+st+';background:#F6F2EA;color:#6F6355;overflow-wrap:anywhere">'+(cu?esc2(cu):'— chưa có —')+'</div></div>'
+    +'<div>'+lb('Số hợp đồng mới <span style="color:#B23A2E">*</span>')+'<input id="so-moi" value="'+esc2(cu)+'" maxlength="60" oninput="hdSoHDXem(\''+esc2(ma)+'\')" style="'+st+';font-weight:700">'
+    +'<a href="javascript:void 0" onclick="var e=document.getElementById(\'so-moi\');e.value=hdGoiYSoHD(hdTim(\''+esc2(ma)+'\'));hdSoHDXem(\''+esc2(ma)+'\')" style="font-size:11.5px;color:#1D4E89">Gợi ý số theo mẫu</a></div></div>'
+    +'<div style="margin-bottom:10px">'+lb('Lý do điều chỉnh')+'<input id="so-ly" placeholder="vd: cấp số theo sổ hợp đồng, sửa lỗi gõ…" style="'+st+'"></div>'
+    +'<div id="so-xem" style="background:#FBF8F1;border:1px solid #EDE7DB;border-radius:9px;padding:10px 13px;font-size:12.5px;line-height:1.6;margin-bottom:12px"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="dongModal2()">Hủy</button><button id="so-ok" class="btn btn-primary" onclick="hdSoHDLuu(\''+esc2(ma)+'\')">🔢 Cập nhật & đồng bộ</button></div>';
+  modal2('Đổi số hợp đồng', h); hdSoHDXem(ma);
+  setTimeout(function(){ var e=document.getElementById('so-moi'); if(e){ e.focus(); e.select(); } },30);
+}
+function hdSoHDXem(ma){
+  var r=hdTim(ma), box=document.getElementById('so-xem'), b=document.getElementById('so-ok'); if(!r||!box) return;
+  var cu=hdSoChuan(r['Số HĐ']), moi=hdSoChuan((document.getElementById('so-moi')||{}).value);
+  if(moi===cu){ box.innerHTML='<span style="color:#9A8F82">Nhập số hợp đồng mới để xem những gì sẽ được cập nhật.</span>'; if(b) b.disabled=true; return; }
+  var loi=hdSoHDKiemTra(r, moi); if(b) b.disabled=!!loi;
+  if(loi){ box.innerHTML='<b style="color:#B23A2E">⛔ '+esc2(loi)+'</b>'; return; }
+  var a=['✓ Hợp đồng: '+(cu?esc2(cu):'—')+' → <b>'+esc2(moi)+'</b> (lưu lịch sử vào Ghi chú)'];
+  if(r['Doc JSON']) a.push('✓ Số trên văn bản hợp đồng soạn thảo');
+  a.push('✓ Dự án PM (nếu đây là HĐ chính): số hợp đồng ở Kế hoạch chung');
+  a.push('✓ Hành trình khách, công nợ, báo cáo, biên bản đối chiếu, cổng khách hàng hiển thị số mới');
+  var pt=(HT.phieuthu||[]).filter(function(p){ return p['Mã HĐKH']===ma && /da xac nhan/.test(hdN(p['Kế toán xác nhận'])); }).length;
+  if(pt) a.push('<span style="color:#8F6A2B">⚠ Đã có '+pt+' phiếu thu được xác nhận — phiếu đã in/gửi khách vẫn mang số cũ</span>');
+  box.innerHTML=a.join('<br>');
+}
+function hdSoHDLuu(ma){
+  var r=hdTim(ma); if(!r) return;
+  var cu=hdSoChuan(r['Số HĐ']), moi=hdSoChuan((document.getElementById('so-moi')||{}).value), ly=((document.getElementById('so-ly')||{}).value||'').trim();
+  if(moi===cu) return dongModal2();
+  var loi=hdSoHDKiemTra(r, moi); if(loi) return toast(loi,'⚠️');
+  var btn=document.getElementById('so-ok'); if(btn){ btn.disabled=true; btn.textContent='Đang đồng bộ…'; }
+  var xong=function(j){
+    r['Số HĐ']=moi;
+    try{ var doc=JSON.parse(r['Doc JSON']||'null'); if(doc && typeof doc==='object'){ doc.so=moi; r['Doc JSON']=JSON.stringify(doc); } }catch(e){}
+    r['Ghi chú']=(j&&j.ghiChu) || ((r['Ghi chú']?r['Ghi chú']+' · ':'')+'[Đổi số HĐ '+(cu||'—')+' → '+moi+' · '+((currentUser&&currentUser.name)||'')+(ly?' · '+ly:'')+']');
+    htSave(); dongModal2();
+    if(window.__htLead && String(window.__htLead.id)===String(r['Mã KH']) && typeof htGhiNhanh==='function') htGhiNhanh('Ghi chú','Đổi số HĐ '+(cu||'—')+' → '+moi+(ly?' ('+ly+')':''));
+    toast('Đã đổi số hợp đồng → '+moi+((j&&j.n&&j.n.da)?' · cập nhật '+j.n.da+' dự án PM':''),'🔢');
+    if(currentPage==='hopdong' && typeof hdmRender==='function') hdmRender();
+    else if(window.__htLead && typeof htRender==='function' && document.getElementById('crm-modal2')){ try{ htRender(); }catch(e){} }
+    if(currentPage==='revenue' && typeof rvRender==='function') rvRender();
+  };
+  if(typeof getApiUrl==='function' && !getApiUrl()) return xong(null);
+  apiPost({action:'doiSoHD', data:{code:ma, so:moi, lyDo:ly}}).then(function(j){ if(j && j.ok===false) throw {json:j}; xong(j); })
+    .catch(function(e){
+      if(btn){ btn.disabled=false; btn.textContent='🔢 Cập nhật & đồng bộ'; }
+      if(e && e.json) toast('⛔ '+(e.json.error||'Máy chủ từ chối'),'⚠️');
+      else toast('Cần có kết nối mạng để đổi số hợp đồng — thử lại sau','📶');
+    });
+}
+/* ══════════════════════════ hết khối v9.73 ══════════════════════════ */
+
 
 
 
@@ -9422,7 +9498,14 @@ function htLuuHopDong(ma){
     try{ var __doc=JSON.parse(rec['Doc JSON']||'null'); if(__doc && typeof __doc==='object'){ __doc.ngay=__nkMoi; rec['Doc JSON']=JSON.stringify(__doc); } }catch(e){}
     rec['Ghi chú'] = (rec['Ghi chú']?rec['Ghi chú']+' · ':'')+'[Đổi ngày ký '+(__nkCu?rvVN(__nkCu):'—')+' → '+rvVN(__nkMoi)+' · '+((currentUser&&currentUser.name)||'')+']';
   }
-  rec['Số HĐ'] = (document.getElementById('hd-so')||{}).value||'';
+  /* ★ v9.73 — đổi số HĐ trong form: chặn trùng, cập nhật văn bản + lịch sử */
+  var __soCu = ma ? hdSoChuan(rec['Số HĐ']) : '', __soMoi = hdSoChuan((document.getElementById('hd-so')||{}).value);
+  if(__soMoi && __soMoi!==__soCu){
+    var __soLoi = hdSoHDKiemTra(ma?rec:null, __soMoi); if(__soLoi) return toast(__soLoi,'⚠️');
+    if(ma){ try{ var __d2=JSON.parse(rec['Doc JSON']||'null'); if(__d2 && typeof __d2==='object'){ __d2.so=__soMoi; rec['Doc JSON']=JSON.stringify(__d2); } }catch(e){}
+      if(__soCu) rec['Ghi chú'] = (rec['Ghi chú']?rec['Ghi chú']+' · ':'')+'[Đổi số HĐ '+__soCu+' → '+__soMoi+' · '+((currentUser&&currentUser.name)||'')+']'; }
+  }
+  rec['Số HĐ'] = __soMoi;
   rec['Ngày ký'] = (document.getElementById('hd-ngay')||{}).value||'';
   rec['Giá trị (đ)'] = gt;
   rec['File scan'] = file.trim();
@@ -9933,7 +10016,8 @@ function hdmRender(){
   body.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px">'+head+rows.map(function(h){
     var ma=h['Mã HĐKH'], gt=rvNum(h['Giá trị (đ)']), t=hdmThuCuaHD(h).daThu, con=gt-t;
     return '<tr style="border-top:1px solid #F1EBE0;cursor:pointer" onclick="hdmOpen(\''+esc2(ma)+'\')">'
-      +'<td style="padding:10px 14px"><b style="color:#1D4E89">'+esc2(h['Số HĐ']||ma||'')+'</b>'+(h['File scan']?' <a href="'+esc2(h['File scan'])+'" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#1D4E89;text-decoration:none">📎</a>':'')+'<div style="margin-top:3px">'+hdBadgeLoai(h)+'</div></td>'
+      +'<td style="padding:10px 14px"><b style="color:#1D4E89">'+(h['Số HĐ']?esc2(h['Số HĐ']):'<i style="color:#B23A2E;font-weight:600">chưa có số</i> <span style="color:#9A8F82;font-weight:400;font-size:11px">'+esc2(ma||'')+'</span>')+'</b>'
+        +(hdQuyenNgayKy(h)&&!hdThanhLy(h)?' <button onclick="event.stopPropagation();hdSoHDForm(\''+esc2(ma)+'\')" title="Đổi số hợp đồng — tự đồng bộ CRM & PM" style="border:none;background:none;cursor:pointer;font-size:11px;opacity:.65;padding:0 2px">✏️</button>':'')+(h['File scan']?' <a href="'+esc2(h['File scan'])+'" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#1D4E89;text-decoration:none">📎</a>':'')+'<div style="margin-top:3px">'+hdBadgeLoai(h)+'</div></td>'
       +'<td style="padding:10px">'+esc2(bgmKhachName(h['Mã KH'])||'—')+'</td>'
       +'<td style="padding:10px;text-align:right;font-weight:700">'+formatShort(gt)+'</td>'
       +'<td style="padding:10px;text-align:right;color:#0F5132">'+(t?formatShort(t):'–')+'</td>'
