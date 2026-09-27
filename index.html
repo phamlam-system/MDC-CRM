@@ -1759,6 +1759,7 @@ async function syncFromSheets(){
     try{ sdtChuanHoaDuLieu(); }catch(_e){}   /* ★ v9.65 — SĐT có số 0 đầu */
     try{ dlChuanHoaHT(); }catch(_e){}   /* ★ v9.66 — trạng thái chuẩn + tiền dạng chữ → số (chạy TRƯỚC mọi phép tính) */
     try{ if(data.donVi) dvNhanTuSheet(data.donVi); }catch(_e){}   /* ★ v9.68 — hồ sơ đơn vị */
+    try{ if(Array.isArray(data.ngayLe)) HT.ngayLe=data.ngayLe; }catch(_e){}   /* ★ v9.75 — ngày lễ (danh mục PM) */
     try{ if(typeof hdTinhLaiTatCa==='function') hdTinhLaiTatCa(); if(typeof rvBadge==='function') rvBadge(); }catch(_e){}   /* ★ v9.57 — TK/TC theo HĐ */
     if(typeof htSave === 'function') htSave();
     saveLocal();
@@ -4626,7 +4627,9 @@ function modal2(tieude, noidung){
   document.getElementById(id+'-b').innerHTML = noidung;
   el.style.display = 'flex';
 }
-function dongModal2(){ var e = document.getElementById('crm-modal2'); if(e) e.style.display='none'; }
+function dongModal2(){ var e = document.getElementById('crm-modal2'); if(e) e.style.display='none';
+  if(window.__hdmTuHoSo){ window.__hdmTuHoSo=false; if(currentPage==='hopdong' && typeof hdmRender==='function'){ try{ hdmRender(); }catch(_e){} } }   /* ★ v9.74 — đóng hồ sơ khách → làm mới bảng hợp đồng */
+}
 
 
 /* ═══ MODULE HÀNH TRÌNH KHÁCH HÀNG ═══ */
@@ -5560,7 +5563,8 @@ function htKhoiMotHopDong(l, hd, quyen){
   var h = '<div style="border:1px solid #E5DFD5;border-radius:10px;background:#fff;margin-top:12px;overflow:hidden">'
     + '<div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid #F1EBE0;flex-wrap:wrap">'
     + '<b style="font-size:13px">✍ Hợp đồng '+esc2(hd['Số HĐ']||'')+'</b>' + hdBadgeLoai(hd)
-    + '<span style="font-size:11.5px;color:#9A8F82">ký '+esc2(ngayVN(hd['Ngày ký'])||'')+' · '+formatShort(gtHD)+'</span>'
+    + '<span style="font-size:11.5px;color:#9A8F82">ký '+esc2(ngayVN(hd['Ngày ký'])||'')+' · '+formatShort(gtHD)+(/chưa/i.test(String(hd['Giá nhập theo']||''))?' (gồm VAT; trước thuế '+formatShort(rvNum(hd['Giá trị trước thuế (đ)']))+')':'')+'</span>'
+    + hdTienDoTom(hd)   /* ★ v9.75 */
     + (hd['File scan']?'<a href="'+esc2(hd['File scan'])+'" target="_blank" style="font-size:11.5px;color:#1D4E89;text-decoration:none">📎 Bản scan</a>':'')
     + hdNutQuanLy(hd, quyen)   /* ★ v9.64 — Sửa · Hủy/Thanh lý · Xóa */
     + '</div>' + (hdThanhLy(hd) ? '<div style="padding:9px 14px;background:#F6F2EA;color:#6F6355;font-size:12px;border-bottom:1px solid #F1EBE0">⛔ Đã thanh lý ngày <b>'
@@ -5864,7 +5868,7 @@ function bgImport(){
   el.onclick=function(e){ if(e.target===el) bgImpClose(); };
   var note=(typeof XLSX==='undefined')?'<div style="color:#B23A2E;font-size:11.5px;margin-top:4px">⚠ Chưa nạp được thư viện đọc Excel — anh vẫn có thể DÁN bảng vào ô dưới.</div>':'';
   el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:840px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
-    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.73)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.76)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
     +'<div style="padding:14px 18px;overflow:auto">'
     +'<div style="font-size:12px;color:#6F6355;line-height:1.55;margin-bottom:10px">Chọn <b>file Excel (.xlsx/.csv)</b> báo giá/dự toán — hoặc <b>dán</b> bảng copy từ Excel/Google Sheet. Hệ tự nhận diện cột: <b>Tên hạng mục / Chi tiết đơn hàng</b>, <b>Chất liệu · quy cách</b> (→ mô tả), <b>ĐVT</b>, <b>Dài/Rộng/Cao</b>, <b>Khối lượng</b>, <b>Số lượng</b>, <b>Đơn giá</b>, <b>Thành tiền</b>, <b>Ghi chú</b>. Dòng tiêu đề · nhóm (Tầng/Phòng) · dòng tổng được xử lý tự động.'+note+'</div>'
     +'<div style="margin-bottom:8px"><label class="btn btn-outline btn-sm" style="cursor:pointer"><input type="file" accept=".xlsx,.xls,.xlsm,.csv,text/csv" style="display:none" onchange="bgImpFile(this)">📂 Chọn file Excel / CSV</label></div>'
@@ -8530,7 +8534,15 @@ function hdXoaLuu(ma){
 /* ══════════════════════════ ★ v9.66 — CHUẨN HÓA DỮ LIỆU & SỨC KHỎE DỮ LIỆU ══════════════════════════
    Từ điển trạng thái (giống hệt backend v6.23) · số tiền dạng chữ → số · điểm Lead theo mức ngân sách · trang 🩺 Sức khỏe dữ liệu (Admin). */
 var TT_TU_DIEN = {
-  hopdongKH: {'Trạng thái':[['Bản nháp','Đang hiệu lực','Tạm dừng','Hoàn thành','Thanh lý','Hủy'],
+  hopdongKH: {
+    'Cách tính ngày':[['Lịch (cả CN, lễ)','Trừ Chủ nhật','Trừ CN & ngày lễ'],   /* ★ v9.76 — giống backend v6.31 */
+      {'lich':'Lịch (cả CN, lễ)','ngay lich':'Lịch (cả CN, lễ)','lich ca cn le':'Lịch (cả CN, lễ)','tinh ca chu nhat ngay le':'Lịch (cả CN, lễ)','tinh ca chu nhat va ngay le':'Lịch (cả CN, lễ)','ca cn le':'Lịch (cả CN, lễ)',
+       'tru cn':'Trừ Chủ nhật','khong tinh chu nhat':'Trừ Chủ nhật','khong tinh cn':'Trừ Chủ nhật','tru chu nhat':'Trừ Chủ nhật',
+       'tru cn le':'Trừ CN & ngày lễ','tru cn va ngay le':'Trừ CN & ngày lễ','tru chu nhat va ngay le':'Trừ CN & ngày lễ','tru chu nhat ngay le':'Trừ CN & ngày lễ','khong tinh chu nhat va ngay le':'Trừ CN & ngày lễ','khong tinh chu nhat ngay le':'Trừ CN & ngày lễ','ngay lam viec':'Trừ CN & ngày lễ'}],
+    'Giá nhập theo':[['Gồm VAT','Chưa gồm VAT'],
+      {'da gom vat':'Gồm VAT','bao gom vat':'Gồm VAT','co vat':'Gồm VAT','gom thue':'Gồm VAT','sau thue':'Gồm VAT','gom':'Gồm VAT',
+       'chua vat':'Chưa gồm VAT','chua bao gom vat':'Chưa gồm VAT','chua gom thue':'Chưa gồm VAT','truoc thue':'Chưa gồm VAT','khong vat':'Chưa gồm VAT','chua':'Chưa gồm VAT'}],
+    'Trạng thái':[['Bản nháp','Đang hiệu lực','Tạm dừng','Hoàn thành','Thanh lý','Hủy'],
     {'nhap':'Bản nháp','da huy':'Hủy','huy bo':'Hủy','da thanh ly':'Thanh lý','hieu luc':'Đang hiệu lực','con hieu luc':'Đang hiệu lực','da ky':'Đang hiệu lực','dang thuc hien':'Đang hiệu lực','da hoan thanh':'Hoàn thành','hoan tat':'Hoàn thành'}]},
   thanhtoan: {'Trạng thái':[['Chưa đến hạn','Đã xuất đề nghị','Đã thu một phần','Đã thu đủ','Hủy'],
     {'da thu':'Đã thu đủ','da thanh toan':'Đã thu đủ','thu du':'Đã thu đủ','da thu du tien':'Đã thu đủ','hoan thanh':'Đã thu đủ','da thu 1 phan':'Đã thu một phần','thu mot phan':'Đã thu một phần','mot phan':'Đã thu một phần','thu 1 phan':'Đã thu một phần',
@@ -8551,14 +8563,14 @@ function ttChuanDL(bang, cot, v){
   if(!t.mp){ var m={}; t[0].forEach(function(x){ m[ttKhoa(x)]=x; }); Object.keys(t[1]).forEach(function(a){ m[ttKhoa(a)]=t[1][a]; }); t.mp=m; }
   var c=t.mp[ttKhoa(v)]; return c?[c,true]:[String(v).trim(),false];
 }
-function laCotSo(h){ var k=String(h||'').trim(); if(/\(đ\)\s*$/i.test(k) || /^(đơn giá|thành tiền|tổng tiền|số tiền)( ước tính)?$/i.test(k)) return 'tien'; if(/%/.test(k)) return 'pct'; return ''; }
+function laCotSo(h){ var k=String(h||'').trim(); if(/\(đ\)\s*$/i.test(k) || /^(đơn giá|thành tiền|tổng tiền|số tiền)( ước tính)?$/i.test(k)) return 'tien'; if(/%/.test(k)) return 'pct'; if(/\((ngày|tháng|giờ)\)\s*$/i.test(k)) return 'nguyen'; return ''; }   /* ★ v9.76 */
 function soVN(v){
   if(typeof v==='number') return isFinite(v)?v:null;
   if(v===''||v==null) return null;
   var s=String(v).trim().toLowerCase().replace(/\s+/g,''), nhan=1;
   var m=s.match(/^(-?[\d.,]+)(tỷ|ty|tỉ|triệu|trieu|tr|nghìn|nghin|ngàn|ngan|k)$/);
   if(m){ s=m[1]; nhan=/^t[yỷỉ]/.test(m[2])?1e9:/^tr/.test(m[2])?1e6:1e3; }
-  s=s.replace(/(đồng|dong|vnđ|vnd|đ|₫|%)$/,'');
+  s=s.replace(/(đồng|dong|vnđ|vnd|đ|₫|%|ngày|ngay|tháng|thang|giờ|gio)$/,'');
   if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s=s.replace(/\./g,'').replace(',','.');
   else if(/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s=s.replace(/,/g,'');
   else if(/^-?\d+,\d+$/.test(s)) s=s.replace(',','.');
@@ -8573,7 +8585,9 @@ function dlChuanHoaHT(){
       Object.keys(r).forEach(function(k){ var v=r[k];
         if(v===''||v==null) return;
         var ls=laCotSo(k);
-        if(ls){ if(typeof v==='number') return; var n=soVN(v); if(n!==null){ r[k]=ls==='tien'?Math.round(n):Math.round(n*100)/100; bc.tien++; if(bc.vd.length<12) bc.vd.push((TEN_BANG[bang]||bang)+' · '+k+': "'+v+'"'); } return; }
+        if(ls){ if(typeof v==='number') return; var n=soVN(v); if(n!==null){ r[k]=(ls==='tien'||ls==='nguyen')?Math.round(n):Math.round(n*100)/100; bc.tien++; if(bc.vd.length<12) bc.vd.push((TEN_BANG[bang]||bang)+' · '+k+': "'+v+'"'); } return; }
+        if(typeof v==='string' && /^ngày/i.test(k)){ var iso=dlNgayISO(v); if(iso){ r[k]=iso; bc.ngay=(bc.ngay||0)+1; if(bc.vd.length<12) bc.vd.push((TEN_BANG[bang]||bang)+' · '+k+': "'+v+'" → '+iso); } return; }   /* ★ v9.76 */
+        if(typeof v==='string' && k==='Số HĐ'){ var sc=v.replace(/\s+/g,' ').trim(); if(sc!==v){ r[k]=sc; bc.soHD=(bc.soHD||0)+1; } return; }
         if((TT_TU_DIEN[bang]||{})[k]){ var x=ttChuanDL(bang,k,v); if(x[0]!==v){ r[k]=x[0]; bc.tt++; if(bc.vd.length<12) bc.vd.push((TEN_BANG[bang]||bang)+' · '+k+': "'+v+'" → '+x[0]); }
           if(!x[1]){ var kk=bang+'|'+k+'|'+x[0]; bc.la[kk]=(bc.la[kk]||0)+1; } }
       });
@@ -8622,9 +8636,9 @@ function dlKiemTra(){
     items:L.filter(function(l){ return !l.owner || (Object.keys(nv).length && !nv[String(l.owner)]); }).map(function(l){ return nutKH(l)+' · '+esc2(l.owner||'(trống)'); })});
   /* 4. Dữ liệu trên Sheet chưa chuẩn (đã được CRM tự hiểu đúng khi tải) */
   var bc=window.__dlBC||{tt:0,tien:0,la:{},vd:[]};
-  add({nhom:'Google Sheet', muc:'Tiền lưu dạng chữ / trạng thái viết lệch trên Sheet', muc_do:2, sua:'dlSuaSheet()', suaTen:'Sửa tận gốc trên Sheet…',
-    ghiChu:'CRM đã tự hiểu đúng khi tải về; nút bên phải sửa luôn bản gốc trên Google Sheet (tự sao lưu trước).', dem:(bc.tien||0)+(bc.tt||0),
-    items:(bc.tien||bc.tt)?['<b>'+bc.tien+'</b> ô tiền dạng chữ · <b>'+bc.tt+'</b> trạng thái viết lệch'].concat(bc.vd.map(esc2)):[]});
+  add({nhom:'Google Sheet', muc:'Tiền / số ngày / ngày tháng lưu dạng chữ · trạng thái viết lệch trên Sheet', muc_do:2, sua:'dlSuaSheet()', suaTen:'Sửa tận gốc trên Sheet…',
+    ghiChu:'CRM đã tự hiểu đúng khi tải về; nút bên phải sửa luôn bản gốc trên Google Sheet (tự sao lưu trước).', dem:(bc.tien||0)+(bc.tt||0)+(bc.ngay||0)+(bc.soHD||0),
+    items:(bc.tien||bc.tt||bc.ngay||bc.soHD)?['<b>'+bc.tien+'</b> ô số/tiền dạng chữ · <b>'+bc.tt+'</b> trạng thái/lựa chọn lệch · <b>'+(bc.ngay||0)+'</b> ô ngày dd/mm/yyyy · <b>'+(bc.soHD||0)+'</b> số HĐ thừa khoảng trắng'].concat(bc.vd.map(esc2)):[]});
   add({nhom:'Google Sheet', muc:'Trạng thái lạ (không có trong từ điển chuẩn)', muc_do:2,
     ghiChu:'Không tự đổi được vì không rõ nghĩa — sửa tay trên Sheet về một trong các trạng thái chuẩn, hoặc báo để bổ sung từ điển.',
     items:Object.keys(bc.la||{}).map(function(k){ var p=k.split('|'); return esc2(TEN_BANG[p[0]]||p[0])+' · '+esc2(p[1])+': "<b>'+esc2(p[2])+'</b>" × '+bc.la[k]+' <span style="color:#9A8F82">— chuẩn: '+esc2(TT_TU_DIEN[p[0]][p[1]][0].join(' · '))+'</span>'; })});
@@ -8641,6 +8655,20 @@ function dlKiemTra(){
   var lech=[]; hdHL.forEach(function(r){ var o=rvHD(r); if(!o.dots.length) return; var d=o.tongDot-o.gtPay; if(Math.abs(d)>1000) lech.push({o:o,d:d}); });
   add({nhom:'Hợp đồng & thu tiền', muc:'Tổng các đợt thu lệch giá trị phải thu', muc_do:1,
     items:lech.map(function(x){ return nutHT(x.o.kh, x.o.ten+' · '+(x.o.rec['Số HĐ']||x.o.ma))+' · đợt '+formatShort(x.o.tongDot)+' / phải thu '+formatShort(x.o.gtPay)+' <b style="color:#B23A2E">('+(x.d>0?'+':'')+soTien(x.d)+' đ)</b>'; })});
+  /* ★ v9.76 — chuẩn số HĐ · tiến độ · giá trước thuế */
+  var nutSo=function(r){ var l=bgmLeadOf(r['Mã KH']); return '<a href="javascript:void 0" onclick="hdSoHDForm(\''+esc2(r['Mã HĐKH'])+'\')">'+esc2(r['Số HĐ']||r['Mã HĐKH'])+'</a> · '+esc2(l?l.name:r['Mã KH']); };
+  add({nhom:'Hợp đồng & thu tiền', muc:'Hợp đồng đang hiệu lực chưa có số hợp đồng', muc_do:2, items:hdHL.filter(function(r){ return !hdSoChuan(r['Số HĐ']); }).map(nutSo)});
+  var gSo={}; (HT.hopdongKH||[]).filter(hdHieuLuc).forEach(function(r){ var k=hdSoChuan(r['Số HĐ']).toLowerCase(); if(k) (gSo[k]=gSo[k]||[]).push(r); });
+  add({nhom:'Hợp đồng & thu tiền', muc:'Trùng số hợp đồng', muc_do:2, ghiChu:'Bấm vào số để đổi — hệ thống tự đồng bộ CRM & PM.',
+    items:Object.keys(gSo).filter(function(k){ return gSo[k].length>1; }).map(function(k){ return '<code>'+esc2(gSo[k][0]['Số HĐ'])+'</code>: '+gSo[k].map(nutSo).join(' · '); })});
+  var lechHT=dlLechNgayHT();
+  add({nhom:'Hợp đồng & thu tiền', muc:'Ngày hoàn thành HĐ chưa khớp tiến độ (đổi ngày ký / danh mục ngày lễ)', muc_do:1, sua:lechHT.length?'dlSuaNgayHT()':'', suaTen:'Tính lại',
+    items:lechHT.map(function(x){ return nutSo(x.r)+' · '+(x.cu?rvVN(x.cu):'(trống)')+' → <b>'+rvVN(x.moi)+'</b>'; })});
+  add({nhom:'Hợp đồng & thu tiền', muc:'Hợp đồng thi công đang hiệu lực chưa khai tiến độ (số ngày)', muc_do:1,
+    items:hdHL.filter(function(r){ return hdFamOf(hdLoaiDoan(r))==='tc' && !rvNum(r['Tiến độ (ngày)']); }).map(function(r){ return nutHT(r['Mã KH'], (r['Số HĐ']||r['Mã HĐKH'])+' · '+((bgmLeadOf(r['Mã KH'])||{}).name||r['Mã KH'])); })});
+  add({nhom:'Hợp đồng & thu tiền', muc:'Giá trị trước thuế lệch với giá gồm VAT / VAT %', muc_do:1, ghiChu:'Mở "Sửa" hợp đồng và lưu lại để hệ thống tính lại.',
+    items:hdHL.filter(function(r){ var gt=rvNum(r['Giá trị (đ)']), tt=rvNum(r['Giá trị trước thuế (đ)']), v=rvNum(r['VAT %']); if(!gt || !tt) return false; return Math.abs(Math.round(tt*(1+v/100))-gt)>Math.max(1000, gt*0.0005); })
+      .map(function(r){ return nutSo(r)+' · gồm VAT '+soTien(rvNum(r['Giá trị (đ)']))+' / trước thuế '+soTien(rvNum(r['Giá trị trước thuế (đ)']))+' · VAT '+rvNum(r['VAT %'])+'%'; })});
   var cr=rvChuaRo();
   add({nhom:'Hợp đồng & thu tiền', muc:'Đợt thu / phát sinh chưa rõ thuộc hợp đồng nào', muc_do:2, sua:cr.n?'rvChuaRoOpen()':'', suaTen:'Chọn hợp đồng',
     items:cr.dots.map(function(x){ return esc2(x.d['Tên đợt']||x.d['Mã TT'])+' · '+formatShort(rvNum(x.d['Giá trị (đ)'])); }).concat(cr.ps.map(function(x){ return 'Phát sinh '+esc2(x.p['Mã PS'])+' · '+formatShort(rvNum(x.p['Giá trị (đ)'])); }))});
@@ -8665,20 +8693,22 @@ function dlSuaSheet(){
   apiPost({action:'chuanHoaDuLieu', data:{ghi:false}}).then(function(k){
     var dong=function(x){ return '<li style="margin:2px 0">'+x+'</li>'; };
     var h='<div style="font-size:13px;line-height:1.6">Kết quả quét (chưa ghi gì):<ul style="margin:6px 0 10px 18px;padding:0">'
-      +dong('<b>'+k.sdt+'</b> ô SĐT mất số 0 / sai dạng')+dong('<b>'+k.tien+'</b> ô tiền / % lưu dạng chữ')+dong('<b>'+k.tt+'</b> trạng thái viết lệch')
+      +dong('<b>'+k.sdt+'</b> ô SĐT mất số 0 / sai dạng')+dong('<b>'+k.tien+'</b> ô tiền / % lưu dạng chữ')+dong('<b>'+k.tt+'</b> trạng thái / lựa chọn viết lệch')
+      +dong('<b>'+(k.ngay||0)+'</b> ô ngày dạng chữ dd/mm/yyyy → yyyy-mm-dd')+dong('<b>'+(k.so||0)+'</b> ô số ngày / số tháng dạng chữ')+dong('<b>'+(k.soHD||0)+'</b> số hợp đồng thừa khoảng trắng')
+      +((k.trungSoHD||[]).length?dong('<span style="color:#B23A2E">⚠ Trùng số hợp đồng (không tự sửa — đổi ở module Hợp đồng): '+k.trungSoHD.map(esc2).join(' · ')+'</span>'):'')
       +(k.doiTen&&k.doiTen.length?dong('Đổi tên cột: '+k.doiTen.map(esc2).join(' · ')):'')+'</ul>'
       +(k.vd&&k.vd.length?'<details style="margin-bottom:10px"><summary style="cursor:pointer;color:#1D4E89">Xem ví dụ ('+k.vd.length+')</summary><div style="font-size:11.5px;color:#6F6355;max-height:200px;overflow:auto;margin-top:6px">'+k.vd.map(esc2).join('<br>')+'</div></details>':'')
       +((k.la||[]).length?'<div style="background:#FBF4E6;color:#8F6A2B;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px">'+k.la.length+' loại trạng thái lạ sẽ <b>không</b> bị đổi (xem trong trang Sức khỏe dữ liệu).</div>':'')
       +'<div style="font-size:12px;color:#6F6355;margin-bottom:12px">Khi bấm Ghi: máy chủ <b>sao lưu toàn bộ file Google Sheet</b> (bản sao trong Drive) rồi mới sửa. Có thể chạy lại nhiều lần.</div>'
       +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="dongModal2()">Đóng</button>'
-      +((k.sdt||k.tien||k.tt||(k.doiTen||[]).length)?'<button id="dl-ghi" style="background:#0F5132;color:#fff;border:none;padding:9px 16px;font-weight:700;border-radius:8px;cursor:pointer" onclick="dlGhiSheet()">✓ Sao lưu &amp; ghi</button>':'')+'</div></div>';
+      +((k.sdt||k.tien||k.tt||k.ngay||k.so||k.soHD||(k.doiTen||[]).length)?'<button id="dl-ghi" style="background:#0F5132;color:#fff;border:none;padding:9px 16px;font-weight:700;border-radius:8px;cursor:pointer" onclick="dlGhiSheet()">✓ Sao lưu &amp; ghi</button>':'')+'</div></div>';
     modal2('🩺 Sửa dữ liệu tận gốc trên Google Sheet', h);
   }).catch(function(e){ modal2('🩺 Sửa dữ liệu','<div style="color:#B23A2E;padding:10px">'+esc2((e&&e.json&&e.json.error)||e.message||'Lỗi')+'<br><span style="color:#6F6355;font-size:12px">Backend cần bản v6.23 trở lên.</span></div>'); });
 }
 function dlGhiSheet(){
   var b=document.getElementById('dl-ghi'); if(b){ b.disabled=true; b.textContent='Đang sao lưu & ghi…'; }
   apiPost({action:'chuanHoaDuLieu', data:{ghi:true}}).then(function(k){
-    modal2('🩺 Đã chuẩn hóa','<div style="font-size:13px;line-height:1.6">✅ Đã sửa '+k.sdt+' ô SĐT · '+k.tien+' ô tiền · '+k.tt+' trạng thái.'+(k.saoLuu?'<br>Bản sao lưu: <a href="'+esc2(k.saoLuu)+'" target="_blank">mở trong Drive</a>':'')+'</div>'
+    modal2('🩺 Đã chuẩn hóa','<div style="font-size:13px;line-height:1.6">✅ Đã sửa '+k.sdt+' ô SĐT · '+k.tien+' ô tiền · '+k.tt+' trạng thái · '+(k.ngay||0)+' ô ngày · '+(k.so||0)+' ô số ngày · '+(k.soHD||0)+' số HĐ.'+(k.saoLuu?'<br>Bản sao lưu: <a href="'+esc2(k.saoLuu)+'" target="_blank">mở trong Drive</a>':'')+'</div>'
       +'<div style="text-align:right;margin-top:12px"><button class="btn" onclick="dongModal2()">Đóng</button></div>');
     if(typeof syncFromSheets==='function') syncFromSheets().then(function(){ if(currentPage==='health') renderHealth(); });
   }).catch(function(e){ if(b){ b.disabled=false; b.textContent='✓ Sao lưu & ghi'; } toast('⛔ '+((e&&e.json&&e.json.error)||e.message),'⚠️'); });
@@ -9177,6 +9207,7 @@ function hdDotTheoNgayKy(r, cu){
 /* Áp thay đổi vào dữ liệu trên máy (trùng quy tắc backend) */
 function hdApNgayKyLocal(r, cu, moi, opt){
   opt=opt||{}; r['Ngày ký']=moi;
+  if(rvNum(r['Tiến độ (ngày)']) && !rvNgay(r['Ngày bắt đầu TH']) && typeof hdCongNgay==='function') r['Ngày hoàn thành HĐ']=hdCongNgay(moi, rvNum(r['Tiến độ (ngày)']), r['Cách tính ngày']);   /* ★ v9.75 */
   if(opt.tt!==false) hdDotTheoNgayKy(r, cu).forEach(function(d){ d['Ngày đến hạn']=moi; if(d['Mã điều kiện']==='KY') d['Điều kiện']='Khi ký HĐ — đạt '+rvVN(moi); });
   (HT.phuluc||[]).forEach(function(p){ if(p['Mã HĐKH']===r['Mã HĐKH'] && p['Loại']==='Giảm trừ – Tặng TK' && cu && rvNgay(p['Ngày'])===cu) p['Ngày']=moi; });
   try{ var doc=JSON.parse(r['Doc JSON']||'null'); if(doc && typeof doc==='object'){ doc.ngay=moi; r['Doc JSON']=JSON.stringify(doc); } }catch(e){}
@@ -9316,6 +9347,133 @@ function hdSoHDLuu(ma){
 }
 /* ══════════════════════════ hết khối v9.73 ══════════════════════════ */
 
+/* ══════════════ v9.74 · MODULE HỢP ĐỒNG: BẤM TÊN KHÁCH → HỒ SƠ ĐẦY ĐỦ ══════════════
+   Mở thẻ Hành trình khách hàng (thông tin liên hệ ✏️, báo giá, hợp đồng, đợt thu, công nợ, lịch sử làm việc…) để chỉnh ngay;
+   đóng lại thì bảng hợp đồng tự làm mới. */
+function hdmOKhach(h){
+  var l=bgmLeadOf(h['Mã KH']), ten=bgmKhachName(h['Mã KH'])||'';
+  if(!l) return esc2(ten||'—')+(h['Mã KH']?'<div style="font-size:11px;color:#B23A2E">không tìm thấy hồ sơ '+esc2(h['Mã KH'])+'</div>':'');
+  var phu=[l.phone?sdtHien(l.phone):'', l.address||l.diachi||''].filter(Boolean).join(' · ');
+  return '<a href="javascript:void 0" onclick="event.stopPropagation();hdmMoHoSo(\''+esc2(h['Mã KH'])+'\')" title="Xem & sửa toàn bộ hồ sơ khách hàng" style="color:#3A2E22;font-weight:600;text-decoration:none;border-bottom:1px dashed #B8AD9E">'+esc2(l.name||ten||'—')+'</a>'
+    +(phu?'<div style="font-size:11px;color:#9A8F82;margin-top:2px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc2(phu)+'</div>':'');
+}
+function sdtHien(v){ return (typeof sdtChuan==='function')?sdtChuan(v):String(v||''); }
+function hdmMoHoSo(maKH){
+  var l=bgmLeadOf(maKH); if(!l) return toast('Không tìm thấy hồ sơ khách '+maKH,'⚠️');
+  window.__hdmTuHoSo=true; window.__bgHost=null; window.__htLead=l; moHanhTrinh(l.id);
+}
+/* ══════════════════════════ hết khối v9.74 ══════════════════════════ */
+/* ══════════════ v9.75 · GIÁ HỢP ĐỒNG GỒM / CHƯA VAT + TIẾN ĐỘ HỢP ĐỒNG (SỐ NGÀY · CÁCH TÍNH) ══════════════
+   · Ô giá trị có lựa chọn "Đã gồm VAT" / "Chưa gồm VAT" — hệ thống luôn lưu cả 2 con số (gồm VAT & trước thuế).
+   · Tiến độ: số ngày + cách tính (cả CN & lễ / trừ CN / trừ CN & lễ) → ngày hoàn thành dự kiến; đồng bộ Kế hoạch chung PM
+     và văn bản hợp đồng soạn thảo. Ngày lễ dùng chung danh mục của PM (🗓 Ngày lễ). */
+var HD_CACH_TINH=['Lịch (cả CN, lễ)','Trừ Chủ nhật','Trừ CN & ngày lễ'];
+var HD_NGAY_LE_MD=['2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-04-26','2026-04-30','2026-05-01','2026-09-01','2026-09-02','2027-01-01','2027-04-30','2027-05-01','2027-09-02'];
+function hdNgayLe(){ var h=HT.ngayLe; return (Array.isArray(h)&&h.length)?h:HD_NGAY_LE_MD; }
+function hdCongNgay(start, n, mode){
+  n=Number(n)||0; start=rvNgay(start); if(!start || n<=0) return '';
+  mode=HD_CACH_TINH.indexOf(mode)>-1?mode:HD_CACH_TINH[0];
+  var le=mode===HD_CACH_TINH[2]?hdNgayLe():[], d=new Date(start+'T00:00:00'), c=0, g=0;
+  while(c<n && g<200000){ d.setDate(d.getDate()+1); g++; var dow=d.getDay(), iso=rvD(d);
+    if(mode===HD_CACH_TINH[0]) c++; else if(mode===HD_CACH_TINH[1]){ if(dow!==0) c++; } else { if(dow!==0 && le.indexOf(iso)<0) c++; } }
+  return rvD(d);
+}
+function hdCachTinhChu(m){ return m===HD_CACH_TINH[1]?'không tính Chủ nhật':m===HD_CACH_TINH[2]?'không tính Chủ nhật và ngày lễ':'tính cả Chủ nhật, ngày lễ'; }
+function hdThu(iso){ var d=new Date(iso+'T00:00:00'); return ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'][d.getDay()]; }
+var HD_LB='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px', HD_IN='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:14px';
+/* ── Khối giá trị: gồm / chưa VAT ── */
+function hdGiaNhapHtml(x, gtMD, vatMD){
+  var chua = !!(x && /chưa/i.test(String(x['Giá nhập theo']||'')));
+  var tt = x ? rvNum(x['Giá trị trước thuế (đ)']) : 0; if(chua && !tt) tt=Math.round(gtMD/(1+(+vatMD||0)/100));
+  var nhap = chua ? tt : gtMD;
+  return '<div style="display:grid;grid-template-columns:1fr 150px 90px;gap:10px;margin-bottom:4px">'
+    +'<div><label style="'+HD_LB+'">Giá trị hợp đồng (đ)</label><input id="hd-gt-nhap" type="number" value="'+(nhap||'')+'" oninput="hdGiaTinh()" style="'+HD_IN+';font-weight:700"></div>'
+    +'<div><label style="'+HD_LB+'">Giá đã nhập</label><select id="hd-gt-loai" onchange="hdGiaTinh()" style="'+HD_IN+';font-size:13px;font-weight:600">'
+      +'<option value="gom"'+(chua?'':' selected')+'>Đã gồm VAT</option><option value="chua"'+(chua?' selected':'')+'>Chưa gồm VAT</option></select></div>'
+    +'<div><label style="'+HD_LB+'">VAT %</label><input id="hd-vat" type="number" step="0.5" min="0" value="'+vatMD+'" oninput="hdGiaTinh()" style="'+HD_IN+'"></div></div>'
+    +'<input id="hd-gt" type="hidden" value="'+(gtMD||0)+'">'
+    +'<div id="hd-gt-giai" style="font-size:12px;color:#0F5132;margin-bottom:10px;font-variant-numeric:tabular-nums"></div>';
+}
+function hdGiaLoai(){ return ((document.getElementById('hd-gt-loai')||{}).value==='chua')?'chua':'gom'; }
+function hdGiaTruocThue(gt, vat){ if(hdGiaLoai()==='chua'){ var n=+((document.getElementById('hd-gt-nhap')||{}).value)||0; if(n) return Math.round(n); } return Math.round(gt/(1+(+vat||0)/100)); }
+function hdGiaGiai(){
+  var el=document.getElementById('hd-gt-giai'); if(!el) return;
+  var gt=+((document.getElementById('hd-gt')||{}).value)||0, vat=+((document.getElementById('hd-vat')||{}).value)||0, tt=hdGiaTruocThue(gt,vat);
+  el.innerHTML=gt?('Trước thuế <b>'+soTien(tt)+' đ</b> + VAT '+vat+'% '+soTien(gt-tt)+' đ = <b>Tổng thanh toán '+soTien(gt)+' đ</b>'
+    +(hdGiaLoai()==='chua'?' <span style="color:#8F6A2B">· đợt thu tính trên số gồm VAT</span>':'')):'<span style="color:#9A8F82">Nhập giá trị hợp đồng</span>';
+}
+function hdGiaTinh(){
+  var n=+((document.getElementById('hd-gt-nhap')||{}).value)||0, vat=+((document.getElementById('hd-vat')||{}).value)||0;
+  var gt = hdGiaLoai()==='chua' ? Math.round(n*(1+vat/100)) : Math.round(n);
+  var h=document.getElementById('hd-gt'), cu=h?+h.value:0; if(h) h.value=gt;
+  hdGiaGiai();
+  if(cu!==gt && typeof htTinhLaiDot==='function') htTinhLaiDot();
+  if(typeof htVeTang==='function') htVeTang();
+}
+/* ── Khối tiến độ ── */
+function hdTienDoHtml(x){
+  var n=x?rvNum(x['Tiến độ (ngày)']):0, m=(x&&x['Cách tính ngày'])||HD_CACH_TINH[0], bd=x?rvNgay(x['Ngày bắt đầu TH']):'';
+  if(!n && x){ try{ var d=JSON.parse(x['Doc JSON']||'null'); if(d&&d.tienDo){ n=+d.tienDo.soNgay||0; if(d.tienDo.cachTinh) m=d.tienDo.cachTinh; if(!bd && d.tienDo.batDau) bd=d.tienDo.batDau; } }catch(e){} }
+  return '<div style="border:1px solid #E5DFD5;border-radius:9px;padding:11px 12px;margin-bottom:12px;background:#FCFAF5">'
+    +'<b style="font-size:12.5px;text-transform:uppercase;letter-spacing:.5px">Tiến độ hợp đồng</b>'
+    +'<div style="display:grid;grid-template-columns:110px 1fr 1fr;gap:10px;margin-top:6px">'
+    +'<div><label style="'+HD_LB+'">Số ngày</label><input id="hd-td-ngay" type="number" min="0" value="'+(n||'')+'" placeholder="vd: 60" oninput="hdTienDoXem()" style="'+HD_IN+';font-weight:700"></div>'
+    +'<div><label style="'+HD_LB+'">Cách tính ngày</label><select id="hd-td-cach" onchange="hdTienDoXem()" style="'+HD_IN+';font-size:13px">'
+      +HD_CACH_TINH.map(function(k){ return '<option value="'+esc2(k)+'"'+(k===m?' selected':'')+'>'+esc2(k==='Lịch (cả CN, lễ)'?'Tính cả Chủ nhật & ngày lễ':k==='Trừ Chủ nhật'?'Không tính Chủ nhật':'Không tính Chủ nhật & ngày lễ')+'</option>'; }).join('')+'</select></div>'
+    +'<div><label style="'+HD_LB+'">Bắt đầu tính từ <span style="font-weight:400;text-transform:none">(trống = ngày ký)</span></label><input id="hd-td-bd" type="date" value="'+esc2(bd)+'" oninput="hdTienDoXem()" style="'+HD_IN+';font-size:13px"></div></div>'
+    +'<div id="hd-td-kq" style="font-size:12.5px;margin-top:8px"></div></div>';
+}
+function hdTienDoDoc(){
+  var n=Math.max(0,Math.round(+((document.getElementById('hd-td-ngay')||{}).value)||0)), m=(document.getElementById('hd-td-cach')||{}).value||HD_CACH_TINH[0];
+  var bd=(document.getElementById('hd-td-bd')||{}).value||'', ky=(document.getElementById('hd-ngay')||{}).value||'';
+  return {n:n, m:m, bd:bd, goc:bd||ky, ht:n?hdCongNgay(bd||ky, n, m):''};
+}
+function hdTienDoXem(){
+  var el=document.getElementById('hd-td-kq'); if(!el) return; var t=hdTienDoDoc();
+  if(!t.n){ el.innerHTML='<span style="color:#9A8F82">Nhập số ngày thực hiện để tính ngày hoàn thành dự kiến.</span>'; return; }
+  if(!t.goc){ el.innerHTML='<span style="color:#8F6A2B">Chọn ngày ký (hoặc ngày bắt đầu) để tính ngày hoàn thành.</span>'; return; }
+  var lich=rvDays(t.goc,t.ht);
+  el.innerHTML='✓ Hoàn thành dự kiến: <b style="color:#1D4E89">'+hdThu(t.ht)+', '+rvVN(t.ht)+'</b> · '+t.n+' ngày '+hdCachTinhChu(t.m)+(lich!==t.n?' = '+lich+' ngày lịch':'')+' kể từ '+(t.bd?'ngày '+rvVN(t.bd):'ngày ký '+rvVN(t.goc));
+}
+/* Ghi các trường mới vào bản ghi HĐ (gọi trong htLuuHopDong) */
+function hdGhiTienDoGia(rec){
+  var t=hdTienDoDoc();
+  rec['Giá nhập theo']=hdGiaLoai()==='chua'?'Chưa gồm VAT':'Gồm VAT';
+  rec['Tiến độ (ngày)']=t.n||''; rec['Cách tính ngày']=t.n?t.m:(rec['Cách tính ngày']||''); rec['Ngày bắt đầu TH']=t.bd||''; rec['Ngày hoàn thành HĐ']=t.ht||'';
+  try{ var d=JSON.parse(rec['Doc JSON']||'null'); if(d && typeof d==='object'){ d.tienDo=d.tienDo||{}; if(t.n){ d.tienDo.soNgay=t.n; d.tienDo.cachTinh=t.m; } d.tienDo.batDau=t.bd||''; rec['Doc JSON']=JSON.stringify(d); } }catch(e){}
+}
+/* Dòng hiển thị tiến độ cho thẻ HĐ / bảng HĐ */
+function hdTienDoTom(r, ngan){
+  var n=rvNum(r['Tiến độ (ngày)']); if(!n) return '';
+  var ht=rvNgay(r['Ngày hoàn thành HĐ'])||hdCongNgay(rvNgay(r['Ngày bắt đầu TH'])||rvNgay(r['Ngày ký']), n, r['Cách tính ngày']);
+  var con=ht?rvDays(rvToday(),ht):null, xong=hdThanhLy(r);
+  var mau=xong?'#9A8F82':con==null?'#6F6355':con<0?'#B23A2E':con<=7?'#8F6A2B':'#0F5132';
+  var nh=ht?(xong?'':con<0?' · trễ '+(-con)+' ngày':con===0?' · hôm nay':' · còn '+con+' ngày'):'';
+  return ngan ? '<div style="font-size:11px;color:'+mau+';margin-top:2px">HT '+(ht?rvVN(ht).slice(0,5):'—')+nh+'</div>'
+    : '<span style="font-size:11.5px;color:'+mau+'">⏱ '+n+' ngày ('+esc2(hdCachTinhChu(r['Cách tính ngày']))+') → HT '+(ht?rvVN(ht):'—')+nh+'</span>';
+}
+/* ══════════════════════════ hết khối v9.75 ══════════════════════════ */
+
+/* ══════════════ v9.76 · CHUẨN HÓA ĐỒNG BỘ CRM–PM–BACKEND CHO CÁC TRƯỜNG HỢP ĐỒNG MỚI ══════════════
+   Cột (ngày)/(tháng)/(giờ) = số nguyên · ngày dạng chữ dd/mm/yyyy → yyyy-mm-dd · Số HĐ bỏ khoảng trắng thừa ·
+   từ điển "Cách tính ngày" & "Giá nhập theo" (giống backend v6.31 & PM v8.9) · Sức khỏe dữ liệu: số HĐ trống/trùng, tiến độ, giá trước thuế. */
+function dlNgayISO(v){ var m=String(v||'').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/); if(!m) return ''; var d=+m[1], mo=+m[2]; if(mo<1||mo>12||d<1||d>31) return ''; return m[3]+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+function dlLechNgayHT(){
+  return (HT.hopdongKH||[]).filter(function(r){ return hdHieuLuc(r) && !hdThanhLy(r) && rvNum(r['Tiến độ (ngày)'])>0; }).map(function(r){
+    var moi=hdCongNgay(rvNgay(r['Ngày bắt đầu TH'])||rvNgay(r['Ngày ký']), rvNum(r['Tiến độ (ngày)']), r['Cách tính ngày']), cu=rvNgay(r['Ngày hoàn thành HĐ']);
+    return (moi && moi!==cu) ? {r:r, cu:cu, moi:moi} : null; }).filter(Boolean);
+}
+function dlSuaNgayHT(){
+  var ds=dlLechNgayHT(); if(!ds.length) return toast('Không có hợp đồng cần tính lại');
+  var ops=hdGom(function(){ ds.forEach(function(x){ x.r['Ngày hoàn thành HĐ']=x.moi; htGui('saveHopDongKH',{'Mã HĐKH':x.r['Mã HĐKH'],'Ngày hoàn thành HĐ':x.moi}); }); });
+  htSave(); if(typeof hdGuiBatch==='function') hdGuiBatch(ops); else ops.forEach(function(o){ htGui(o.action,o.data); });
+  toast('Đã tính lại ngày hoàn thành cho '+ds.length+' hợp đồng','⏱'); if(currentPage==='health') renderHealth();
+}
+/* ══════════════════════════ hết khối v9.76 ══════════════════════════ */
+
+
+
+
 
 
 
@@ -9355,19 +9513,14 @@ function htFormKyHopDong(ma){
     + '<input id="hd-so" value="'+esc2(x?x['Số HĐ']:'')+'" placeholder="vd: HĐ-12/2026" '
     + 'style="width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px"></div>'
     + '<div><label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px">Ngày ký</label>'
-    + '<input id="hd-ngay" type="date" value="'+esc2(x?x['Ngày ký']:new Date().toISOString().split('T')[0])+'" '
+    + '<input id="hd-ngay" type="date" oninput="hdTienDoXem()" value="'+esc2(x?x['Ngày ký']:new Date().toISOString().split('T')[0])+'" '
     + 'style="width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px"></div></div>'
     + '<div style="margin-bottom:10px"><label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px">Loại hợp đồng <span style="color:#B23A2E">*</span> '
     + '<span style="font-weight:400;text-transform:none;letter-spacing:0">— quyết định giá trị cộng vào HĐ Thiết kế hay HĐ Thi công</span></label>'
     + '<select id="hd-loai" onchange="htVeTang()" style="width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:13px;font-weight:600">'
     + hdLoaiOptions(loaiMD) + '</select></div>'
-    + '<div style="display:grid;grid-template-columns:1fr 110px;gap:10px;margin-bottom:10px">'
-    + '<div><label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px">Giá trị hợp đồng (đ, gồm VAT)</label>'
-    + '<input id="hd-gt" type="number" value="'+gtMD+'" oninput="htTinhLaiDot();htVeTang()" '
-    + 'style="width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:14px;font-weight:700"></div>'
-    + '<div><label style="font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.5px">VAT %</label>'
-    + '<input id="hd-vat" type="number" step="0.5" min="0" value="'+vatMD+'" oninput="htVeTang()" '
-    + 'style="width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:5px;font-size:14px"></div></div>'
+    + hdGiaNhapHtml(x, gtMD, vatMD)   /* ★ v9.75 — gồm / chưa VAT */
+    + hdTienDoHtml(x)   /* ★ v9.75 — tiến độ HĐ */
     + '<div id="hd-tang" data-ma="'+esc2(ma||'')+'"></div>'
     + '<div style="margin-bottom:12px"><label style="font-size:11px;font-weight:700;color:#6F6355;'
     + 'text-transform:uppercase;letter-spacing:.5px">Bản scan hợp đồng đã ký <span style="color:#B23A2E">* bắt buộc</span> '
@@ -9406,6 +9559,7 @@ function htFormKyHopDong(ma){
   }) : [{ten:'',ngay:'',pct:0,tien:0,dk:''}];
   window.__tangSel=null; try{ htVeTang(); }catch(e){}
   htVeDot();
+  try{ hdGiaGiai(); hdTienDoXem(); }catch(e){}   /* ★ v9.75 */
 }
 function htVeDot(){
   var tb = document.getElementById('hd-dot'); if(!tb) return;
@@ -9513,7 +9667,7 @@ function htLuuHopDong(ma){
   rec['Mã BG'] = rec['Mã BG'] || (H.bgMoi ? H.bgMoi['Mã BG'] : '');
   rec['Trạng thái'] = 'Đang hiệu lực';
   rec['Người ký'] = rec['Người ký'] || (currentUser&&currentUser.name) || '';
-  hdGanTruongV957(rec, l, loai, vatP, Math.round(gt/(1+vatP/100)));   /* ★ v9.57 */
+  hdGanTruongV957(rec, l, loai, vatP, hdGiaTruocThue(gt, vatP)); hdGhiTienDoGia(rec);   /* ★ v9.75 */    /* ★ v9.57 */
   rec['Thời hạn bảo hành (tháng)'] = +((document.getElementById('hd-bh-thang')||{}).value) || rec['Thời hạn bảo hành (tháng)'] || 12;   /* ★ v9.67 */
   if(!ma) HT.hopdongKH.push(rec);
 
@@ -10018,13 +10172,13 @@ function hdmRender(){
     return '<tr style="border-top:1px solid #F1EBE0;cursor:pointer" onclick="hdmOpen(\''+esc2(ma)+'\')">'
       +'<td style="padding:10px 14px"><b style="color:#1D4E89">'+(h['Số HĐ']?esc2(h['Số HĐ']):'<i style="color:#B23A2E;font-weight:600">chưa có số</i> <span style="color:#9A8F82;font-weight:400;font-size:11px">'+esc2(ma||'')+'</span>')+'</b>'
         +(hdQuyenNgayKy(h)&&!hdThanhLy(h)?' <button onclick="event.stopPropagation();hdSoHDForm(\''+esc2(ma)+'\')" title="Đổi số hợp đồng — tự đồng bộ CRM & PM" style="border:none;background:none;cursor:pointer;font-size:11px;opacity:.65;padding:0 2px">✏️</button>':'')+(h['File scan']?' <a href="'+esc2(h['File scan'])+'" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#1D4E89;text-decoration:none">📎</a>':'')+'<div style="margin-top:3px">'+hdBadgeLoai(h)+'</div></td>'
-      +'<td style="padding:10px">'+esc2(bgmKhachName(h['Mã KH'])||'—')+'</td>'
+      +'<td style="padding:10px">'+hdmOKhach(h)+'</td>'
       +'<td style="padding:10px;text-align:right;font-weight:700">'+formatShort(gt)+'</td>'
       +'<td style="padding:10px;text-align:right;color:#0F5132">'+(t?formatShort(t):'–')+'</td>'
       +'<td style="padding:10px;text-align:right;font-weight:700;color:'+(con>0?'#B23A2E':'#0F5132')+'">'+(con>0?formatShort(con):'✓')+'</td>'
       +'<td style="padding:10px;color:#6F6355;font-size:12px;white-space:nowrap">'+(hdQuyenNgayKy(h)&&!hdThanhLy(h)
         ?'<span onclick="event.stopPropagation();hdNgayKyForm(\''+esc2(ma)+'\')" title="Bấm để đổi ngày ký — tự đồng bộ CRM & PM" style="cursor:pointer;border-bottom:1px dashed #B8AD9E;padding-bottom:1px">'+(esc2(ngayVN(h['Ngày ký'])||'')||'<i style="color:#B23A2E">chưa có</i>')+' <span style="font-size:11px;opacity:.7">✏️</span></span>'
-        :esc2(ngayVN(h['Ngày ký'])||''))+'</td>'
+        :esc2(ngayVN(h['Ngày ký'])||''))+hdTienDoTom(h,true)+'</td>'
       +'<td style="padding:10px">'+hdmStatusBadge(h['Trạng thái'])+'</td>'
       +'<td style="padding:10px 14px;text-align:right"><button onclick="event.stopPropagation();hdmKyThu(\''+esc2(ma)+'\')" title="Ký &amp; thu tiền (đồng bộ PM)" style="border:none;background:none;cursor:pointer;color:#0F5132;font-size:14px">💰</button> <button onclick="event.stopPropagation();bgmHoSo(\''+esc2(h['Mã KH'])+'\')" title="Mở hồ sơ khách" style="border:none;background:none;cursor:pointer;color:#9A8F82;font-size:15px">👤</button></td></tr>';
   }).join('')+'</table>';
@@ -11205,7 +11359,8 @@ function hdComposerOpen(maHDKH){
       var doc=null; try{ doc=JSON.parse(rec['Doc JSON']||'null'); }catch(e){}
       __hd = doc || hdNewDoc(l);
       __hd.maHDKH=maHDKH; __hd.maKH=rec['Mã KH'];
-      if(!doc){ __hd.so=rec['Số HĐ']||__hd.so; __hd.ngay=rec['Ngày ký']||__hd.ngay; __hd.taiChinh.tong=rvNum(rec['Giá trị (đ)']); }
+      if(!doc){ __hd.so=rec['Số HĐ']||__hd.so; __hd.ngay=rec['Ngày ký']||__hd.ngay; __hd.taiChinh.tong=rvNum(rec['Giá trị (đ)']);
+        if(rvNum(rec['Tiến độ (ngày)'])){ __hd.tienDo.soNgay=rvNum(rec['Tiến độ (ngày)']); __hd.tienDo.cachTinh=rec['Cách tính ngày']||''; __hd.tienDo.batDau=rvNgay(rec['Ngày bắt đầu TH'])||''; } }   /* ★ v9.75 */
     } else { __hd=hdNewDoc(l); }
   } else { __hd=hdNewDoc(l); }
   __hd.benB=hdCompany();
@@ -11338,6 +11493,7 @@ function hdFormHtml(){
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
     +'<div>'+hdLbl('Ngày bắt đầu')+hdInp('tienDo.batDau',T.batDau,'','date')+'</div>'
     +'<div>'+hdLbl('Tổng thời gian (ngày)')+hdInp('tienDo.soNgay',T.soNgay,'','number')+'</div>'
+    +'<div>'+hdLbl('Cách tính ngày')+'<select onchange="hdF(\'tienDo.cachTinh\',this.value)" style="width:100%;padding:8px;border:1px solid #DED8CE;border-radius:6px;font-size:13px">'+HD_CACH_TINH.map(function(k){ return '<option'+(k===(T.cachTinh||HD_CACH_TINH[0])?' selected':'')+'>'+esc2(k)+'</option>'; }).join('')+'</select></div>'
     +'<div>'+hdLbl('Gia hạn cho phép (ngày)')+hdInp('tienDo.giaHan',T.giaHan,'','number')+'</div>'
     +(ty.baoHanh?('<div>'+hdLbl('Bảo hành (tháng)')+hdInp('tienDo.baoHanhThang',T.baoHanhThang,'','number')+'</div>'
       +'<div>'+hdLbl('Phản hồi sự cố (giờ)')+hdInp('tienDo.phanHoiGio',T.phanHoiGio,'','number')+'</div>'
@@ -11468,7 +11624,8 @@ function hdPreviewHtml(d,forPrint){
   n++; s+=hdDieuBox(n,'PHƯƠNG THỨC & TIẾN ĐỘ THANH TOÁN',hdDotTable(d));
   // Điều: tiến độ
   n++; s+=hdDieuBox(n,'THỜI GIAN & TIẾN ĐỘ THỰC HIỆN',
-    '<div>Thời gian thực hiện: <b>'+esc2(T.soNgay||'…')+'</b> ngày'+(T.batDau?(', bắt đầu từ ngày '+hdNgayChu(T.batDau)):'')+
+    '<div>Thời gian thực hiện: <b>'+esc2(T.soNgay||'…')+'</b> ngày ('+hdCachTinhChu(T.cachTinh)+')'+(T.batDau?(', bắt đầu từ ngày '+hdNgayChu(T.batDau)):', kể từ ngày ký hợp đồng')+
+    ((+T.soNgay>0 && (T.batDau||d.ngay))?(', dự kiến hoàn thành ngày '+hdNgayChu(hdCongNgay(T.batDau||d.ngay, +T.soNgay, T.cachTinh))):'')+
     (T.giaHan?('; được gia hạn tối đa '+esc2(T.giaHan)+' ngày trong trường hợp bất khả kháng'):'')+'.</div>');
   // Điều: bảo hành (thi công)
   if(ty.baoHanh){ n++; s+=hdDieuBox(n,'BẢO HÀNH & BẢO TRÌ',
@@ -11511,6 +11668,8 @@ function hdSaveDoc(){
   (function(){ var f=__hd.taiChinh||{}, tt=+f.tamTinh||0; tt=tt-Math.round(tt*(+f.ck||0)/100);   /* ★ v9.57 */
     hdGanTruongV957(rec, l, __hd.loai, +f.vat||0, Math.round(tt)); })();
   rec['Người ký']=rec['Người ký']||((currentUser&&currentUser.name)||'');
+  (function(){ var T=__hd.tienDo||{}, n=+T.soNgay||0;   /* ★ v9.75 — tiến độ từ bản soạn → bản ghi HĐ */
+    if(n){ rec['Tiến độ (ngày)']=n; rec['Cách tính ngày']=T.cachTinh||HD_CACH_TINH[0]; rec['Ngày bắt đầu TH']=T.batDau||''; rec['Ngày hoàn thành HĐ']=hdCongNgay(T.batDau||__hd.ngay, n, rec['Cách tính ngày']); } })();
   rec['Doc JSON']=JSON.stringify(__hd);
   if(hdTinhGiaTriLead(l)){ if(typeof touch==='function') touch(l); if(typeof saveLocal==='function') saveLocal(); if(typeof pushLead==='function') pushLead(l); }
   htSave(); if(typeof htGui==='function') htGui('saveHopDongKH',rec);
