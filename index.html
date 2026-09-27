@@ -1287,7 +1287,7 @@ const STAGE_CHECKLIST = {
   // GĐ01 TIẾP CẬN — Telesale & Zalo
   tk_new: [
     {text:'Gọi điện trong vòng 30 phút sau khi nhận lead', type:'call', urgency:'red', sla:'≤ 30 phút', tip:'Nếu quá 30 phút → báo Admin nhắn KH trước. Không để KH chờ >1h'},
-    {text:'Mở đầu: Chào cá nhân hóa + nhắc đúng lý do gọi', type:'call', urgency:'red', sla:'30 giây đầu', tip:'"Chào anh [Tên], em là [Tên Sales] – MDC Interior. Em gọi vì anh vừa quan tâm đến..."'},
+    {text:'Mở đầu: Chào cá nhân hóa + nhắc đúng lý do gọi', type:'call', urgency:'red', sla:'30 giây đầu', tip:'"Chào anh [Tên], em là [Tên Sales] – {congty}. Em gọi vì anh vừa quan tâm đến..."'},
     {text:'Hỏi 1 câu SPIN khai thác Pain Point – lắng nghe, không ngắt lời', type:'call', urgency:'red', sla:'0:30–1:30', tip:'"Anh dự kiến nhận nhà tháng mấy? / Điều gì anh lo nhất khi làm nội thất?"'},
     {text:'Trao giá trị & xin kết bạn Zalo (1 lý do + 1 tài liệu cụ thể)', type:'send', urgency:'red', sla:'1:30–2:30', tip:'"Em có bộ 3 công trình thực tế + báo giá sơ bộ đúng dạng nhà anh. Kết bạn Zalo nhé?"'},
     {text:'Phân loại lead A/B/C ngay sau khi gác máy + ghi CRM', type:'other', urgency:'red', sla:'Trong 15 phút', tip:'A (≤6 tháng) → Chăm 1:1 | B (>6 tháng) → Phễu | C → Gác 90 ngày'},
@@ -1415,7 +1415,7 @@ function createStageChecklistTasks(lead, newStage){
       date: dDate.toISOString().split('T')[0],
       time: '09:00',
       assignee: lead.owner || currentUser?.id || '',
-      note: tpl.tip || '',
+      note: dvChu(tpl.tip || ''),
       sla: tpl.sla || '',
       done: false,
       created: new Date().toISOString(),
@@ -1758,6 +1758,7 @@ async function syncFromSheets(){
     });
     try{ sdtChuanHoaDuLieu(); }catch(_e){}   /* ★ v9.65 — SĐT có số 0 đầu */
     try{ dlChuanHoaHT(); }catch(_e){}   /* ★ v9.66 — trạng thái chuẩn + tiền dạng chữ → số (chạy TRƯỚC mọi phép tính) */
+    try{ if(data.donVi) dvNhanTuSheet(data.donVi); }catch(_e){}   /* ★ v9.68 — hồ sơ đơn vị */
     try{ if(typeof hdTinhLaiTatCa==='function') hdTinhLaiTatCa(); if(typeof rvBadge==='function') rvBadge(); }catch(_e){}   /* ★ v9.57 — TK/TC theo HĐ */
     if(typeof htSave === 'function') htSave();
     saveLocal();
@@ -2331,16 +2332,17 @@ function openTagPicker(leadId){
 // MẪU TIN NHẮN — điền sẵn tên KH, gửi qua Zalo/SMS/Email/Copy
 // ══════════════════════════════════════════════════════════════
 const MSG_TEMPLATES = [
-  {id:'chao',   ten:' Chào & giới thiệu', noidung:'Chào anh/chị {ten}, em là {nv} bên MDC Interior (Mộc Đông Châu). Cảm ơn anh/chị đã quan tâm dịch vụ thiết kế – thi công nội thất của bên em. Không biết anh/chị đang có nhu cầu cho công trình nào ạ?'},
+  {id:'chao',   ten:' Chào & giới thiệu', noidung:'Chào anh/chị {ten}, em là {nv} bên {congty} ({tengoi}). Cảm ơn anh/chị đã quan tâm dịch vụ thiết kế – thi công nội thất của bên em. Không biết anh/chị đang có nhu cầu cho công trình nào ạ?'},
   {id:'hen_ks', ten:'📐 Hẹn khảo sát',      noidung:'Dạ anh/chị {ten}, bên em muốn xin một buổi khảo sát thực tế mặt bằng để tư vấn phương án và báo giá chính xác nhất. Anh/chị sắp xếp được thời gian nào trong tuần này ạ?'},
   {id:'gui_bg', ten:'📄 Gửi báo giá',        noidung:'Dạ anh/chị {ten}, em gửi anh/chị bảng báo giá chi tiết cho công trình mình. Anh/chị xem qua giúp em, có điểm nào cần điều chỉnh mình trao đổi thêm nhé. Em cảm ơn ạ!'},
   {id:'nhac',   ten:'Nhắc nhẹ (follow-up)',noidung:'Dạ anh/chị {ten}, không biết anh/chị đã có thời gian xem qua phương án/báo giá bên em gửi chưa ạ? Nếu cần em tư vấn thêm gì, anh/chị cứ nhắn em nhé. Em cảm ơn!'},
-  {id:'cam_on', ten:'Cảm ơn sau khi ký',  noidung:'MDC Interior chân thành cảm ơn anh/chị {ten} đã tin tưởng lựa chọn bên em. Em cam kết đồng hành sát sao để công trình của mình hoàn thiện đúng tiến độ và chất lượng. Trân trọng!'},
+  {id:'cam_on', ten:'Cảm ơn sau khi ký',  noidung:'{congty} chân thành cảm ơn anh/chị {ten} đã tin tưởng lựa chọn bên em. Em cam kết đồng hành sát sao để công trình của mình hoàn thiện đúng tiến độ và chất lượng. Trân trọng!'},
   {id:'cham_soc',ten:'💝 Chăm sóc sau bàn giao',noidung:'Dạ anh/chị {ten}, công trình mình đưa vào sử dụng cũng được một thời gian rồi, không biết mọi thứ có ổn không ạ? Nếu cần bảo hành hay hỗ trợ gì, anh/chị cứ nhắn em nhé. MDC luôn sẵn sàng!'}
 ];
 function fillTemplate(tpl, l){
-  const nv=(currentUser&&currentUser.name)||'MDC';
-  return tpl.replace(/\{ten\}/g, l.name||'anh/chị').replace(/\{sdt\}/g, l.phone||'').replace(/\{nv\}/g, nv);
+  const d=dv(), nv=(currentUser&&currentUser.name)||d.vietTat;
+  return dvChu(tpl).replace(/\{ten\}/g, l.name||'anh/chị').replace(/\{sdt\}/g, l.phone||'').replace(/\{nv\}/g, nv)
+    .replace(/MDC Interior \(Mộc Đông Châu\)/g, d.tenTM+' ('+d.tenGoi+')').replace(/MDC Interior/g, d.tenTM);   /* ★ v9.68 — mẫu cũ trên Sheet vẫn đổi đúng tên đơn vị */
 }
 function openMsgTemplates(leadId){
   const l=leads.find(l=>l.id==leadId); if(!l) return;
@@ -2358,7 +2360,7 @@ function pickTemplate(leadId, tplId){
   const phone=chuanSDT(l.phone);
   const zaloUrl = phone?`https://zalo.me/${phone}`:'https://zalo.me';
   const smsUrl  = `sms:${phone}?body=${encodeURIComponent(msg)}`;
-  const mailUrl = l.email?`mailto:${l.email}?subject=${encodeURIComponent('MDC Interior')}&body=${encodeURIComponent(msg)}`:'';
+  const mailUrl = l.email?`mailto:${l.email}?subject=${encodeURIComponent(dv().tenTM)}&body=${encodeURIComponent(msg)}`:'';
   modal2('💬 '+tpl.ten, `
     <textarea id="msg-body" class="form-input" style="width:100%;height:150px;font-size:13px;line-height:1.6">${esc2(msg)}</textarea>
     <div style="font-size:11.5px;color:var(--mgray);margin:8px 0 12px">${esc2(l.phone||'–')}${l.email?' · ✉️ '+esc2(l.email):''}</div>
@@ -2724,13 +2726,13 @@ function renderTasksByKh(khList, selKh){
           ${stageChecklist.map((tpl,i)=>{
             const done = khTasks.find(t=>t.isTemplate&&t.stage===selKh.stage&&t.text===tpl.text&&t.done);
             const uColor = tpl.urgency==='red'?'var(--ruby)':tpl.urgency==='orange'?'var(--amber)':'var(--emerald)';
-            return `<div style="display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border-radius:6px;background:${done?'var(--lgreen)':'var(--white)'}" title="${(tpl.tip||'').replace(/"/g,'&quot;')}">
+            return `<div style="display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border-radius:6px;background:${done?'var(--lgreen)':'var(--white)'}" title="${dvChu(tpl.tip||'').replace(/"/g,'&quot;')}">
               <span style="font-size:12px;flex-shrink:0">${done?'✅':'⬜'}</span>
               <span style="width:5px;height:5px;border-radius:50%;background:${uColor};flex-shrink:0;margin-top:5px"></span>
               <div style="flex:1;min-width:0">
                 <span style="font-size:11.5px;color:${done?'var(--mgray)':'var(--charcoal)'};${done?'text-decoration:line-through':''};line-height:1.35;font-weight:500">${tpl.text}</span>
                 ${tpl.sla?`<span style="font-size:9px;font-family:Arial, sans-serif;color:${uColor};background:${pipe==='tc'?'rgba(10,77,69,.08)':'rgba(15,52,96,.08)'};padding:1px 5px;border-radius:6px;margin-left:5px;white-space:nowrap">${tpl.sla}</span>`:''}
-                ${tpl.tip?`<div style="font-size:10px;color:var(--mgray);line-height:1.3;margin-top:2px;font-style:italic">💬 ${tpl.tip.length>70?tpl.tip.slice(0,70)+'...':tpl.tip}</div>`:''}
+                ${tpl.tip?`<div style="font-size:10px;color:var(--mgray);line-height:1.3;margin-top:2px;font-style:italic">💬 ${dvChu(tpl.tip).length>70?dvChu(tpl.tip).slice(0,70)+'...':dvChu(tpl.tip)}</div>`:''}
               </div>
             </div>`;
           }).join('')}
@@ -3296,7 +3298,8 @@ async function testAndSaveUrl(){
 function renderSettings(){
   const s=loadSettings();
   document.getElementById('page-content').innerHTML=`
-    <div style="max-width:560px">
+    <div style="max-width:620px">
+      ${dvThe()}
       <div class="table-wrap" style="padding:22px;margin-bottom:14px">
         <div class="section-title">Thông tin Sales</div>
         <div class="form-grid">
@@ -3311,7 +3314,7 @@ function renderSettings(){
       </div>
       <div class="table-wrap" style="padding:22px;margin-bottom:14px">
         <div class="section-title">⚖️ Tham số nghiệp vụ</div>
-        <div style="font-size:12px;color:var(--mgray);margin-bottom:10px">Ngưỡng giá trị báo giá để xác định cấp duyệt. VAT mặc định chỉnh trong 🏢 Thông tin Công ty (đang ${(typeof vatMacDinh==='function'?vatMacDinh():8)}%).</div>
+        <div style="font-size:12px;color:var(--mgray);margin-bottom:10px">Ngưỡng giá trị báo giá để xác định cấp duyệt. VAT mặc định chỉnh trong 🏢 Dữ liệu tham chiếu của đơn vị (đang ${(typeof vatMacDinh==='function'?vatMacDinh():8)}%).</div>
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Dưới mức này → Trưởng phòng duyệt (đ)</label><input class="form-input" id="s-nguongtp" type="number" value="${nguongDuyet().tp}"></div>
           <div class="form-group"><label class="form-label">Đến mức này → Giám đốc duyệt (đ)</label><input class="form-input" id="s-nguonggd" type="number" value="${nguongDuyet().gd}"></div>
@@ -5861,7 +5864,7 @@ function bgImport(){
   el.onclick=function(e){ if(e.target===el) bgImpClose(); };
   var note=(typeof XLSX==='undefined')?'<div style="color:#B23A2E;font-size:11.5px;margin-top:4px">⚠ Chưa nạp được thư viện đọc Excel — anh vẫn có thể DÁN bảng vào ô dưới.</div>':'';
   el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:840px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)">'
-    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.67)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #E5DFD5"><b style="font-size:15px;flex:1">📥 Nhập hạng mục từ Excel <span style="font-size:11px;color:#8A6D3B;font-weight:600">(bản v9.69)</span></b><button onclick="bgImpClose()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9A8F82">✕</button></div>'
     +'<div style="padding:14px 18px;overflow:auto">'
     +'<div style="font-size:12px;color:#6F6355;line-height:1.55;margin-bottom:10px">Chọn <b>file Excel (.xlsx/.csv)</b> báo giá/dự toán — hoặc <b>dán</b> bảng copy từ Excel/Google Sheet. Hệ tự nhận diện cột: <b>Tên hạng mục / Chi tiết đơn hàng</b>, <b>Chất liệu · quy cách</b> (→ mô tả), <b>ĐVT</b>, <b>Dài/Rộng/Cao</b>, <b>Khối lượng</b>, <b>Số lượng</b>, <b>Đơn giá</b>, <b>Thành tiền</b>, <b>Ghi chú</b>. Dòng tiêu đề · nhóm (Tầng/Phòng) · dòng tổng được xử lý tự động.'+note+'</div>'
     +'<div style="margin-bottom:8px"><label class="btn btn-outline btn-sm" style="cursor:pointer"><input type="file" accept=".xlsx,.xls,.xlsm,.csv,text/csv" style="display:none" onchange="bgImpFile(this)">📂 Chọn file Excel / CSV</label></div>'
@@ -6574,7 +6577,8 @@ function bgPrint(ma){
     S+='@page{size:A4 portrait;margin:16mm 14mm 16mm}@page{@bottom-center{content:"Trang " counter(page) " / " counter(pages);font-size:9px;color:#9AA3AD;font-family:Arial,sans-serif}}@media print{body{padding:0}.noprint{display:none}}</style></head><body>';
   }
   S+='<div class="bar noprint"><button onclick="window.print()">🖨 In / Lưu PDF</button></div>';
-  S+='<div class="hd"><div class="co"><div><span class="logo">MDC</span><b>MỘC ĐÔNG CHÂU</b></div><div class="x" style="margin-top:6px">Thiết kế · Sản xuất · Thi công nội thất</div><div class="x">Hotline / Zalo: ………  ·  Email: ………</div></div>';
+  var _dv=dv();   /* ★ v9.68 — tiêu đề báo giá theo Hồ sơ đơn vị */
+  S+='<div class="hd"><div class="co"><div>'+(_dv.logo?'<img src="'+esc2(_dv.logo)+'" style="height:38px;max-width:150px;object-fit:contain;vertical-align:middle;margin-right:8px">':'<span class="logo">'+esc2(_dv.vietTat)+'</span>')+'<b>'+esc2(String(_dv.tenGoi||_dv.tenTM).toUpperCase())+'</b></div><div class="x" style="margin-top:6px">'+esc2(_dv.slogan||'')+'</div><div class="x">Hotline / Zalo: '+esc2(_dv.dienThoai||'………')+'  ·  Email: '+esc2(_dv.email||'………')+(_dv.website?'  ·  '+esc2(_dv.website):'')+'</div>'+(_dv.diaChi?'<div class="x">'+esc2(_dv.diaChi)+'</div>':'')+'</div>';
   S+='<div class="qt"><h1>BÁO GIÁ</h1><div class="x">Số: '+esc2(x['Mã BG'])+' · v'+(x['Phiên bản']||1)+'</div><div class="x">Ngày: '+esc2(ngayVN(x['Ngày lập'])||'')+'</div></div></div>';
   S+='<div class="meta"><div class="box"><div class="t">Kính gửi khách hàng</div><b>'+esc2(l.name||'—')+'</b>'+(l.phone?'<div class="x">ĐT: '+esc2(l.phone)+'</div>':'')+((l.address||l.diachi)?'<div class="x">'+esc2(l.address||l.diachi)+'</div>':'')+'</div>';
   S+='<div class="box"><div class="t">Nội dung báo giá</div><b>'+esc2(x['Tiêu đề']||'')+'</b><div class="x">Loại: '+esc2(x['Loại báo giá']||'—')+'</div>'+(hieuLuc?'<div class="x">Hiệu lực đến: '+hieuLuc+'</div>':'')+'</div></div>';
@@ -6627,8 +6631,8 @@ function bgPrint(ma){
     S+='</div>';
   }
   S+='<div class="sign"><div>KHÁCH HÀNG<br><span style="font-size:11px;color:#9AA3AD">(Ký, ghi rõ họ tên)</span><div class="sp"></div></div>';
-  S+='<div>MỘC ĐÔNG CHÂU<br><span style="font-size:11px;color:#9AA3AD">(Ký, đóng dấu)</span><div class="sp"></div><b>'+esc2(x['Người lập']||'')+'</b></div></div>';
-  S+='<div class="ft">Báo giá có giá trị trong '+esc2(x['Hiệu lực (ngày)']||30)+' ngày kể từ ngày lập · Cảm ơn Quý khách đã tin tưởng Mộc Đông Châu</div>';
+  S+='<div>'+esc2(String(dv().tenGoi||dv().tenTM).toUpperCase())+'<br><span style="font-size:11px;color:#9AA3AD">'+dvKy()+'</span><div class="sp"></div><b>'+esc2(x['Người lập']||'')+'</b></div></div>';
+  S+='<div class="ft">Báo giá có giá trị trong '+esc2(x['Hiệu lực (ngày)']||30)+' ngày kể từ ngày lập · Cảm ơn Quý khách đã tin tưởng '+esc2(dv().tenGoi||dv().tenTM)+'</div>';
   S+='</body></html>';
   var w=window.open('','_blank'); if(!w) return toast('Trình duyệt chặn cửa sổ in — hãy cho phép popup');
   w.document.open(); w.document.write(S); w.document.close();
@@ -7300,7 +7304,7 @@ function rvXuatExcel(){
   }
   var c=(typeof hdCompany==='function')?hdCompany():{};
   var loc=[RV.nhom?('Nhóm '+RV.nhom.toUpperCase()):'',RV.loai?('Loại '+RV.loai):'',RV.nv?('NV '+rvNvTen(RV.nv)):''].filter(Boolean).join(' · ');
-  var aoa=[[String(c.ten||'MDC INTERIOR').toUpperCase()],['BÁO CÁO DOANH THU – '+ten.toUpperCase()],
+  var aoa=[[String(c.ten||dv().ten).toUpperCase()],['BÁO CÁO DOANH THU – '+ten.toUpperCase()],
     ['Kỳ báo cáo: '+D.R.label+' ('+rvVN(D.R.tu)+' – '+rvVN(D.R.den)+')'+(loc?' · Lọc: '+loc:'')],
     ['Lập lúc '+nowStr()+' · Người lập: '+((currentUser&&currentUser.name)||'')+' · Đơn vị tính: đồng'],[],head].concat(rows);
   var sum=null;
@@ -8004,7 +8008,7 @@ function rvInCSS(){ return '<style>@page{size:A4;margin:18mm 16mm 18mm 22mm}body
   +'td.n{text-align:right;white-space:nowrap}tfoot td{font-weight:bold}.ky{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;margin-top:26px;page-break-inside:avoid}.ky b{display:block}.ky i{display:block;font-size:11pt;margin-bottom:60px}'
   +'.note{font-size:11pt;font-style:italic}@media screen{body{max-width:800px;margin:20px auto;padding:0 16px}.bar{position:sticky;top:0;background:#fff;padding:8px 0;text-align:right}}@media print{.bar{display:none}}</style>'; }
 function rvInHeader(){ var c=(typeof hdCompany==='function')?hdCompany():{}, d=new Date();
-  return '<div class="hd"><div><b style="font-weight:normal">'+esc2(String(c.ten||'CÔNG TY TNHH NỘI THẤT MỘC ĐÔNG CHÂU').toUpperCase())+'</b><b>PHÒNG KINH DOANH</b><span class="u"></span></div>'
+  return '<div class="hd"><div><b style="font-weight:normal">'+esc2(String(c.ten||dv().ten).toUpperCase())+'</b>'+(dvLoai()==='congty'?'<b>PHÒNG KINH DOANH</b>':'')+'<span class="u"></span></div>'
     +'<div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><b>Độc lập - Tự do - Hạnh phúc</b><span class="u" style="width:55%"></span></div></div>'
     +'<div class="dd">'+esc2((c.diaDiem||'Huế'))+', ngày '+d.getDate()+' tháng '+(d.getMonth()+1)+' năm '+d.getFullYear()+'</div>'; }
 function rvMoIn(tieuDe, html){
@@ -8042,7 +8046,7 @@ function rvInBaoCaoThang(ky){
     +q.map(function(x){ return '<tr><td>'+esc2(x.o.ten)+'</td><td>'+esc2(x.o.rec['Số HĐ']||x.o.ma)+'</td><td>'+esc2(x.d.ten)+'</td><td>'+rvVN(x.d.han)+'</td><td class="n">'+x.d.qh+' ngày</td><td class="n">'+n(x.d.con)+'</td></tr>'; }).join('')+'</table>':'<p>Không có khoản quá hạn.</p>');
   h+='<h2>V. ĐỐI SOÁT & KHÓA SỔ</h2><p>'+(ks?('Tiền về theo sao kê (CK): <b>'+n(rvNum(ks['Tiền về theo sao kê (đ)']))+' đ</b>; phiếu thu CK đã xác nhận: <b>'+n(rvNum(ks['Phiếu thu CK xác nhận (đ)']))+' đ</b>; chênh lệch: <b>'+n(rvNum(ks['Chênh lệch (đ)']))+' đ</b>'+(ks['Giải trình']?' ('+esc2(ks['Giải trình'])+')':'')+'. Trạng thái: <b>'+esc2(ks['Trạng thái']||'')+'</b>'+(rvKyKhoa(ky)?' — khóa ngày '+rvVN(ks['Ngày khóa'])+' bởi '+esc2(ks['Người khóa']||''):'')+'.')
     :'Chưa đối soát tháng này.')+'</p>';
-  h+='<div class="ky"><div><b>NGƯỜI LẬP BIỂU</b><i>(Ký, ghi rõ họ tên)</i>'+esc2((currentUser&&currentUser.name)||'')+'</div><div><b>KẾ TOÁN</b><i>(Ký, ghi rõ họ tên)</i></div><div><b>GIÁM ĐỐC</b><i>(Ký, ghi rõ họ tên, đóng dấu)</i></div></div>';
+  h+='<div class="ky"><div><b>NGƯỜI LẬP BIỂU</b><i>(Ký, ghi rõ họ tên)</i>'+esc2((currentUser&&currentUser.name)||'')+'</div><div><b>KẾ TOÁN</b><i>(Ký, ghi rõ họ tên)</i></div><div><b>'+dvChucDanhKy()+'</b><i>'+(dvLoai()==='congty'?'(Ký, ghi rõ họ tên, đóng dấu)':'(Ký, ghi rõ họ tên)')+'</i></div></div>';
   rvMoIn('BaoCaoDoanhThu_'+ky, h);
 }
 /* Biên bản đối chiếu công nợ với 1 khách hàng */
@@ -8051,7 +8055,7 @@ function rvInDoiChieu(maKH){
   var hds=(HT.hopdongKH||[]).filter(function(r){ return String(r['Mã KH'])===String(maKH) && hdHieuLuc(r); }).map(function(r){ return rvHD(r,today); }).sort(function(a,b){ return (a.ngayKy||'')>(b.ngayKy||'')?1:-1; });
   var h=rvInHeader()+'<h1>BIÊN BẢN ĐỐI CHIẾU CÔNG NỢ</h1><div class="sub">Tính đến ngày '+rvVN(today)+'</div>'
     +'<p><b>BÊN A (Khách hàng):</b> '+esc2((l&&l.name)||maKH)+(l&&l.phone?' — Điện thoại: '+esc2(l.phone):'')+(l&&(l.address||l.diachi)?'<br>Địa chỉ: '+esc2(l.address||l.diachi):'')+'</p>'
-    +'<p><b>BÊN B:</b> '+esc2(c.ten||'Công ty TNHH Nội thất Mộc Đông Châu')+(c.mst?' — MST: '+esc2(c.mst):'')+(c.diaChi?'<br>Địa chỉ: '+esc2(c.diaChi):'')+(c.taiKhoan?'<br>Tài khoản: '+esc2(c.taiKhoan)+(c.nganHang?' tại '+esc2(c.nganHang):''):'')+'</p>'
+    +'<p><b>BÊN B:</b> '+esc2(dvTenBenB(c.ten?c:dv()))+(c.mst?' — MST: '+esc2(c.mst):'')+(c.diaChi?'<br>Địa chỉ: '+esc2(c.diaChi):'')+(c.taiKhoan?'<br>Tài khoản: '+esc2(c.taiKhoan)+(c.nganHang?' tại '+esc2(c.nganHang):''):'')+'</p>'
     +'<p>Hai bên cùng đối chiếu số liệu thanh toán theo các hợp đồng đã ký như sau:</p>';
   var tong={gt:0,thu:0,con:0};
   hds.forEach(function(o,i){ tong.gt+=o.gtPay; tong.thu+=o.daThu; tong.con+=o.con;
@@ -8065,7 +8069,7 @@ function rvInDoiChieu(maKH){
       +'<tfoot><tr><td colspan="2">Cộng</td><td class="n">'+n(o.tongDot)+'</td><td class="n">'+n(o.daThu)+'</td><td></td><td class="n">'+n(o.con)+'</td></tr></tfoot></table>'; });
   h+='<h2>TỔNG HỢP</h2><table><tr><td>Tổng giá trị phải thanh toán</td><td class="n">'+n(tong.gt)+'</td></tr><tr><td>Bên A đã thanh toán</td><td class="n">'+n(tong.thu)+'</td></tr><tr><td><b>Bên A còn phải thanh toán</b></td><td class="n"><b>'+n(tong.con)+'</b></td></tr></table>'
     +'<p class="note">Biên bản lập thành 02 bản, mỗi bên giữ 01 bản có giá trị như nhau. Nếu có sai lệch, đề nghị Bên A phản hồi trong vòng 07 ngày kể từ ngày nhận biên bản.</p>'
-    +'<div class="ky" style="grid-template-columns:1fr 1fr"><div><b>ĐẠI DIỆN BÊN A</b><i>(Ký, ghi rõ họ tên)</i></div><div><b>ĐẠI DIỆN BÊN B</b><i>(Ký, ghi rõ họ tên, đóng dấu)</i></div></div>';
+    +'<div class="ky" style="grid-template-columns:1fr 1fr"><div><b>ĐẠI DIỆN BÊN A</b><i>(Ký, ghi rõ họ tên)</i></div><div><b>'+(dvLoai()==='congty'?'ĐẠI DIỆN BÊN B':'BÊN B')+'</b><i>'+(dvLoai()==='congty'?'(Ký, ghi rõ họ tên, đóng dấu)':'(Ký, ghi rõ họ tên)')+'</i></div></div>';
   rvMoIn('DoiChieuCongNo_'+((l&&l.name)||maKH), h);
 }
 /* ★ v9.61 — Đồng bộ PM: backend gắn KH/HĐ cho đợt thu PM + cập nhật giá trị HĐ vào sheet Dự án */
@@ -8775,6 +8779,148 @@ function hdBHKhauTruLuu(maTT, veKH){
   if(currentPage==='revenue' && typeof rvRender==='function') rvRender();
 }
 /* ══════════════════════════ hết khối v9.67 ══════════════════════════ */
+
+/* ══════════════════════════ ★ v9.68 — HỒ SƠ ĐƠN VỊ (DỮ LIỆU THAM CHIẾU) ══════════════════════════
+   Một nguồn duy nhất cho tên, logo, pháp lý, người đại diện, ngân hàng, tên gọi hệ thống → dùng cho giao diện, hợp đồng, báo giá,
+   báo cáo, tin nhắn, cổng khách, PM. Lưu trên Google Sheet (PM_KeHoach · key "don_vi"); đổi đơn vị = sửa 1 chỗ → nhân bản dễ. */
+var DV_KEY='mdc_donvi';
+var DV_DEF={loaiHinh:'congty', soDKKD:'', ten:'CÔNG TY TNHH NỘI THẤT MỘC ĐÔNG CHÂU', tenTM:'MDC Interior', tenGoi:'Mộc Đông Châu', vietTat:'MDC', slogan:'Thiết kế · Sản xuất · Thi công nội thất', logo:'',
+  mst:'', ngayCapDKKD:'', noiCapDKKD:'', diaChi:'TP. Huế', diaChiXuong:'', dienThoai:'', email:'', website:'',
+  daiDien:'', chucVu:'Giám đốc', cccd:'', cccdNgayCap:'', cccdNoiCap:'',
+  taiKhoan:'', nganHang:'', chiNhanh:'', chuTK:'', vatMacDinh:8,
+  tenCRM:'Sales CRM', tenPM:'Quản lý dự án', tenPortal:'Cổng khách hàng'};
+/* ★ v9.69 — Loại hình đơn vị: Công ty · Hộ kinh doanh · Cá nhân (chưa đăng ký KD). Nhãn, trường, kiểm tra, câu chữ biểu mẫu đổi theo loại hình */
+var DV_LOAI={congty:'Công ty / Doanh nghiệp', hokd:'Hộ kinh doanh', canhan:'Cá nhân (chưa đăng ký kinh doanh)'};
+function dvLoai(d){ d=d||dv(); return DV_LOAI[d.loaiHinh]?d.loaiHinh:'congty'; }
+function dvNhom(loai){
+  var nhanDien=function(tenLbl,tenPh){ return ['Nhận diện',[['ten',tenLbl,tenPh,2],['tenTM','Tên thương mại','vd: MDC Interior'],['tenGoi','Tên gọi tiếng Việt','vd: Mộc Đông Châu'],['vietTat','Tên viết tắt','vd: MDC'],['slogan','Khẩu hiệu / lĩnh vực','',2]]]; };
+  var chung=[
+    ['Liên hệ',[['dienThoai','Hotline / Zalo',''],['email','Email',''],['website','Website','',2]]],
+    ['Tài khoản ngân hàng',[['taiKhoan','Số tài khoản',''],['chuTK','Chủ tài khoản','(mặc định = tên ở trên)'],['nganHang','Ngân hàng','vd: Vietcombank'],['chiNhanh','Chi nhánh','vd: CN Huế'],['vatMacDinh','VAT mặc định (%)',loai==='congty'?'8':'0 — giá trọn gói']]],
+    ['Tên gọi trong hệ thống',[['tenCRM','Tên phần mềm bán hàng','Sales CRM'],['tenPM','Tên phần mềm quản lý dự án','Quản lý dự án'],['tenPortal','Tên cổng khách hàng','Cổng khách hàng']]]];
+  if(loai==='hokd') return [nhanDien('Tên hộ kinh doanh (theo giấy chứng nhận)','HỘ KINH DOANH …'),
+    ['Đăng ký hộ kinh doanh',[['soDKKD','Số giấy CN đăng ký hộ KD',''],['mst','Mã số hộ KD / MST','số định danh chủ hộ (12 số) hoặc MST cũ'],['ngayCapDKKD','Ngày cấp','dd/mm/yyyy'],['noiCapDKKD','Nơi cấp','vd: UBND phường …'],['diaChi','Địa điểm kinh doanh','',2],['diaChiXuong','Địa chỉ xưởng / nơi khác','',2]]],
+    ['Chủ hộ kinh doanh',[['daiDien','Họ tên chủ hộ',''],['cccd','Số CCCD',''],['cccdNgayCap','Ngày cấp CCCD','dd/mm/yyyy'],['cccdNoiCap','Nơi cấp CCCD','vd: Cục CS QLHC về TTXH']]]].concat(chung);
+  if(loai==='canhan') return [nhanDien('Họ và tên người thực hiện','vd: Nguyễn Văn A'),
+    ['Giấy tờ cá nhân',[['cccd','Số CCCD / số định danh','12 số — dùng thay mã số thuế'],['cccdNgayCap','Ngày cấp','dd/mm/yyyy'],['cccdNoiCap','Nơi cấp','vd: Cục CS QLHC về TTXH',2],['diaChi','Địa chỉ thường trú','',2],['diaChiXuong','Nơi làm việc / xưởng','',2]]]].concat(chung);
+  return [nhanDien('Tên pháp lý (đầy đủ)','CÔNG TY TNHH …'),
+    ['Pháp lý',[['mst','Mã số thuế / mã số DN',''],['ngayCapDKKD','Ngày cấp ĐKDN','dd/mm/yyyy'],['noiCapDKKD','Nơi cấp ĐKDN','vd: Sở Tài chính TP. Huế',2],['diaChi','Địa chỉ trụ sở','',2],['diaChiXuong','Địa chỉ xưởng / văn phòng khác','',2]]],
+    ['Người đại diện theo pháp luật',[['daiDien','Họ tên',''],['chucVu','Chức vụ','Giám đốc'],['cccd','Số CCCD',''],['cccdNgayCap','Ngày cấp CCCD','dd/mm/yyyy'],['cccdNoiCap','Nơi cấp CCCD','vd: Cục CS QLHC về TTXH',2]]]].concat(chung);
+}
+/* Câu chữ biểu mẫu theo loại hình */
+function dvKy(d){ return dvLoai(d)==='congty'?'(Ký, đóng dấu)':'(Ký, ghi rõ họ tên)'; }
+function dvTenBenB(d){ d=d||dv(); var l=dvLoai(d); if(l==='canhan') return 'Ông/Bà '+d.ten; if(l==='hokd' && !/^(hộ kinh doanh|hkd)\b/i.test(d.ten)) return 'HỘ KINH DOANH '+d.ten; return d.ten; }
+function dvChucDanhKy(d){ d=d||dv(); var l=dvLoai(d); return l==='hokd'?'CHỦ HỘ KINH DOANH':l==='canhan'?'NGƯỜI THỰC HIỆN':String(d.chucVu||'Giám đốc').toUpperCase(); }
+function dvNhanMa(d){ var l=dvLoai(d); return l==='hokd'?'Mã số hộ KD':l==='canhan'?'Số định danh (MST)':'Mã số thuế'; }
+function dv(){
+  var o={}; Object.keys(DV_DEF).forEach(function(k){ o[k]=DV_DEF[k]; });
+  var l=null; try{ l=JSON.parse(localStorage.getItem(DV_KEY)||'null'); }catch(e){}
+  if(!l){ try{ var cu=JSON.parse(localStorage.getItem(HDB_KEY)||'null'); if(cu && cu.ten) l=cu; }catch(e){} }   /* chuyển dữ liệu "Thông tin công ty" cũ */
+  if(l) Object.keys(l).forEach(function(k){ if(l[k]!=null && l[k]!=='') o[k]=l[k]; });
+  if(!o.chuTK) o.chuTK=o.ten;
+  return o;
+}
+function dvLuuLocal(d){ try{ localStorage.setItem(DV_KEY, JSON.stringify(d||{})); }catch(e){} }
+/* Nhận hồ sơ từ Sheet khi đồng bộ */
+function dvNhanTuSheet(d){ if(d && typeof d==='object'){ dvLuuLocal(d); } apDungDonVi(); }
+function dvChu(s){ var d=dv(); return String(s==null?'':s).replace(/\{congty\}/g, d.tenTM).replace(/\{tencongty\}/g, d.ten).replace(/\{hotline\}/g, d.dienThoai||'').replace(/\{tengoi\}/g, d.tenGoi||d.tenTM); }
+function dvLogoHtml(cao, mau){
+  var d=dv(); cao=cao||40;
+  if(d.logo) return '<img src="'+esc2(d.logo)+'" alt="" style="height:'+cao+'px;max-width:'+(cao*4)+'px;object-fit:contain;vertical-align:middle">';
+  return '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:'+cao+'px;height:'+cao+'px;padding:0 6px;border-radius:8px;background:'+(mau||'#2B211A')+';color:#D4AF6A;font-weight:800;font-size:'+Math.round(cao*0.42)+'px;vertical-align:middle">'+esc2(d.vietTat||'')+'</span>';
+}
+/* Áp tên / logo lên giao diện CRM */
+function apDungDonVi(){
+  var d=dv();
+  try{ document.title=d.tenTM+' — '+d.tenCRM; }catch(e){}
+  document.querySelectorAll('.login-logo,.brand-title').forEach(function(e){ e.innerHTML=(d.logo?'<img src="'+esc2(d.logo)+'" alt="" style="max-height:34px;max-width:150px;object-fit:contain;display:block;margin-bottom:4px">':'')+esc2(d.tenTM); });
+  document.querySelectorAll('.login-sub,.brand-sub').forEach(function(e){ e.textContent=d.tenCRM; });
+}
+/* ─── Thẻ trong Cài đặt ─── */
+function dvThe(){
+  var d=dv(), ad=(typeof isAdmin==='function' && isAdmin());
+  var loai=dvLoai(d), thieu=[]; if(!d.mst && loai!=='canhan') thieu.push(dvNhanMa(d)); if(!d.daiDien && loai!=='canhan') thieu.push(loai==='hokd'?'chủ hộ':'người đại diện'); if(!d.cccd) thieu.push('CCCD'); if(loai==='hokd' && !d.soDKKD) thieu.push('số giấy CN đăng ký hộ KD'); if(!d.taiKhoan) thieu.push('tài khoản ngân hàng'); if(!d.dienThoai) thieu.push('hotline');
+  var dong=function(l,v){ return '<div style="display:flex;gap:8px;font-size:12.5px;padding:3px 0"><span style="color:#9A8F82;min-width:120px">'+l+'</span><b style="font-weight:600">'+(v?esc2(v):'<span style="color:#C9BFAF;font-weight:400">— chưa nhập —</span>')+'</b></div>'; };
+  return '<div class="table-wrap" style="padding:22px;margin-bottom:14px">'
+    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+dvLogoHtml(46)+'<div style="flex:1"><div class="section-title" style="margin:0">🏢 Dữ liệu tham chiếu của đơn vị</div>'
+    +'<div style="font-size:12px;color:var(--mgray)">Một nguồn duy nhất cho tên, logo, pháp lý, ngân hàng — tự dùng trong hợp đồng, báo giá, báo cáo, tin nhắn, cổng khách hàng và PM.</div></div></div>'
+    +dong('Loại hình',DV_LOAI[loai])+dong(loai==='canhan'?'Họ và tên':loai==='hokd'?'Tên hộ kinh doanh':'Tên pháp lý',d.ten)+dong('Tên thương mại',d.tenTM+(d.tenGoi?' · '+d.tenGoi:''))
+    +(loai==='canhan'?dong('Số CCCD / định danh',d.cccd):dong(dvNhanMa(d),d.mst))+dong(loai==='canhan'?'Địa chỉ thường trú':loai==='hokd'?'Địa điểm KD':'Địa chỉ',d.diaChi)
+    +(loai==='canhan'?'':dong(loai==='hokd'?'Chủ hộ':'Người đại diện',d.daiDien?(d.daiDien+(loai==='congty'?' — '+d.chucVu:'')+(d.cccd?' · CCCD '+d.cccd:'')):''))+dong('Hotline',d.dienThoai)
+    +dong('Tài khoản',d.taiKhoan?(d.taiKhoan+' · '+d.nganHang+(d.chiNhanh?' – '+d.chiNhanh:'')):'')
+    +(loai==='canhan'?'<div style="margin-top:8px;font-size:12px;color:#6F6355;background:#F6F2EA;border-radius:7px;padding:7px 10px">💡 Đang làm với tư cách cá nhân. Làm thường xuyên với khách lẻ nên đăng ký hộ kinh doanh để hợp đồng chặt chẽ và xuất được hóa đơn khi khách cần — đổi "Loại hình" khi đã đăng ký.</div>':'')
+    +(thieu.length?'<div style="margin-top:8px;font-size:12px;color:#8F6A2B;background:#FBF4E6;border-radius:7px;padding:7px 10px">⚠ Còn thiếu: '+thieu.join(', ')+' — hợp đồng in ra sẽ để trống các mục này.</div>':'')
+    +(d.capNhat?'<div style="font-size:11px;color:#9A8F82;margin-top:6px">Cập nhật '+esc2(d.capNhat)+(d.nguoiCapNhat?' · '+esc2(d.nguoiCapNhat):'')+'</div>':'')
+    +'<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px">'+(ad?'<button class="btn btn-primary" onclick="dvForm()">✏️ Chỉnh sửa hồ sơ đơn vị</button>':'<span style="font-size:12px;color:#9A8F82">Chỉ Admin được chỉnh sửa</span>')+'</div></div>';
+}
+function dvForm(tam){
+  if(!(typeof isAdmin==='function' && isAdmin())) return toast('Chỉ Admin được sửa hồ sơ đơn vị','🔒');
+  var d=tam||dv(), loai=dvLoai(d), inp='width:100%;padding:8px 9px;border:1px solid #DED8CE;border-radius:7px;margin-top:4px;font-size:13px', lab='font-size:10.5px;font-weight:700;color:#6F6355;text-transform:uppercase;letter-spacing:.4px';
+  var h='<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;padding:10px;background:#FBF8F1;border-radius:9px">'
+    +'<div id="dv-logo-xem" style="width:120px;height:60px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed #C9BFAF;border-radius:8px;overflow:hidden">'+(d.logo?'<img src="'+esc2(d.logo)+'" style="max-width:116px;max-height:56px;object-fit:contain">':'<span style="font-size:11px;color:#9A8F82">Chưa có logo</span>')+'</div>'
+    +'<div style="flex:1;font-size:12px;color:#6F6355"><b style="font-size:10.5px;text-transform:uppercase;letter-spacing:.4px">Logo</b><div style="margin:4px 0">Chọn ảnh PNG/JPG — hệ thống tự thu nhỏ (≤ 360px) để lưu vào Google Sheet.</div>'
+    +'<input type="file" accept="image/*" onchange="dvChonLogo(this)" style="font-size:12px"> <button type="button" class="btn btn-outline btn-sm" onclick="dvXoaLogo()">Bỏ logo</button><input type="hidden" id="dv-logo" value="'+esc2(d.logo||'')+'"></div></div>';
+  h+='<div style="margin-bottom:6px"><label style="'+lab+'">Loại hình đơn vị</label><select id="dv-loaiHinh" onchange="dvDoiLoai(this.value)" style="'+inp+';font-weight:700">'
+    +Object.keys(DV_LOAI).map(function(k){ return '<option value="'+k+'"'+(k===loai?' selected':'')+'>'+DV_LOAI[k]+'</option>'; }).join('')+'</select>'
+    +(loai==='hokd'?'<div style="font-size:11.5px;color:#6F6355;margin-top:5px">Hợp đồng ghi "HỘ KINH DOANH …", chủ hộ ký, không bắt buộc đóng dấu. Từ 01/07/2025 mã số hộ kinh doanh dùng số định danh của chủ hộ. Mặc định giá trọn gói (VAT 0%).</div>'
+      :loai==='canhan'?'<div style="font-size:11.5px;color:#8F6A2B;background:#FBF4E6;border-radius:7px;padding:7px 9px;margin-top:5px">Hợp đồng ký với tư cách cá nhân: ghi họ tên, số CCCD (dùng thay mã số thuế), địa chỉ thường trú; ký ghi rõ họ tên. Làm thường xuyên với khách lẻ nên đăng ký <b>hộ kinh doanh</b> để hợp đồng chặt chẽ và xuất được hóa đơn khi khách cần.</div>':'')+'</div>';
+  dvNhom(loai).forEach(function(g){
+    h+='<div style="font-size:12px;font-weight:800;color:#3A2E22;margin:12px 0 6px;border-bottom:1px solid #EDE7DB;padding-bottom:4px">'+g[0]+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">';
+    g[1].forEach(function(f){ h+='<div'+(f[3]===2?' style="grid-column:1/3"':'')+'><label style="'+lab+'">'+f[1]+'</label><input id="dv-'+f[0]+'" value="'+esc2(f[0]==='chuTK' && d.chuTK===d.ten?'':(d[f[0]]==null?'':d[f[0]]))+'" placeholder="'+esc2(f[2]||'')+'" style="'+inp+'"></div>'; });
+    h+='</div>';
+  });
+  h+='<div style="font-size:11.5px;color:#6F6355;background:#F6F2EA;border-radius:8px;padding:9px 11px;margin-top:12px">Lưu lên Google Sheet — mọi máy CRM, PM và cổng khách hàng nhận sau lần đồng bộ kế tiếp. Chuyển giao hệ thống cho đơn vị khác: chỉ cần sửa hồ sơ này.</div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn btn-outline" onclick="dongModal2();if(currentPage===\'settings\')renderSettings()">Hủy</button><button id="dv-luu" class="btn btn-primary" onclick="dvLuu()">✓ Lưu hồ sơ đơn vị</button></div>';
+  modal2('🏢 Hồ sơ đơn vị — dữ liệu tham chiếu', h);
+}
+function dvThuForm(){ var d=dv(); d.loaiHinh=(document.getElementById('dv-loaiHinh')||{}).value||dvLoai(d);
+  dvNhom(d.loaiHinh).forEach(function(g){ g[1].forEach(function(f){ var e=document.getElementById('dv-'+f[0]); if(e) d[f[0]]=String(e.value||'').trim(); }); });
+  var lg=document.getElementById('dv-logo'); if(lg) d.logo=lg.value||''; return d; }
+function dvDoiLoai(loai){
+  var d=dvThuForm(), cu=dvLoai(dv()); d.loaiHinh=loai;
+  if(loai!=='congty' && (d.vatMacDinh===''||+d.vatMacDinh===8)) d.vatMacDinh=0;
+  if(loai==='congty' && (d.vatMacDinh===''||+d.vatMacDinh===0)) d.vatMacDinh=8;
+  if(loai==='hokd' && d.chucVu==='Giám đốc') d.chucVu='Chủ hộ kinh doanh';
+  dvForm(d);
+}
+function dvChonLogo(inp){
+  var f=inp.files&&inp.files[0]; if(!f) return;
+  if(!/^image\//.test(f.type)) return toast('Chọn file ảnh','⚠️');
+  var rd=new FileReader(); rd.onload=function(){ var img=new Image(); img.onload=function(){
+    var max=360, sc=Math.min(1, max/Math.max(img.width,img.height)), c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.width*sc)); c.height=Math.max(1,Math.round(img.height*sc));
+    var x=c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height);
+    var url=c.toDataURL('image/png'); if(url.length>40000) url=c.toDataURL('image/jpeg',0.85); if(url.length>40000){ c.width=Math.round(c.width*0.6); c.height=Math.round(c.height*0.6); c.getContext('2d').drawImage(img,0,0,c.width,c.height); url=c.toDataURL('image/png'); }
+    if(url.length>40000) return toast('Logo quá chi tiết — dùng ảnh đơn giản hơn (≤ 30 KB)','⚠️');
+    document.getElementById('dv-logo').value=url; document.getElementById('dv-logo-xem').innerHTML='<img src="'+url+'" style="max-width:116px;max-height:56px;object-fit:contain">';
+  }; img.src=rd.result; }; rd.readAsDataURL(f);
+}
+function dvXoaLogo(){ var a=document.getElementById('dv-logo'); if(a) a.value=''; var b=document.getElementById('dv-logo-xem'); if(b) b.innerHTML='<span style="font-size:11px;color:#9A8F82">Chưa có logo</span>'; }
+function dvLuu(){
+  var d=dvThuForm(), loai=dvLoai(d);
+  if(d.chuTK && d.chuTK===dv().ten) d.chuTK='';
+  if(!d.ten) return toast(loai==='canhan'?'Nhập họ và tên':loai==='hokd'?'Nhập tên hộ kinh doanh':'Nhập tên pháp lý của đơn vị','⚠️');
+  if(!d.tenTM) d.tenTM=d.ten;
+  d.cccd=String(d.cccd||'').replace(/\s/g,''); d.mst=String(d.mst||'').replace(/\s/g,'');
+  if(d.cccd && !/^\d{9}(\d{3})?$/.test(d.cccd)) return toast('Số CCCD gồm 12 chữ số (CMND cũ 9 số)','⚠️');
+  if(loai==='congty' && d.mst && !/^\d{10}(-\d{3})?$/.test(d.mst)) return toast('Mã số thuế doanh nghiệp gồm 10 số (hoặc 10 số - 3 số chi nhánh)','⚠️');
+  if(loai==='hokd' && d.mst && !/^(\d{10}(-\d{3})?|\d{12})$/.test(d.mst)) return toast('Mã số hộ kinh doanh: số định danh chủ hộ 12 số, hoặc MST cũ 10 số','⚠️');
+  if(loai==='canhan'){ if(!d.cccd) return toast('Cá nhân: bắt buộc nhập số CCCD','⚠️'); d.daiDien=d.ten; d.chucVu=''; d.mst=d.cccd; d.soDKKD=''; d.ngayCapDKKD=''; d.noiCapDKKD=''; }
+  if(loai==='hokd'){ d.chucVu='Chủ hộ kinh doanh'; if(!d.mst && d.cccd) d.mst=d.cccd; }
+  d.vatMacDinh=d.vatMacDinh===''?8:+d.vatMacDinh;
+  if(typeof sdtChuan==='function' && d.dienThoai) d.dienThoai=sdtChuan(d.dienThoai);
+  d.capNhat=nowStr(); d.nguoiCapNhat=(currentUser&&currentUser.name)||'';
+  dvLuuLocal(d); apDungDonVi();
+  if(window.__hd){ window.__hd.benB=hdCompany(); try{ hdRenderPreview(); }catch(e){} }
+  var xong=function(){ dongModal2(); if(currentPage==='settings') renderSettings(); };
+  if(typeof getApiUrl==='function' && getApiUrl()){
+    var b=document.getElementById('dv-luu'); if(b){ b.disabled=true; b.textContent='Đang lưu lên Sheet…'; }
+    apiPost({action:'saveDonVi', data:{donVi:d}}).then(function(){ toast('Đã lưu hồ sơ đơn vị lên Google Sheet','✅'); xong(); })
+      .catch(function(e){ toast('Đã lưu trên máy này — chưa lên Sheet: '+((e&&e.json&&e.json.error)||e.message||'lỗi mạng'),'⚠️'); xong(); });
+  } else { toast('Đã lưu (chưa kết nối Sheet)'); xong(); }
+}
+try{ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', apDungDonVi); else apDungDonVi(); }catch(e){}
+/* ══════════════════════════ hết khối v9.68 ══════════════════════════ */
+
 
 
 
@@ -10538,11 +10684,11 @@ function vlCloudLoad(){ if(typeof apiFetch!=='function'||!(typeof getApiUrl==='f
 var HDB_KEY='mdc_crm_company';
 var HD_COMPANY_DEF={ten:'CÔNG TY TNHH NỘI THẤT MỘC ĐÔNG CHÂU',daiDien:'',chucVu:'Giám đốc',
   diaChi:'TP. Huế',mst:'',dienThoai:'',email:'',taiKhoan:'',nganHang:'',vatMacDinh:8};
-function hdCompany(){ try{ var c=JSON.parse(localStorage.getItem(HDB_KEY)||'null'); if(c&&c.ten) return c; }catch(e){} return JSON.parse(JSON.stringify(HD_COMPANY_DEF)); }
-function hdCompanySave(c){ try{ localStorage.setItem(HDB_KEY,JSON.stringify(c)); }catch(e){} }
+function hdCompany(){ return dv(); }   /* ★ v9.68 — lấy từ Hồ sơ đơn vị */
+function hdCompanySave(c){ var d=dv(); Object.keys(c||{}).forEach(function(k){ d[k]=c[k]; }); dvLuuLocal(d); }
 function vatMacDinh(){ try{ var c=hdCompany(); var v=(c&&c.vatMacDinh!=null&&c.vatMacDinh!=='')?+c.vatMacDinh:8; return isNaN(v)?8:v; }catch(e){ return 8; } }
 function hdCompanyThieu(){ var c=hdCompany(); var m=[]; if(!c.mst)m.push('MST'); if(!c.diaChi)m.push('địa chỉ'); if(!c.taiKhoan)m.push('tài khoản ngân hàng'); return m; }
-function hdCompanyForm(){
+function hdCompanyForm(){ return dvForm();   /* ★ v9.68 — dùng form Hồ sơ đơn vị */
   var c=hdCompany(); var inp='width:100%;padding:9px;border:1px solid #DED8CE;border-radius:7px;margin-top:4px;font-size:13px', lab='font-size:11px;font-weight:700;color:#6F6355;text-transform:uppercase';
   function f(k,l,ph){ return '<div><label style="'+lab+'">'+l+'</label><input id="hdc-'+k+'" value="'+esc2(c[k]||'')+'" placeholder="'+(ph||'')+'" style="'+inp+'"></div>'; }
   var h='<div style="font-size:12px;color:#7A756C;margin-bottom:10px">Thông tin <b>Bên B</b> (đơn vị mình) — tự điền vào mọi hợp đồng. Cần đủ MST · địa chỉ · tài khoản ngân hàng.</div>'
@@ -10868,13 +11014,16 @@ function hdPreviewHtml(d,forPrint){
   if(A.diaChi) s+='<div>Địa chỉ: '+esc2(A.diaChi)+'</div>';
   s+='<div>Điện thoại: '+esc2(A.dienThoai||'…')+(A.email?(' · Email: '+esc2(A.email)):'')+'</div></div>';
   // Bên B
-  s+='<div style="margin-top:8px"><b>BÊN B (ĐƠN VỊ THỰC HIỆN):</b> '+esc2(B.ten||'…')+'</div>';
+  var _lB=dvLoai(B);   /* ★ v9.69 — Bên B theo loại hình */
+  s+='<div style="margin-top:8px"><b>BÊN B ('+(_lB==='canhan'?'BÊN THỰC HIỆN':'ĐƠN VỊ THỰC HIỆN')+'):</b> '+esc2(B.ten?dvTenBenB(B):'…')+'</div>';
   s+='<div style="padding-left:14px">';
-  if(B.daiDien) s+='<div>Đại diện: '+esc2(B.daiDien)+(B.chucVu?(' — '+esc2(B.chucVu)):'')+'</div>';
-  if(B.mst) s+='<div>Mã số thuế: '+esc2(B.mst)+'</div>';
-  if(B.diaChi) s+='<div>Địa chỉ: '+esc2(B.diaChi)+'</div>';
+  if(B.daiDien && _lB!=='canhan') s+='<div>'+(_lB==='hokd'?'Chủ hộ kinh doanh: ':'Đại diện: ')+esc2(B.daiDien)+(B.chucVu&&_lB==='congty'?(' — '+esc2(B.chucVu)):'')+'</div>';
+  if(_lB==='hokd' && B.soDKKD) s+='<div>Giấy chứng nhận đăng ký hộ kinh doanh số: '+esc2(B.soDKKD)+(B.ngayCapDKKD?(' · cấp ngày '+esc2(B.ngayCapDKKD)):'')+(B.noiCapDKKD?(' tại '+esc2(B.noiCapDKKD)):'')+'</div>';
+  if(B.cccd) s+='<div>Số CCCD: '+esc2(B.cccd)+(B.cccdNgayCap?(' · cấp ngày '+esc2(B.cccdNgayCap)):'')+(B.cccdNoiCap?(' tại '+esc2(B.cccdNoiCap)):'')+'</div>';   /* ★ v9.68 */
+  if(B.mst && !(_lB==='canhan' && B.mst===B.cccd)) s+='<div>'+dvNhanMa(B)+': '+esc2(B.mst)+(_lB==='congty'&&B.ngayCapDKKD?(' · cấp ngày '+esc2(B.ngayCapDKKD)):'')+(_lB==='congty'&&B.noiCapDKKD?(' tại '+esc2(B.noiCapDKKD)):'')+'</div>';
+  if(B.diaChi) s+='<div>'+(_lB==='canhan'?'Địa chỉ thường trú: ':_lB==='hokd'?'Địa điểm kinh doanh: ':'Địa chỉ: ')+esc2(B.diaChi)+'</div>';
   if(B.dienThoai||B.email) s+='<div>Điện thoại: '+esc2(B.dienThoai||'…')+(B.email?(' · Email: '+esc2(B.email)):'')+'</div>';
-  if(B.taiKhoan) s+='<div>Số TK: '+esc2(B.taiKhoan)+(B.nganHang?(' — '+esc2(B.nganHang)):'')+'</div>';
+  if(B.taiKhoan) s+='<div>Số TK: '+esc2(B.taiKhoan)+(B.chuTK&&B.chuTK!==B.ten?(' · chủ TK: '+esc2(B.chuTK)):'')+(B.nganHang?(' — '+esc2(B.nganHang)):'')+(B.chiNhanh?(' – '+esc2(B.chiNhanh)):'')+'</div>';
   s+='</div>';
   s+='<div style="margin:10px 0">Hai bên thống nhất ký kết hợp đồng với các điều khoản sau:</div>';
   var n=0;
@@ -10909,7 +11058,7 @@ function hdPreviewHtml(d,forPrint){
   // ký
   s+='<div style="display:flex;justify-content:space-between;margin-top:26px;text-align:center">'
     +'<div style="width:46%"><b>ĐẠI DIỆN BÊN A</b><div style="font-size:11.5px;font-style:italic">(Ký, ghi rõ họ tên)</div><div style="height:60px"></div><div>'+esc2(A.daiDien||A.ten||'')+'</div></div>'
-    +'<div style="width:46%"><b>ĐẠI DIỆN BÊN B</b><div style="font-size:11.5px;font-style:italic">(Ký, đóng dấu)</div><div style="height:60px"></div><div>'+esc2(B.daiDien||'')+'</div></div></div>';
+    +'<div style="width:46%"><b>'+(dvLoai(B)==='congty'?'ĐẠI DIỆN BÊN B':dvLoai(B)==='hokd'?'BÊN B (CHỦ HỘ KINH DOANH)':'BÊN B')+'</b><div style="font-size:11.5px;font-style:italic">'+dvKy(B)+'</div><div style="height:60px"></div><div>'+esc2(B.daiDien||B.ten||'')+'</div></div></div>';
   s+='</div>';
   return s;
 }
